@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 /*
-  Natural pastel theme for a Japan-targeted baby clothing shop.
-  Warm off-white base with soft sage / blush accents.
+  Monochrome theme for a Japan-targeted baby clothing shop.
+  White base with neutral grays; no chromatic accents, fully squared corners.
 */
 :root {
-  --background: #fbf9f6;
+  --background: #ffffff;
   --surface: #ffffff;
-  --sand: #f1ebe3;
-  --foreground: #55524c;
-  --muted: #9b9690;
-  --border: #eae3d9;
-  --sage: #8c9a83;
-  --sage-soft: #dfe5d9;
-  --blush: #d99e97;
-  --blush-soft: #f4e2df;
-  --sale: #c25b52;
+  --sand: #eeeeee;
+  --foreground: #2f2f2f;
+  --muted: #8a8a8a;
+  --border: #e2e2e2;
+  --sage: #4a4a4a;
+  --sage-soft: #ededed;
+  --blush: #7a7a7a;
+  --blush-soft: #f2f2f2;
+  --sale: #1f1f1f;
 }
 
 @theme inline {
@@ -32,7 +32,7 @@
   --color-sale: var(--sale);
   --font-sans: var(--font-noto-jp), var(--font-noto-kr), ui-sans-serif,
     system-ui, sans-serif;
-  --radius-card: 1rem;
+  --radius-card: 0;
 }
 
 body {
@@ -40,6 +40,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Fully squared design: neutralize every rounded corner across the app. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
 }
 
 /* Hide scrollbar on horizontal scroll rows while keeping scroll */

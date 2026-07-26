@@ -94,7 +94,7 @@ function SlideView({ slide, locale, active }: SlideViewProps) {
       aria-hidden={!active}
       className={`absolute inset-0 flex items-center transition-opacity duration-700 ${slide.gradient} ${vis}`}
     >
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6">
+      <div className="mx-auto flex w-full max-w-480 items-center justify-between px-6 sm:px-10">
         <div className="max-w-lg">
           <p className="mb-3 text-sm font-medium tracking-wide text-sage">
             {slide.eyebrow[locale]}

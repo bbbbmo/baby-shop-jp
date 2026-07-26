@@ -13,7 +13,7 @@ function SearchResults() {
   const results = searchProducts(query);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
       <h1 className="text-xl font-bold text-foreground">
         <span className="text-sage">“{query}”</span>
         {d.search.resultFor}
@@ -35,7 +35,7 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-6xl px-4 py-16" />}>
+    <Suspense fallback={<div className="mx-auto max-w-480 px-6 py-16 sm:px-10" />}>
       <SearchResults />
     </Suspense>
   );

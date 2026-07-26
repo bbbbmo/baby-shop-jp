@@ -25,14 +25,14 @@ export function CartView() {
 
   useEffect(() => setMounted(true), []);
   if (!mounted) {
-    return <div className="mx-auto max-w-6xl px-4 py-16" />;
+    return <div className="mx-auto max-w-480 px-6 py-16 sm:px-10" />;
   }
 
   const lines = enrich(items);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
       <h1 className="mb-6 text-2xl font-bold text-foreground">{d.cart.title}</h1>
       {lines.length === 0 ? (
         <EmptyState />

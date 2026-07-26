@@ -16,7 +16,7 @@ export function ColorPicker({ colors, selected, onSelect }: ColorProps) {
           aria-label={c}
           onClick={() => onSelect(c)}
           style={{ backgroundColor: c }}
-          className={`h-8 w-8 rounded-full ring-1 ring-black/10 transition ${
+          className={`h-8 w-8 ring-1 ring-black/10 transition ${
             selected === c ? "outline outline-2 outline-offset-2 outline-sage" : ""
           }`}
         />

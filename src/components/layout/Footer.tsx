@@ -15,16 +15,16 @@ export function Footer() {
 
   return (
     <footer className="mt-20 border-t border-border bg-sand">
-      <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-480 px-6 py-12 sm:px-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-lg font-bold text-foreground">{d.brandName}</p>
+            <p className="text-lg font-bold text-black">{d.brandName}</p>
             <p className="mt-1 text-sm text-muted">{d.tagline}</p>
           </div>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-black">
             {links.map((label) => (
               <li key={label}>
-                <Link href="#" className="hover:text-foreground">
+                <Link href="#" className="hover:opacity-70">
                   {label}
                 </Link>
               </li>

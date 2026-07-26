@@ -20,7 +20,7 @@ const notoKr = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "Komo | やさしいベビー服",
+  title: "KOMO | やさしいベビー服",
   description: "赤ちゃんにやさしい素材のベビー服セレクトショップ（デモ）",
 };
 

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { MenuIcon } from "@/components/ui/icons";
-import { SearchBar } from "./SearchBar";
 import { CartButton } from "./CartButton";
 import { LocaleToggle } from "./LocaleToggle";
 import { NavDrawer } from "./NavDrawer";
@@ -19,21 +18,26 @@ export function Header() {
         <div className="bg-sage py-2 text-center text-xs text-white">
           {d.announcement}
         </div>
-        <div className="relative flex items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="menu"
-              onClick={() => setDrawerOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-sand"
-            >
-              <MenuIcon />
-            </button>
-            <SearchBar className="hidden w-52 md:block lg:w-64" />
-          </div>
+        <div className="relative mx-auto flex max-w-480 items-center justify-between px-6 py-3 sm:px-10">
+          <span
+            role="button"
+            tabIndex={0}
+            aria-label="menu"
+            onClick={() => setDrawerOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setDrawerOpen(true);
+              }
+            }}
+            className="inline-flex cursor-pointer items-center gap-2 text-foreground"
+          >
+            <MenuIcon className="h-7 w-7" />
+            <span className="text-sm font-medium tracking-wide">MENU</span>
+          </span>
           <Link
             href="/"
-            className="absolute left-1/2 -translate-x-1/2 text-xl font-bold tracking-tight text-foreground"
+            className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-tight text-foreground md:text-3xl"
           >
             {d.brandName}
           </Link>

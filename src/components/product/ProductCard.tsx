@@ -52,12 +52,12 @@ function CardBadges({
   return (
     <div className="absolute left-2.5 top-2.5 flex gap-1">
       {product.isNew && (
-        <span className="rounded-full bg-sage px-2 py-0.5 text-[11px] font-medium text-white">
+        <span className="rounded-full bg-[#8c9a83] px-2 py-0.5 text-[11px] font-medium text-white">
           {labels.new}
         </span>
       )}
       {product.isBest && (
-        <span className="rounded-full bg-blush px-2 py-0.5 text-[11px] font-medium text-white">
+        <span className="rounded-full bg-[#d99e97] px-2 py-0.5 text-[11px] font-medium text-white">
           {labels.best}
         </span>
       )}
@@ -87,7 +87,7 @@ function ColorDots({ colors }: { colors: string[] }) {
       {colors.map((c) => (
         <span
           key={c}
-          className="h-3 w-3 rounded-full ring-1 ring-black/5"
+          className="h-3 w-3 ring-1 ring-black/5"
           style={{ backgroundColor: c }}
         />
       ))}

@@ -48,7 +48,7 @@ export function ProductBrowser({
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         <p className="mt-1 text-sm text-muted">
