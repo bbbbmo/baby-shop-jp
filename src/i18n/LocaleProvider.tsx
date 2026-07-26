@@ -18,7 +18,7 @@ type LocaleContextValue = {
   d: Dictionary;
 };
 
-const STORAGE_KEY = "koharu.locale";
+const STORAGE_KEY = "komo.locale";
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const isLocale = (value: unknown): value is Locale =>

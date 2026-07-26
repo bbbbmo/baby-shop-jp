@@ -37,7 +37,7 @@ export const useCart = create<CartState>()(
       },
       clear: () => set({ items: [] }),
     }),
-    { name: "koharu.cart" },
+    { name: "komo.cart" },
   ),
 );
 
