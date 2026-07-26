@@ -42,7 +42,9 @@ export function Header() {
             {d.brandName}
           </Link>
           <div className="flex items-center gap-2">
-            <LocaleToggle />
+            <div className="hidden md:block">
+              <LocaleToggle />
+            </div>
             <CartButton />
           </div>
         </div>

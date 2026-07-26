@@ -6,6 +6,7 @@ import { categories } from "@/lib/categories";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { CloseIcon } from "@/components/ui/icons";
 import { SearchBar } from "./SearchBar";
+import { LocaleToggle } from "./LocaleToggle";
 
 type NavDrawerProps = { open: boolean; onClose: () => void };
 
@@ -39,7 +40,7 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
         <div className="px-4">
           <SearchBar />
         </div>
-        <nav className="mt-4 px-2">
+        <nav className="mt-4 flex-1 px-2">
           <ul className="space-y-1 text-sm" onClick={onClose}>
             <DrawerItem href="/products" label={d.nav.all} />
             {categories.map((c) => (
@@ -51,6 +52,9 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
             ))}
           </ul>
         </nav>
+        <div className="border-t border-border px-4 py-4 md:hidden">
+          <LocaleToggle />
+        </div>
       </aside>
     </>
   );
