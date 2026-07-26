@@ -1,0 +1,175 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useCart, type CartItem } from "@/store/cart";
+import { useLocale } from "@/i18n/LocaleProvider";
+import { getProduct } from "@/lib/products";
+import { formatYen } from "@/lib/format";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/constants";
+import type { Product } from "@/lib/types";
+import { ProductThumb } from "@/components/product/ProductThumb";
+import { QuantityStepper } from "./QuantityStepper";
+
+type Line = CartItem & { product: Product };
+
+const enrich = (items: CartItem[]): Line[] =>
+  items
+    .map((item) => ({ ...item, product: getProduct(item.productId) }))
+    .filter((item): item is Line => Boolean(item.product));
+
+export function CartView() {
+  const { d } = useLocale();
+  const items = useCart((s) => s.items);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+  if (!mounted) {
+    return <div className="mx-auto max-w-6xl px-4 py-16" />;
+  }
+
+  const lines = enrich(items);
+  const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">{d.cart.title}</h1>
+      {lines.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
+          <ul className="divide-y divide-border">
+            {lines.map((line) => (
+              <CartLine key={line.id} line={line} />
+            ))}
+          </ul>
+          <CartSummary subtotal={subtotal} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmptyState() {
+  const { d } = useLocale();
+  return (
+    <div className="py-20 text-center">
+      <p className="text-4xl">🧺</p>
+      <p className="mt-4 text-sm text-muted">{d.cart.empty}</p>
+      <Link
+        href="/products"
+        className="mt-6 inline-flex rounded-full bg-foreground px-6 py-2.5 text-sm text-white hover:opacity-90"
+      >
+        {d.cart.continue}
+      </Link>
+    </div>
+  );
+}
+
+function CartLine({ line }: { line: Line }) {
+  const { locale, d } = useLocale();
+  const { updateQuantity, remove } = useCart();
+  return (
+    <li className="flex gap-4 py-5">
+      <ProductThumb
+        category={line.product.category}
+        color={line.color}
+        className="h-24 w-24 shrink-0 rounded-2xl"
+      />
+      <div className="flex flex-1 flex-col">
+        <p className="text-xs text-muted">{line.product.brand}</p>
+        <p className="text-sm text-foreground">{line.product.name[locale]}</p>
+        <p className="mt-0.5 text-xs text-muted">
+          {d.product.size} {line.size}
+        </p>
+        <div className="mt-auto flex items-center justify-between pt-3">
+          <QuantityStepper
+            value={line.quantity}
+            onChange={(q) => updateQuantity(line.id, q)}
+          />
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-foreground">
+              {formatYen(line.product.price * line.quantity)}
+            </span>
+            <button
+              type="button"
+              onClick={() => remove(line.id)}
+              className="text-xs text-muted underline-offset-2 hover:text-sale hover:underline"
+            >
+              {d.cart.remove}
+            </button>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function CartSummary({ subtotal }: { subtotal: number }) {
+  const { d } = useLocale();
+  const free = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shipping = free ? 0 : SHIPPING_FEE;
+
+  return (
+    <aside className="h-fit rounded-2xl bg-surface p-5 ring-1 ring-border">
+      <FreeShippingBar subtotal={subtotal} free={free} />
+      <SummaryRow label={d.cart.subtotal} value={formatYen(subtotal)} />
+      <SummaryRow
+        label={d.cart.shipping}
+        value={free ? d.cart.shippingFree : formatYen(shipping)}
+      />
+      <div className="my-3 border-t border-border" />
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">{d.cart.total}</span>
+        <span className="text-lg font-bold text-foreground">
+          {formatYen(subtotal + shipping)}
+        </span>
+      </div>
+      <button
+        type="button"
+        className="mt-5 w-full rounded-full bg-foreground py-3 text-sm font-medium text-white hover:opacity-90"
+      >
+        {d.cart.checkout}
+      </button>
+      <p className="mt-3 text-[11px] leading-relaxed text-muted">
+        {d.cart.demoNotice}
+      </p>
+    </aside>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-1 text-sm">
+      <span className="text-muted">{label}</span>
+      <span className="text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function FreeShippingBar({
+  subtotal,
+  free,
+}: {
+  subtotal: number;
+  free: boolean;
+}) {
+  const { d } = useLocale();
+  const remain = Math.max(FREE_SHIPPING_THRESHOLD - subtotal, 0);
+  const pct = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const message = free
+    ? d.cart.freeShipMet
+    : d.cart.freeShipRemain.replace("{amount}", formatYen(remain));
+
+  return (
+    <div className="mb-4">
+      <p className="mb-2 text-xs text-foreground">{message}</p>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-sand">
+        <div
+          className="h-full rounded-full bg-sage transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}

@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
+/*
+  Natural pastel theme for a Japan-targeted baby clothing shop.
+  Warm off-white base with soft sage / blush accents.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbf9f6;
+  --surface: #ffffff;
+  --sand: #f1ebe3;
+  --foreground: #55524c;
+  --muted: #9b9690;
+  --border: #eae3d9;
+  --sage: #8c9a83;
+  --sage-soft: #dfe5d9;
+  --blush: #d99e97;
+  --blush-soft: #f4e2df;
+  --sale: #c25b52;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-sand: var(--sand);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --color-blush: var(--blush);
+  --color-blush-soft: var(--blush-soft);
+  --color-sale: var(--sale);
+  --font-sans: var(--font-noto-jp), var(--font-noto-kr), ui-sans-serif,
+    system-ui, sans-serif;
+  --radius-card: 1rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar on horizontal scroll rows while keeping scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
