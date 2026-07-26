@@ -2,7 +2,7 @@
 
 import { useLocale } from "@/i18n/LocaleProvider";
 import { bestProducts, newProducts } from "@/lib/products";
-import { Hero } from "@/components/home/Hero";
+import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { ProductSection } from "@/components/home/ProductSection";
 import { FeatureBanner } from "@/components/home/FeatureBanner";
@@ -12,7 +12,7 @@ export default function HomePage() {
 
   return (
     <div className="pb-4">
-      <Hero />
+      <HeroCarousel />
       <CategoryTiles />
       <ProductSection
         title={d.home.bestTitle}
