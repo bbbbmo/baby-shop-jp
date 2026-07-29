@@ -12,7 +12,7 @@ export function CartButton() {
 
   return (
     <Link href="/cart" aria-label="cart" className="relative text-foreground">
-      <CartIcon className="h-7 w-7" />
+      <CartIcon className="h-6 w-6" />
       {hydrated && count > 0 && (
         <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center bg-blush px-1 text-[11px] font-medium text-white">
           {count}
