@@ -5,6 +5,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Star,
 } from "lucide-react";
 
@@ -34,6 +35,10 @@ export function ChevronLeftIcon({ className = base }: IconProps) {
 
 export function ChevronRightIcon({ className = base }: IconProps) {
   return <ChevronRight className={className} strokeWidth={1.6} aria-hidden />;
+}
+
+export function ChevronDownIcon({ className = base }: IconProps) {
+  return <ChevronDown className={className} strokeWidth={1.6} aria-hidden />;
 }
 
 export function StarIcon({ className = base }: IconProps) {
