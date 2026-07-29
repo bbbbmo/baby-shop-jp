@@ -11,7 +11,7 @@ const OPTIONS: { value: Locale; label: string }[] = [
 export function LocaleToggle() {
   const { locale, setLocale } = useLocale();
   return (
-    <div className="flex items-center rounded-full border border-border bg-surface p-0.5 text-xs">
+    <div className="flex w-full items-center border border-border bg-surface p-0.5 text-xs">
       {OPTIONS.map((opt) => (
         <button
           key={opt.value}
@@ -29,5 +29,5 @@ export function LocaleToggle() {
 function buttonClass(active: boolean): string {
   const activeCls = "bg-sage text-white";
   const idleCls = "text-muted hover:text-foreground";
-  return `rounded-full px-2.5 py-1 transition-colors ${active ? activeCls : idleCls}`;
+  return `flex-1 px-2.5 py-1.5 text-center transition-colors ${active ? activeCls : idleCls}`;
 }

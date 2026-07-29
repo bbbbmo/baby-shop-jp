@@ -52,7 +52,7 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
             ))}
           </ul>
         </nav>
-        <div className="border-t border-border px-4 py-4 md:hidden">
+        <div className="border-t border-border px-4 py-4">
           <LocaleToggle />
         </div>
       </aside>

@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { MenuIcon } from "@/components/ui/icons";
 import { CartButton } from "./CartButton";
-import { LocaleToggle } from "./LocaleToggle";
 import { NavDrawer } from "./NavDrawer";
 
 export function Header() {
@@ -29,7 +28,7 @@ export function Header() {
             }}
             className="inline-flex cursor-pointer items-center gap-2 text-foreground"
           >
-            <MenuIcon className="h-7 w-7" />
+            <MenuIcon className="h-6 w-6" />
             <span className="text-sm font-medium tracking-wide">MENU</span>
           </span>
           <Link
@@ -39,9 +38,6 @@ export function Header() {
             {d.brandName}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="hidden md:block">
-              <LocaleToggle />
-            </div>
             <CartButton />
           </div>
         </div>
