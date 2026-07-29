@@ -7,6 +7,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { CloseIcon, ChevronDownIcon } from "@/components/ui/icons";
 import { SearchBar } from "./SearchBar";
 import { LocaleToggle } from "./LocaleToggle";
+import { FontToggle } from "./FontToggle";
 
 type NavDrawerProps = { open: boolean; onClose: () => void };
 
@@ -69,8 +70,9 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
             )}
           </ul>
         </nav>
-        <div className="border-t border-border px-4 py-4">
+        <div className="space-y-2 border-t border-border px-4 py-4">
           <LocaleToggle />
+          <FontToggle />
         </div>
       </aside>
     </>
