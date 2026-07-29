@@ -15,9 +15,6 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur">
-        <div className="bg-sage py-2 text-center text-xs text-white">
-          {d.announcement}
-        </div>
         <div className="relative mx-auto flex max-w-480 items-center justify-between px-6 py-3 sm:px-10">
           <span
             role="button"
