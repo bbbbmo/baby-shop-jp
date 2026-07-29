@@ -2,7 +2,7 @@ import type { Locale, Localized } from "@/lib/types";
 
 export const dictionaries = {
   ja: {
-    brandName: "KOMO",
+    brandName: "COMO",
     tagline: "赤ちゃんにやさしい、毎日のふく。",
     announcement: "¥5,000以上のご購入で送料無料 🚚",
     search: { placeholder: "商品を検索", button: "検索", empty: "検索結果がありません。", resultFor: "の検索結果" },
@@ -76,7 +76,7 @@ export const dictionaries = {
     },
   },
   ko: {
-    brandName: "KOMO",
+    brandName: "COMO",
     tagline: "아기에게 순한, 매일의 옷.",
     announcement: "5,000엔 이상 구매 시 무료배송 🚚",
     search: { placeholder: "상품 검색", button: "검색", empty: "검색 결과가 없어요.", resultFor: " 검색 결과" },
