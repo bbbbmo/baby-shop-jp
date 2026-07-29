@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { categories } from "@/lib/categories";
+import { useEffect, useState } from "react";
+import { menu, type MenuGroup } from "@/lib/categories";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { CloseIcon } from "@/components/ui/icons";
+import { CloseIcon, ChevronDownIcon } from "@/components/ui/icons";
 import { SearchBar } from "./SearchBar";
 import { LocaleToggle } from "./LocaleToggle";
 
 type NavDrawerProps = { open: boolean; onClose: () => void };
 
 export function NavDrawer({ open, onClose }: NavDrawerProps) {
-  const { locale, d } = useLocale();
+  const { d } = useLocale();
+  const [expandedGroup, setExpandedGroup] = useState<"girl" | "boy" | null>(
+    null,
+  );
 
   useEscapeToClose(open, onClose);
 
@@ -32,7 +35,7 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
             type="button"
             aria-label="close"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-foreground hover:bg-sand"
+            className="flex h-9 w-9 items-center justify-center text-foreground hover:bg-sand"
           >
             <CloseIcon />
           </button>
@@ -41,15 +44,29 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
           <SearchBar />
         </div>
         <nav className="mt-4 flex-1 px-2">
-          <ul className="space-y-1 text-sm" onClick={onClose}>
-            <DrawerItem href="/products" label={d.nav.all} />
-            {categories.map((c) => (
-              <DrawerItem
-                key={c.slug}
-                href={`/products/${c.slug}`}
-                label={`${c.emoji}  ${c.name[locale]}`}
-              />
-            ))}
+          <ul className="space-y-1 text-sm">
+            {menu.map((entry) =>
+              entry.kind === "link" ? (
+                <DrawerItem
+                  key={entry.href}
+                  href={entry.href}
+                  label={entry.starred ? `★ ${entry.label}` : entry.label}
+                  onNavigate={onClose}
+                />
+              ) : (
+                <MenuGroupItem
+                  key={entry.key}
+                  entry={entry}
+                  expanded={expandedGroup === entry.key}
+                  onToggle={() =>
+                    setExpandedGroup((cur) =>
+                      cur === entry.key ? null : entry.key,
+                    )
+                  }
+                  onNavigate={onClose}
+                />
+              ),
+            )}
           </ul>
         </nav>
         <div className="border-t border-border px-4 py-4">
@@ -85,12 +102,67 @@ function panelClass(open: boolean): string {
   return `fixed inset-y-0 left-0 z-50 flex w-72 max-w-[80%] flex-col bg-surface shadow-xl transition-transform ${pos}`;
 }
 
-function DrawerItem({ href, label }: { href: string; label: string }) {
+function DrawerItem({
+  href,
+  label,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  onNavigate: () => void;
+}) {
   return (
     <li>
-      <Link href={href} className="block rounded-lg px-3 py-2.5 hover:bg-sand">
+      <Link
+        href={href}
+        onClick={onNavigate}
+        className="block px-3 py-2.5 hover:bg-sand"
+      >
         {label}
       </Link>
+    </li>
+  );
+}
+
+function MenuGroupItem({
+  entry,
+  expanded,
+  onToggle,
+  onNavigate,
+}: {
+  entry: MenuGroup;
+  expanded: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-sand"
+      >
+        {entry.label}
+        <ChevronDownIcon
+          className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
+      </button>
+      {expanded && (
+        <ul className="space-y-1 pb-1 pl-6">
+          {entry.children.map((child) => (
+            <li key={child.slug}>
+              <Link
+                href={`/products/${child.slug}`}
+                onClick={onNavigate}
+                className="block px-3 py-2 text-muted hover:bg-sand hover:text-foreground"
+              >
+                {child.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   );
 }
