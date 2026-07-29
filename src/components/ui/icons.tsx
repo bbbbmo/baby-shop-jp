@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ChevronDown,
   Star,
+  User,
 } from "lucide-react";
 
 type IconProps = { className?: string };
@@ -23,6 +24,10 @@ export function CartIcon({ className = base }: IconProps) {
 
 export function MenuIcon({ className = base }: IconProps) {
   return <Menu className={className} strokeWidth={1.6} aria-hidden />;
+}
+
+export function ProfileIcon({ className = base }: IconProps) {
+  return <User className={className} strokeWidth={1.6} aria-hidden />;
 }
 
 export function CloseIcon({ className = base }: IconProps) {

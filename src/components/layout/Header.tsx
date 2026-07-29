@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { MenuIcon } from "@/components/ui/icons";
+import { MenuIcon, ProfileIcon } from "@/components/ui/icons";
 import { CartButton } from "./CartButton";
 import { NavDrawer } from "./NavDrawer";
 
@@ -37,8 +37,16 @@ export function Header() {
           >
             {d.brandName}
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-5">
             <CartButton />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="profile"
+              className="text-foreground"
+            >
+              <ProfileIcon className="h-6 w-6" />
+            </span>
           </div>
         </div>
       </header>
