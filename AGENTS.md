@@ -69,4 +69,4 @@
 
 # 문서
 
-- `docs/superpowers/`(브레인스토밍 설계 문서 등)는 로컬 전용이며 `.gitignore`에 등록되어 있습니다. git으로 추적하거나 커밋하지 마세요.
+- `docs/superpowers/`(브레인스토밍 설계 문서 등)와 `.superpowers/`(SDD 실행 워크스페이스: 원장·브리프·리뷰 패키지 등)는 로컬 전용이며 `.gitignore`에 등록되어 있습니다. git으로 추적하거나 커밋하지 마세요.

@@ -42,3 +42,4 @@ next-env.d.ts
 
 # superpowers design docs (local only, not tracked)
 /docs/superpowers/
+/.superpowers/
