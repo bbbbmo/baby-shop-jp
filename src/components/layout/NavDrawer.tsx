@@ -141,6 +141,7 @@ function MenuGroupItem({
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
+        aria-controls={`menu-${entry.key}`}
         className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-sand"
       >
         {entry.label}
@@ -148,21 +149,19 @@ function MenuGroupItem({
           className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
         />
       </button>
-      {expanded && (
-        <ul className="space-y-1 pb-1 pl-6">
-          {entry.children.map((child) => (
-            <li key={child.slug}>
-              <Link
-                href={`/products/${child.slug}`}
-                onClick={onNavigate}
-                className="block px-3 py-2 text-muted hover:bg-sand hover:text-foreground"
-              >
-                {child.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul id={`menu-${entry.key}`} hidden={!expanded} className="space-y-1 pb-1 pl-6">
+        {entry.children.map((child) => (
+          <li key={child.slug}>
+            <Link
+              href={`/products/${child.slug}`}
+              onClick={onNavigate}
+              className="block px-3 py-2 text-muted hover:bg-sand hover:text-foreground"
+            >
+              {child.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </li>
   );
 }

@@ -1,4 +1,4 @@
-import type { CategorySlug } from "@/lib/types";
+import type { CategorySlug, ClothingType } from "@/lib/types";
 
 type Props = {
   category: CategorySlug;
@@ -6,7 +6,7 @@ type Props = {
   className?: string;
 };
 
-const EMOJI_BY_TYPE: Record<string, string> = {
+const EMOJI_BY_TYPE: Record<ClothingType, string> = {
   top: "🎽",
   setup: "🧸",
   bottom: "🩳",
@@ -15,18 +15,18 @@ const EMOJI_BY_TYPE: Record<string, string> = {
   swimwear: "🏊",
 };
 
-const EMOJI_BY_LEAF: Record<string, string> = {
+const EMOJI_BY_LEAF: Record<"mom" | "accessory" | "gift", string> = {
   mom: "👚",
   accessory: "🧦",
   gift: "🎁",
 };
 
 const emojiFor = (category: CategorySlug): string => {
-  if (category in EMOJI_BY_LEAF) {
-    return EMOJI_BY_LEAF[category];
+  if (Object.hasOwn(EMOJI_BY_LEAF, category)) {
+    return EMOJI_BY_LEAF[category as "mom" | "accessory" | "gift"];
   }
   const [, typeKey] = category.split("-");
-  return EMOJI_BY_TYPE[typeKey] ?? "🧸";
+  return EMOJI_BY_TYPE[typeKey as ClothingType] ?? "🧸";
 };
 
 /**

@@ -14,6 +14,7 @@ const CLOTHING_TYPES: ClothingTypeDef[] = [
 export type MenuLink = {
   kind: "link";
   href: string;
+  slug?: CategorySlug;
   label: string;
   starred?: boolean;
 };
@@ -58,27 +59,29 @@ export const menu: MenuEntry[] = [
       CLOTHING_TYPES.filter((t) => t.key !== "dress"),
     ),
   },
-  { kind: "link", href: "/products/mom", label: "mom" },
-  { kind: "link", href: "/products/accessory", label: "accessory" },
-  { kind: "link", href: "/products/gift", label: "gift", starred: true },
+  { kind: "link", href: "/products/mom", slug: "mom", label: "mom" },
+  {
+    kind: "link",
+    href: "/products/accessory",
+    slug: "accessory",
+    label: "accessory",
+  },
+  {
+    kind: "link",
+    href: "/products/gift",
+    slug: "gift",
+    label: "gift",
+    starred: true,
+  },
 ];
 
-const ALL_CATEGORY_SLUGS: CategorySlug[] = [
-  "girl-top",
-  "girl-setup",
-  "girl-bottom",
-  "girl-dress",
-  "girl-homewear",
-  "girl-swimwear",
-  "boy-top",
-  "boy-setup",
-  "boy-bottom",
-  "boy-homewear",
-  "boy-swimwear",
-  "mom",
-  "accessory",
-  "gift",
-];
+const ALL_CATEGORY_SLUGS: CategorySlug[] = menu.flatMap((entry) =>
+  entry.kind === "group"
+    ? entry.children.map((c) => c.slug)
+    : entry.slug
+      ? [entry.slug]
+      : [],
+);
 
 export const isCategorySlug = (value: string): value is CategorySlug =>
   (ALL_CATEGORY_SLUGS as string[]).includes(value);
