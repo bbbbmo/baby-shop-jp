@@ -11,6 +11,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
+import { FontModeProvider } from "@/i18n/FontModeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
@@ -82,9 +83,11 @@ export default function RootLayout({
     <html lang="ja" className={`${notoJp.variable} ${notoKr.variable} ${zillaSlab.variable} ${notoSerifJp.variable} ${notoSerifKr.variable} ${plexMono.variable} ${plexSansJp.variable} ${plexSansKr.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <LocaleProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <FontModeProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </FontModeProvider>
         </LocaleProvider>
       </body>
     </html>
