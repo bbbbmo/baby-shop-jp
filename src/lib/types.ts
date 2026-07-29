@@ -5,20 +5,31 @@ export type Localized = {
   ko: string;
 };
 
-export type CategorySlug =
-  | "rompers"
-  | "innerwear"
-  | "tops"
-  | "bottoms"
-  | "outer"
-  | "accessories"
-  | "gift";
+export type Audience = "girl" | "boy" | "mom" | "accessory" | "gift";
 
-export type Category = {
-  slug: CategorySlug;
-  name: Localized;
-  emoji: string;
-};
+export type ClothingType =
+  | "top"
+  | "setup"
+  | "bottom"
+  | "dress"
+  | "homewear"
+  | "swimwear";
+
+export type CategorySlug =
+  | "girl-top"
+  | "girl-setup"
+  | "girl-bottom"
+  | "girl-dress"
+  | "girl-homewear"
+  | "girl-swimwear"
+  | "boy-top"
+  | "boy-setup"
+  | "boy-bottom"
+  | "boy-homewear"
+  | "boy-swimwear"
+  | "mom"
+  | "accessory"
+  | "gift";
 
 export type Product = {
   id: string;
