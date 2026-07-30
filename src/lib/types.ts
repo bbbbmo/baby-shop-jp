@@ -48,3 +48,11 @@ export type Product = {
   reviewCount: number;
   description: Localized;
 };
+
+export type FriendLook = {
+  id: string;
+  handle: string;
+  imageSrc: string;
+  modelInfo: Localized;
+  productIds: string[];
+};
