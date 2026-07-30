@@ -68,3 +68,32 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Mount-time entrance animations for the look modal (no exit animation). */
+@keyframes como-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes como-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.como-fade-in {
+  animation: como-fade-in 0.2s ease-out;
+}
+
+.como-sheet-up {
+  animation: como-sheet-up 0.25s ease-out;
+}

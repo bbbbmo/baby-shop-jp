@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { menu, type MenuGroup } from "@/lib/categories";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useEscapeToClose } from "@/lib/useEscapeToClose";
 import { CloseIcon, ChevronDownIcon } from "@/components/ui/icons";
 import { SearchBar } from "./SearchBar";
 import { LocaleToggle } from "./LocaleToggle";
@@ -77,21 +78,6 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
       </aside>
     </>
   );
-}
-
-function useEscapeToClose(open: boolean, onClose: () => void) {
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
 }
 
 function overlayClass(open: boolean): string {
