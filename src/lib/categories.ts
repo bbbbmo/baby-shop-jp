@@ -73,6 +73,7 @@ export const menu: MenuEntry[] = [
     label: "gift",
     starred: true,
   },
+  { kind: "link", href: "/friends", label: "COMO Friends" },
 ];
 
 const ALL_CATEGORY_SLUGS: CategorySlug[] = menu.flatMap((entry) =>
