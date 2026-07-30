@@ -4,6 +4,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { bestProducts, newProducts } from "@/lib/products";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { ProductSection } from "@/components/home/ProductSection";
+import { FriendsSection } from "@/components/friends/FriendsSection";
 
 export default function HomePage() {
   const { d } = useLocale();
@@ -21,6 +22,7 @@ export default function HomePage() {
         products={newProducts()}
         moreHref="/products"
       />
+      <FriendsSection />
     </div>
   );
 }
