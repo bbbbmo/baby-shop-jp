@@ -68,6 +68,12 @@ export const dictionaries = {
       law: "特定商取引法に基づく表記",
       note: "本サイトはデモ用のフロントエンドです。",
     },
+    friends: {
+      title: "COMO Friends",
+      wearing: "着用アイテム",
+      viewProduct: "商品詳細へ",
+      close: "閉じる",
+    },
   },
   ko: {
     brandName: "COMO",
@@ -135,6 +141,12 @@ export const dictionaries = {
       returns: "반품·교환",
       law: "특정상거래법 표기",
       note: "본 사이트는 데모용 프론트엔드입니다.",
+    },
+    friends: {
+      title: "COMO Friends",
+      wearing: "착용 아이템",
+      viewProduct: "상품 상세 보기",
+      close: "닫기",
     },
   },
 } as const;
