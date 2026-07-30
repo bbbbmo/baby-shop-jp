@@ -97,3 +97,10 @@ body {
 .como-sheet-up {
   animation: como-sheet-up 0.25s ease-out;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .como-fade-in,
+  .como-sheet-up {
+    animation: none;
+  }
+}

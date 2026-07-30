@@ -15,7 +15,7 @@ export function FriendsSection() {
   return (
     <section className="mx-auto max-w-480 px-6 pt-16 sm:px-10">
       <SectionHeader title={d.friends.title} moreHref="/friends" />
-      <ul className="no-scrollbar -mx-6 flex snap-x snap-mandatory gap-1 overflow-x-auto px-6 sm:-mx-10 sm:px-10">
+      <ul className="no-scrollbar -mx-6 flex snap-x snap-mandatory gap-1 overflow-x-auto px-6 sm:-mx-10 sm:px-10 scroll-pl-6 sm:scroll-pl-10">
         {homeLooks().map((look) => (
           <li
             key={look.id}

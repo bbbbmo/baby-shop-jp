@@ -50,8 +50,8 @@ export function LookModal({ look, onClose }: Props) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={look.handle}
-          className="como-sheet-up pointer-events-auto flex max-h-[90vh] w-full flex-col overflow-y-auto bg-surface shadow-xl sm:max-h-[85vh] sm:max-w-160"
+          aria-label={lookAlt(look, locale)}
+          className="como-sheet-up pointer-events-auto flex max-h-[90vh] w-full flex-col overflow-y-auto bg-surface shadow-xl sm:max-h-[85vh] sm:max-w-160 overscroll-contain"
         >
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-foreground">{look.handle}</span>
