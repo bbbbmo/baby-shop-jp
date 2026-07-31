@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { MenuIcon, ProfileIcon } from "@/components/ui/icons";
 import { CartButton } from "./CartButton";
@@ -10,10 +10,31 @@ import { NavDrawer } from "./NavDrawer";
 export function Header() {
   const { d } = useLocale();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) {
+      return;
+    }
+    const setHeaderHeightVar = () => {
+      document.documentElement.style.setProperty(
+        "--header-h",
+        `${el.offsetHeight}px`,
+      );
+    };
+    setHeaderHeightVar();
+    const observer = new ResizeObserver(setHeaderHeightVar);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur">
+      <header
+        ref={headerRef}
+        className="sticky top-0 z-40 bg-background/90 backdrop-blur"
+      >
         <div className="relative mx-auto flex max-w-480 items-center justify-between px-6 py-3 sm:px-10">
           <span
             role="button"

@@ -18,7 +18,7 @@ type Props = {
  */
 export function LookImage({ look, alt, className = "" }: Props) {
   return (
-    <div className={`aspect-[3/4] overflow-hidden bg-sand ${className}`}>
+    <div className={`aspect-3/4 overflow-hidden bg-sand ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={look.imageSrc}

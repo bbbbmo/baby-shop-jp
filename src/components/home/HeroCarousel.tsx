@@ -32,7 +32,7 @@ export function HeroCarousel() {
       onMouseLeave={() => setPaused(false)}
       onTouchStart={swipe.onTouchStart}
       onTouchEnd={swipe.onTouchEnd}
-      className="relative min-h-[calc(100svh-6rem)] overflow-hidden"
+      className="relative min-h-[calc(100svh-var(--header-h))] overflow-hidden"
     >
       {slides.map((slide, i) => (
         <SlideView
