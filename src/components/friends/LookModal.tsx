@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
-import type { FriendLook, Product } from "@/lib/types";
+import type { FriendLook } from "@/lib/types";
 import { lookAlt, lookProducts } from "@/lib/friends";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/lib/useEscapeToClose";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
-import { formatYen } from "@/lib/format";
 import { CloseIcon } from "@/components/ui/icons";
-import { ProductThumb } from "@/components/product/ProductThumb";
 import { LookImage } from "./LookImage";
+import { WornItem } from "./WornItem";
 
 type Props = {
   look: FriendLook | null;
@@ -84,7 +82,7 @@ export function LookModal({ look, onClose }: Props) {
             <h3 className="mb-3 text-xs uppercase tracking-wider text-muted">
               {d.friends.wearing}
             </h3>
-            <ul className="space-y-3">
+            <ul>
               {lookProducts(look).map((product) => (
                 <WornItem
                   key={product.id}
@@ -98,48 +96,6 @@ export function LookModal({ look, onClose }: Props) {
         </div>
       </div>
     </>
-  );
-}
-
-function WornItem({
-  product,
-  label,
-  onNavigate,
-}: {
-  product: Product;
-  label: string;
-  onNavigate: () => void;
-}) {
-  const { locale } = useLocale();
-
-  return (
-    <li className="flex items-center gap-3 border-t border-border pt-3">
-      <div className="h-16 w-16 shrink-0 bg-sand">
-        <ProductThumb
-          category={product.category}
-          color={product.colors[0]}
-          className="h-full w-full"
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] uppercase tracking-wider text-muted">
-          {product.brand}
-        </p>
-        <p className="truncate text-sm text-foreground">
-          {product.name[locale]}
-        </p>
-        <p className="text-sm font-bold text-foreground">
-          {formatYen(product.price)}
-        </p>
-      </div>
-      <Link
-        href={`/products/${product.category}/${product.id}`}
-        onClick={onNavigate}
-        className="shrink-0 border border-foreground px-3 py-2 text-xs text-foreground hover:bg-sand"
-      >
-        {label}
-      </Link>
-    </li>
   );
 }
 
