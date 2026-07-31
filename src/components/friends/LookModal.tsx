@@ -25,9 +25,12 @@ export function LookModal({ look, onClose }: Props) {
   useBodyScrollLock(open);
 
   useEffect(() => {
-    if (open) {
-      closeRef.current?.focus();
+    if (!open) {
+      return;
     }
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    return () => opener?.focus();
   }, [open]);
 
   if (!look) {
