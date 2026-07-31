@@ -6,6 +6,7 @@ import type { FriendLook, Product } from "@/lib/types";
 import { lookAlt, lookProducts } from "@/lib/friends";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/lib/useEscapeToClose";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import { formatYen } from "@/lib/format";
 import { CloseIcon } from "@/components/ui/icons";
 import { ProductThumb } from "@/components/product/ProductThumb";
@@ -142,16 +143,3 @@ function WornItem({
   );
 }
 
-/** 모달이 열려 있는 동안 배경 스크롤을 잠근다. */
-function useBodyScrollLock(active: boolean) {
-  useEffect(() => {
-    if (!active) {
-      return;
-    }
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [active]);
-}

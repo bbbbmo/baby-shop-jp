@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
 /*
+  LookModal 전용 반응형 축.
+  너비가 아니라 화면 비율로 전환한다 — 가로모드 폰처럼 폭은 좁아도
+  세로 공간이 귀한 화면에서 2단 레이아웃이 필요하기 때문이다.
+*/
+@custom-variant wide (@media (min-aspect-ratio: 1/1));
+
+/*
   Monochrome theme for a Japan-targeted baby clothing shop.
   White base with neutral grays; no chromatic accents, fully squared corners.
 */
