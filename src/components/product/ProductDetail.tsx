@@ -7,7 +7,7 @@ import { useCart } from "@/entities/cart";
 import { discountRate, formatYen } from "@/shared/lib/format";
 import { getByCategory } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
-import { ColorPicker, SizePicker } from "./OptionPicker";
+import { ColorPicker, SizePicker } from "@/features/product-options";
 import { RatingStars } from "@/entities/product";
 import { ProductGrid } from "@/entities/product";
 import { SectionHeader } from "@/shared/ui/SectionHeader";

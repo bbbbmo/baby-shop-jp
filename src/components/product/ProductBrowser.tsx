@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { ProductGrid } from "@/entities/product";
-import { FilterBar, type SortKey, type SeasonKey } from "./FilterBar";
+import { FilterBar, type SortKey, type SeasonKey } from "@/features/product-filter";
 
 const collectSizes = (products: Product[]): string[] => {
   const set = new Set<string>();

@@ -6,9 +6,9 @@ import { menu, type MenuGroup } from "@/entities/category";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
 import { CloseIcon, ChevronDownIcon } from "@/shared/ui/icons";
-import { SearchBar } from "./SearchBar";
-import { LocaleToggle } from "./LocaleToggle";
-import { FontToggle } from "./FontToggle";
+import { SearchBar } from "@/features/search";
+import { LocaleToggle } from "@/features/locale-toggle";
+import { FontToggle } from "@/features/font-toggle";
 
 type NavDrawerProps = { open: boolean; onClose: () => void };
 

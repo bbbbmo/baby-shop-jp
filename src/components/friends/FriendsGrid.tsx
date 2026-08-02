@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FriendLook } from "@/entities/look";
 import { LookCard } from "./LookCard";
-import { LookModal } from "./LookModal";
+import { LookModal } from "@/features/look-modal";
 
 export function FriendsGrid({ looks }: { looks: FriendLook[] }) {
   const [selected, setSelected] = useState<FriendLook | null>(null);

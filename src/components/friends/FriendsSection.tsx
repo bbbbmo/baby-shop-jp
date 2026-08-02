@@ -6,7 +6,7 @@ import { homeLooks } from "@/entities/look";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SectionHeader } from "@/shared/ui/SectionHeader";
 import { LookCard } from "./LookCard";
-import { LookModal } from "./LookModal";
+import { LookModal } from "@/features/look-modal";
 
 export function FriendsSection() {
   const { d } = useLocale();
