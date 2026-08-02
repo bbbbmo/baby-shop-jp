@@ -3,8 +3,8 @@
 import { useState } from "react";
 import type { FriendLook } from "@/lib/types";
 import { homeLooks } from "@/lib/friends";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
 import { LookCard } from "./LookCard";
 import { LookModal } from "./LookModal";
 

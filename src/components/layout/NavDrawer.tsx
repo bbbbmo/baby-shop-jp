@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { menu, type MenuGroup } from "@/lib/categories";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { useEscapeToClose } from "@/lib/useEscapeToClose";
-import { CloseIcon, ChevronDownIcon } from "@/components/ui/icons";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
+import { CloseIcon, ChevronDownIcon } from "@/shared/ui/icons";
 import { SearchBar } from "./SearchBar";
 import { LocaleToggle } from "./LocaleToggle";
 import { FontToggle } from "./FontToggle";

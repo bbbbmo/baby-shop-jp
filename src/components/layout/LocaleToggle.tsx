@@ -1,7 +1,7 @@
 "use client";
 
-import { useLocale } from "@/i18n/LocaleProvider";
-import type { Locale } from "@/lib/types";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import type { Locale } from "@/shared/i18n/types";
 
 const OPTIONS: { value: Locale; label: string }[] = [
   { value: "ja", label: "日本語" },

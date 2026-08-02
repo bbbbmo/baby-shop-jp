@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { useCart } from "@/store/cart";
-import { CartIcon } from "@/components/ui/icons";
+import { CartIcon } from "@/shared/ui/icons";
 
 export function CartButton() {
   const items = useCart((s) => s.items);

@@ -1,4 +1,4 @@
-import type { Locale } from "./types";
+import type { Locale } from "@/shared/i18n/types";
 
 const LOCALE_TAG: Record<Locale, string> = {
   ja: "ja-JP",

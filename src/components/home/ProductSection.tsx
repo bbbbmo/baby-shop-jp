@@ -1,7 +1,7 @@
 "use client";
 
 import type { Product } from "@/lib/types";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
 import { ProductGrid } from "@/components/product/ProductGrid";
 
 type Props = {

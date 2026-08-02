@@ -1,9 +1,4 @@
-export type Locale = "ja" | "ko";
-
-export type Localized = {
-  ja: string;
-  ko: string;
-};
+import type { Localized } from "@/shared/i18n/types";
 
 export type Audience = "girl" | "boy" | "mom" | "accessory" | "gift";
 

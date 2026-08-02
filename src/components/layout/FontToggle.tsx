@@ -1,7 +1,7 @@
 "use client";
 
-import { useFontMode } from "@/i18n/FontModeProvider";
-import type { FontMode } from "@/i18n/FontModeProvider";
+import { useFontMode } from "@/shared/i18n/FontModeProvider";
+import type { FontMode } from "@/shared/i18n/FontModeProvider";
 
 const OPTIONS: { value: FontMode; label: string; previewFont: string }[] = [
   { value: "slab", label: "Slab", previewFont: "var(--font-zilla)" },

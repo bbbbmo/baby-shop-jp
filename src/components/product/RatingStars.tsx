@@ -1,4 +1,4 @@
-import { StarIcon } from "@/components/ui/icons";
+import { StarIcon } from "@/shared/ui/icons";
 
 export function RatingStars({ rating }: { rating: number }) {
   const rounded = Math.round(rating);

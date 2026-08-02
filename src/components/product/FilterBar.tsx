@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 
 export type SortKey = "recommended" | "priceAsc" | "priceDesc" | "new";
 export type SeasonKey = "all" | "ss" | "aw";

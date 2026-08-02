@@ -10,8 +10,8 @@ import {
   IBM_Plex_Sans_KR,
 } from "next/font/google";
 import "./globals.css";
-import { LocaleProvider } from "@/i18n/LocaleProvider";
-import { FontModeProvider } from "@/i18n/FontModeProvider";
+import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
+import { FontModeProvider } from "@/shared/i18n/FontModeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 

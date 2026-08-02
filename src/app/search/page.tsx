@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { searchProducts } from "@/lib/products";
 import { ProductGrid } from "@/components/product/ProductGrid";
 

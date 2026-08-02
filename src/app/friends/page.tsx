@@ -1,8 +1,8 @@
 "use client";
 
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { friendLooks } from "@/lib/friends";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
 import { FriendsGrid } from "@/components/friends/FriendsGrid";
 
 export default function FriendsPage() {

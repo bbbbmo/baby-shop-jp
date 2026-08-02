@@ -1,7 +1,7 @@
 "use client";
 
-import { useLocale } from "@/i18n/LocaleProvider";
-import { InstagramIcon } from "@/components/ui/icons";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { InstagramIcon } from "@/shared/ui/icons";
 
 export function Footer() {
   const { d } = useLocale();

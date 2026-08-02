@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Product } from "@/lib/types";
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { ProductGrid } from "./ProductGrid";
 import { FilterBar, type SortKey, type SeasonKey } from "./FilterBar";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { products } from "@/lib/products";
 import { ProductBrowser } from "@/components/product/ProductBrowser";
 

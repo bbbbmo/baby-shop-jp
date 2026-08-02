@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { MenuIcon, ProfileIcon } from "@/components/ui/icons";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { MenuIcon, ProfileIcon } from "@/shared/ui/icons";
 import { CartButton } from "./CartButton";
 import { NavDrawer } from "./NavDrawer";
 

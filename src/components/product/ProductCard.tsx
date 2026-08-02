@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import type { Product } from "@/lib/types";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { discountRate, formatYen } from "@/lib/format";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { discountRate, formatYen } from "@/shared/lib/format";
 import { ProductThumb } from "./ProductThumb";
 
 export function ProductCard({ product }: { product: Product }) {

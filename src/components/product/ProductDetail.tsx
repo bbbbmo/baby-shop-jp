@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import type { Product } from "@/lib/types";
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useCart } from "@/store/cart";
-import { discountRate, formatYen } from "@/lib/format";
+import { discountRate, formatYen } from "@/shared/lib/format";
 import { getByCategory } from "@/lib/products";
 import { ProductThumb } from "./ProductThumb";
 import { ColorPicker, SizePicker } from "./OptionPicker";
 import { RatingStars } from "./RatingStars";
 import { ProductGrid } from "./ProductGrid";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
 
 export function ProductDetail({ product }: { product: Product }) {
   const { locale, d } = useLocale();

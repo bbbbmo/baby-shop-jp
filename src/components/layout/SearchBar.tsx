@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { SearchIcon } from "@/components/ui/icons";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { SearchIcon } from "@/shared/ui/icons";
 
 export function SearchBar({ className = "" }: { className?: string }) {
   const { d } = useLocale();

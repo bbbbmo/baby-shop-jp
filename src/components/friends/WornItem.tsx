@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import type { Product } from "@/lib/types";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { formatYen } from "@/lib/format";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { formatYen } from "@/shared/lib/format";
+import { ChevronRightIcon } from "@/shared/ui/icons";
 import { ProductThumb } from "@/components/product/ProductThumb";
 
 type Props = {

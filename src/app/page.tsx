@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { bestProducts, newProducts } from "@/lib/products";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { ProductSection } from "@/components/home/ProductSection";

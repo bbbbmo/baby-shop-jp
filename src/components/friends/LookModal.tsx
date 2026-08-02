@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 import type { FriendLook } from "@/lib/types";
 import { lookAlt, lookProducts } from "@/lib/friends";
-import { useLocale } from "@/i18n/LocaleProvider";
-import { useEscapeToClose } from "@/lib/useEscapeToClose";
-import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
-import { CloseIcon } from "@/components/ui/icons";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
+import { useBodyScrollLock } from "@/shared/lib/useBodyScrollLock";
+import { CloseIcon } from "@/shared/ui/icons";
 import { LookImage } from "./LookImage";
 import { WornItem } from "./WornItem";
 

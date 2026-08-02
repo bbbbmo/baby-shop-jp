@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Locale } from "@/lib/types";
-import { useLocale } from "@/i18n/LocaleProvider";
+import type { Locale } from "@/shared/i18n/types";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { slides, type Slide } from "@/lib/slides";
-import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/shared/ui/icons";
 
 const INTERVAL = 5000;
 const SWIPE_THRESHOLD = 50;

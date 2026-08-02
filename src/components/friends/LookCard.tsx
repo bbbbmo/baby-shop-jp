@@ -2,7 +2,7 @@
 
 import type { FriendLook } from "@/lib/types";
 import { lookAlt } from "@/lib/friends";
-import { useLocale } from "@/i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { LookImage } from "./LookImage";
 
 type Props = {

@@ -1,4 +1,4 @@
-import type { Localized } from "./types";
+import type { Localized } from "@/shared/i18n/types";
 
 export type Slide = {
   id: string;

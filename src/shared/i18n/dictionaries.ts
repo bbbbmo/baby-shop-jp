@@ -1,4 +1,4 @@
-import type { Locale, Localized } from "@/lib/types";
+import type { Locale, Localized } from "./types";
 
 export const dictionaries = {
   ja: {

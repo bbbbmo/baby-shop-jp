@@ -1,4 +1,5 @@
-import type { FriendLook, Locale, Product } from "./types";
+import type { FriendLook, Product } from "./types";
+import type { Locale } from "@/shared/i18n/types";
 import { getProduct } from "./products";
 
 export const friendLooks: FriendLook[] = [
