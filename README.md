@@ -23,9 +23,9 @@
 ## 실행
 
 ```bash
-npm install
-npm run dev      # http://localhost:3000
-npm run build    # 프로덕션 빌드
+pnpm install
+pnpm dev      # http://localhost:3000
+pnpm build    # 프로덕션 빌드
 ```
 
 ## 폴더 구조
