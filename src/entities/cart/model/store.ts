@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -65,4 +66,12 @@ function setQuantity(
     return items.filter((i) => i.id !== id);
   }
   return items.map((i) => (i.id === id ? { ...i, quantity } : i));
+}
+
+export function useCartHydrated(): boolean {
+  return useSyncExternalStore(
+    (onChange) => useCart.persist.onFinishHydration(onChange),
+    () => useCart.persist.hasHydrated(),
+    () => false,
+  );
 }

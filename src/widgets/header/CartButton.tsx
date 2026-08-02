@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
-import { useCart } from "@/entities/cart";
+import { useCart, useCartHydrated } from "@/entities/cart";
 import { CartIcon } from "@/shared/ui/icons";
 
 export function CartButton() {
@@ -19,13 +18,5 @@ export function CartButton() {
         </span>
       )}
     </Link>
-  );
-}
-
-function useCartHydrated(): boolean {
-  return useSyncExternalStore(
-    (onChange) => useCart.persist.onFinishHydration(onChange),
-    () => useCart.persist.hasHydrated(),
-    () => false,
   );
 }

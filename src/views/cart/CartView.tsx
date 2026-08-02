@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useCart, type CartItem } from "@/entities/cart";
+import { useCart, useCartHydrated, type CartItem } from "@/entities/cart";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { getProduct } from "@/entities/product";
 import { formatYen } from "@/shared/lib/format";
@@ -21,10 +20,9 @@ const enrich = (items: CartItem[]): Line[] =>
 export function CartView() {
   const { d } = useLocale();
   const items = useCart((s) => s.items);
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useCartHydrated();
 
-  useEffect(() => setMounted(true), []);
-  if (!mounted) {
+  if (!hydrated) {
     return <div className="mx-auto max-w-480 px-6 py-16 sm:px-10" />;
   }
 
