@@ -1,16 +1,5 @@
-"use client";
-
-import { notFound, useParams } from "next/navigation";
-import { getProduct } from "@/entities/product";
-import { ProductDetail } from "@/components/product/ProductDetail";
+import { ProductDetailView } from "@/views/product-detail/ProductDetailView";
 
 export default function ProductDetailPage() {
-  const params = useParams<{ id: string }>();
-  const product = getProduct(params.id);
-
-  if (!product) {
-    notFound();
-  }
-
-  return <ProductDetail product={product} />;
+  return <ProductDetailView />;
 }
