@@ -64,15 +64,23 @@ export function LookModal({ look, onClose }: Props) {
           갖지만, 브라우저가 조상의 shrink-to-fit 폭을 구할 때는 그 결과가
           아니라 <img> 의 고유 크기(플레이스홀더 SVG 의 width=600)를 기준으로
           삼아, 패널이 실제 콘텐츠보다 넓어지고 우측에 빈 여백이 남는다.
-          이미지 높이는 패널 높이가 아니라 (패널 높이 - 헤더 높이 3.75rem) 이고
-          폭은 그 0.75배, 제품 컬럼은 20rem(w-80) 고정이므로, 같은 공식으로
-          폭을 유도해 shrink-to-fit 추정에 기대지 않는다.
+          이미지 높이는 패널 높이가 아니라 (패널 높이 - 헤더 높이) 이고 폭은
+          그 0.75배, 제품 컬럼은 고정 폭이므로, 같은 공식으로 폭을 유도해
+          shrink-to-fit 추정에 기대지 않는다.
+
+          이 세 값(패널 높이, 헤더 높이, 컬럼 폭)은 패널 높이 클래스와 폭
+          calc() 공식, 아래 제품 컬럼 클래스까지 총 세 곳에서 쓰이므로,
+          CSS 커스텀 프로퍼티(--modal-panel-h/--modal-header-h/--modal-col-w)로
+          이 div 에 한 번만 선언하고 나머지는 전부 var() 로 참조한다. 값이
+          바뀌어도 고칠 곳이 한 곳뿐이라, 위 우측 여백 버그가 조용히
+          재발하지 않는다. (전역 --header-h 는 사이트 상단 헤더용 별개
+          변수라 이름이 겹치지 않게 --modal- 접두사를 쓴다.)
         */}
         <div
           role="dialog"
           aria-modal="true"
           aria-label={lookAlt(look, locale)}
-          className="como-sheet-up pointer-events-auto flex max-h-[calc(100svh-3rem)] w-full max-w-160 flex-col overflow-y-auto overscroll-contain bg-surface pb-6 shadow-xl wide:h-[min(calc(100svh-5rem),45rem)] wide:max-h-none wide:w-[calc(0.75*(min(calc(100svh-5rem),45rem)-3.75rem)+20rem)] wide:max-w-[calc(100vw-5rem)] wide:overflow-hidden wide:pb-0"
+          className="como-sheet-up pointer-events-auto flex max-h-[calc(100svh-3rem)] w-full max-w-160 flex-col overflow-y-auto overscroll-contain bg-surface pb-6 shadow-xl wide:[--modal-panel-h:min(calc(100svh-5rem),45rem)] wide:[--modal-header-h:3.75rem] wide:[--modal-col-w:20rem] wide:h-(--modal-panel-h) wide:max-h-none wide:w-[calc(0.75*(var(--modal-panel-h)-var(--modal-header-h))+var(--modal-col-w))] wide:max-w-[calc(100vw-5rem)] wide:overflow-hidden wide:pb-0"
         >
           <div className="flex shrink-0 items-center justify-between px-4 py-3">
             {/*
@@ -120,10 +128,11 @@ export function LookModal({ look, onClose }: Props) {
               본문 높이가 제품 목록보다 짧아도, 이미지는 고정된 채
               목록만 스크롤된다.
 
-              w-80 은 기본 폭이고 shrink 는 허용이다. 좁고 낮은 창에서
-              패널이 max-w 에 걸리면 이 컬럼이 먼저 줄어 가로 넘침을 막는다.
+              var(--modal-col-w)(20rem, 위 패널 div 에서 선언)이 기본 폭이고
+              shrink 는 허용이다. 좁고 낮은 창에서 패널이 max-w 에 걸리면
+              이 컬럼이 먼저 줄어 가로 넘침을 막는다.
             */}
-            <div className="px-4 pt-6 wide:w-80 wide:min-w-0 wide:overflow-y-auto wide:overscroll-contain wide:pb-6">
+            <div className="px-4 pt-6 wide:w-(--modal-col-w) wide:min-w-0 wide:overflow-y-auto wide:overscroll-contain wide:pb-6">
               <h3 className="mb-3 text-xs uppercase tracking-wider text-muted">
                 {d.friends.wearing}
               </h3>

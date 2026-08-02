@@ -32,7 +32,7 @@ export function WornItem({ product, label, onNavigate }: Props) {
       <Link
         href={`/products/${product.category}/${product.id}`}
         onClick={onNavigate}
-        aria-label={`${product.name[locale]} — ${label}`}
+        aria-label={`${product.brand} ${product.name[locale]} ${formatYen(product.price)} — ${label}`}
         className="flex items-center gap-3 py-3 hover:bg-sand"
       >
         <div className="h-24 w-24 shrink-0 bg-sand">
