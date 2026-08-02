@@ -44,54 +44,91 @@ export function LookModal({ look, onClose }: Props) {
         className="como-fade-in fixed inset-0 z-50 bg-black/40"
       />
       {/*
-        래퍼는 pointer-events-none 이다. sm 이상에서 이 래퍼가 화면 전체를
-        덮으므로, 클릭을 통과시켜야 패널 바깥 클릭이 아래 오버레이에 닿아
+        래퍼는 pointer-events-none 이다. 이 래퍼가 화면 전체를 덮으므로,
+        클릭을 통과시켜야 패널 바깥(여백) 클릭이 아래 오버레이에 닿아
         모달이 닫힌다. 패널만 pointer-events-auto 로 되돌린다.
       */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center sm:inset-0 sm:items-center">
+      <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-6 wide:p-10">
+        {/*
+          1단(기본)은 패널 전체가 스크롤한다. 2단(wide)은 반대로 패널이
+          스크롤하지 않고 제품 컬럼만 스크롤하므로, 1단 기본값을
+          wide:overflow-hidden / wide:w-auto 로 빠짐없이 상쇄해야 한다.
+
+          2단 높이가 max-h 가 아니라 h 인 것이 이 레이아웃의 핵심이다.
+          max-h 면 패널 높이가 콘텐츠에 의존해 순환 참조가 생기고,
+          좌측 이미지의 h-full 이 해소되지 않는다. h 로 확정값을 주면
+          이미지가 높이에서 폭을 파생시킬 수 있다(아래 참조).
+        */}
         <div
           role="dialog"
           aria-modal="true"
           aria-label={lookAlt(look, locale)}
-          className="como-sheet-up pointer-events-auto flex max-h-[90vh] w-full flex-col overflow-y-auto bg-surface shadow-xl sm:max-h-[85vh] sm:max-w-160 overscroll-contain"
+          className="como-sheet-up pointer-events-auto flex max-h-[calc(100svh-3rem)] w-full max-w-160 flex-col overflow-y-auto overscroll-contain bg-surface pb-6 shadow-xl wide:h-[min(calc(100svh-5rem),45rem)] wide:max-h-none wide:w-auto wide:max-w-[calc(100vw-5rem)] wide:overflow-hidden wide:pb-0"
         >
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm text-foreground">{look.handle}</span>
+          <div className="flex shrink-0 items-center justify-between px-4 py-3">
+            {/*
+              나이/키는 본문이 아니라 헤더에 둔다. 본문에 두면 2단에서
+              이미지 컬럼 바닥에 붙어 잘린 것처럼 보였다. 헤더로 올리면
+              본문이 이미지 | 제품 두 덩어리로 단순해진다.
+            */}
+            <div className="flex min-w-0 items-baseline gap-2">
+              <span className="shrink-0 text-sm text-foreground">
+                {look.handle}
+              </span>
+              <span className="truncate text-xs text-muted">
+                {look.modelInfo[locale]}
+              </span>
+            </div>
             <button
               ref={closeRef}
               type="button"
               aria-label={d.friends.close}
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center text-foreground hover:bg-sand"
+              className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center text-foreground hover:bg-sand"
             >
               <CloseIcon />
             </button>
           </div>
 
-          <LookImage
-            look={look}
-            alt={lookAlt(look, locale)}
-            className="max-h-[60vh] shrink-0"
-          />
+          {/*
+            min-h-0 이 없으면 flex 자식이 콘텐츠 크기 아래로 줄지 못해
+            패널의 확정 높이가 본문까지 전달되지 않는다.
+          */}
+          <div className="flex flex-col wide:min-h-0 wide:flex-1 wide:flex-row">
+            {/*
+              1단: 폭을 채우고 높이만 캡한다(비율이 깨지며 object-cover 로 잘린다).
+              2단: h-full 로 확정 높이를 받고 aspect-3/4 가 거기서 폭을 계산한다.
+                   w-auto 라 폭이 파생값이 되고, 이미지는 정확히 3:4 를 유지한다.
+            */}
+            <LookImage
+              look={look}
+              alt={lookAlt(look, locale)}
+              className="max-h-[60svh] shrink-0 wide:h-full wide:max-h-none wide:w-auto"
+            />
 
-          <div className="px-4 pt-4">
-            <p className="text-xs text-muted">{look.modelInfo[locale]}</p>
-          </div>
+            {/*
+              제품 컬럼만 스크롤한다. 가로모드 폰처럼 낮은 화면에서
+              본문 높이가 제품 목록보다 짧아도, 이미지는 고정된 채
+              목록만 스크롤된다.
 
-          <div className="px-4 pb-6 pt-6">
-            <h3 className="mb-3 text-xs uppercase tracking-wider text-muted">
-              {d.friends.wearing}
-            </h3>
-            <ul>
-              {lookProducts(look).map((product) => (
-                <WornItem
-                  key={product.id}
-                  product={product}
-                  label={d.friends.viewProduct}
-                  onNavigate={onClose}
-                />
-              ))}
-            </ul>
+              w-80 은 기본 폭이고 shrink 는 허용이다. 좁고 낮은 창에서
+              패널이 max-w 에 걸리면 이 컬럼이 먼저 줄어 가로 넘침을 막는다.
+            */}
+            <div className="px-4 pt-6 wide:w-80 wide:min-w-0 wide:overflow-y-auto wide:overscroll-contain wide:pb-6">
+              <h3 className="mb-3 text-xs uppercase tracking-wider text-muted">
+                {d.friends.wearing}
+              </h3>
+              <ul>
+                {lookProducts(look).map((product) => (
+                  <WornItem
+                    key={product.id}
+                    product={product}
+                    label={d.friends.viewProduct}
+                    onNavigate={onClose}
+                  />
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
