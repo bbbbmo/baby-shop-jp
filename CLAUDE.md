@@ -83,6 +83,23 @@
 - 함수는 **최대 15줄**을 넘기지 마세요. 넘어가면 더 작은 함수로 분리하세요.
 - 중첩 depth는 **최대 3단계**까지만 허용합니다 (if/for/while/switch 등 중첩 포함). 그 이상은 early return이나 함수 추출로 평탄화하세요.
 
+# 커밋 컨벤션
+
+- AngularJS 커밋 컨벤션을 따르세요: `<type>(<scope>): <short summary>` 뒤에 빈 줄, body, 빈 줄, footer 순으로 구성합니다.
+
+```
+<type>(<scope>): <short summary>
+
+<body>
+
+<footer>
+```
+
+- `type`은 `feat`/`fix`/`docs`/`style`/`refactor`/`test`/`chore`/`perf` 등을 사용하세요. `scope`는 영향받는 영역(예: `cart`, `product`, `fsd`)을 씁니다.
+- `short summary`는 한국어 명령형으로 간결하게 씁니다.
+- `body`는 각 항목을 `-`로 시작하는 목록으로 작성하고, 무엇을 바꿨는지보다 **왜** 바꿨는지를 씁니다.
+- `footer`는 `BREAKING CHANGE:`, 이슈 참조 등 필요할 때만 씁니다.
+
 # 문서
 
 - `docs/superpowers/`(브레인스토밍 설계 문서 등)와 `.superpowers/`(SDD 실행 워크스페이스: 원장·브리프·리뷰 패키지 등)는 로컬 전용이며 `.gitignore`에 등록되어 있습니다. git으로 추적하거나 커밋하지 마세요.
