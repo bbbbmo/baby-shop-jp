@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { useCart } from "@/store/cart";
+import { useCart } from "@/entities/cart";
 import { discountRate, formatYen } from "@/shared/lib/format";
 import { getByCategory } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";

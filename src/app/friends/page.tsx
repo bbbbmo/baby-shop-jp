@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { friendLooks } from "@/lib/friends";
+import { friendLooks } from "@/entities/look";
 import { SectionHeader } from "@/shared/ui/SectionHeader";
 import { FriendsGrid } from "@/components/friends/FriendsGrid";
 

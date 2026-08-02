@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { FriendLook } from "@/lib/types";
-import { lookAlt, lookProducts } from "@/lib/friends";
+import type { FriendLook } from "@/entities/look";
+import { lookAlt, lookProducts } from "@/entities/look";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
 import { useBodyScrollLock } from "@/shared/lib/useBodyScrollLock";
 import { CloseIcon } from "@/shared/ui/icons";
-import { LookImage } from "./LookImage";
-import { WornItem } from "./WornItem";
+import { LookImage } from "@/entities/look";
+import { WornItem } from "@/entities/look";
 
 type Props = {
   look: FriendLook | null;

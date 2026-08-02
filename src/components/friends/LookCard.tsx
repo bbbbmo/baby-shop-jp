@@ -1,9 +1,9 @@
 "use client";
 
-import type { FriendLook } from "@/lib/types";
-import { lookAlt } from "@/lib/friends";
+import type { FriendLook } from "@/entities/look";
+import { lookAlt } from "@/entities/look";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { LookImage } from "./LookImage";
+import { LookImage } from "@/entities/look";
 
 type Props = {
   look: FriendLook;

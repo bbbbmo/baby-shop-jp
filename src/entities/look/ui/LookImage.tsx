@@ -1,4 +1,4 @@
-import type { FriendLook } from "@/lib/types";
+import type { FriendLook } from "../model/types";
 
 type Props = {
   look: FriendLook;

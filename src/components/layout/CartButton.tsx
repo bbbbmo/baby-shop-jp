@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import { useCart } from "@/store/cart";
+import { useCart } from "@/entities/cart";
 import { CartIcon } from "@/shared/ui/icons";
 
 export function CartButton() {

@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useCart, type CartItem } from "@/store/cart";
+import { useCart, type CartItem } from "@/entities/cart";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { getProduct } from "@/entities/product";
 import { formatYen } from "@/shared/lib/format";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 import type { Product } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
-import { QuantityStepper } from "./QuantityStepper";
+import { QuantityStepper } from "@/entities/cart";
 
 type Line = CartItem & { product: Product };
 

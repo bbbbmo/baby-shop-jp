@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FriendLook } from "@/lib/types";
+import type { FriendLook } from "@/entities/look";
 import { LookCard } from "./LookCard";
 import { LookModal } from "./LookModal";
 

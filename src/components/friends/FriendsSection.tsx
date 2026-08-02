@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { FriendLook } from "@/lib/types";
-import { homeLooks } from "@/lib/friends";
+import type { FriendLook } from "@/entities/look";
+import { homeLooks } from "@/entities/look";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SectionHeader } from "@/shared/ui/SectionHeader";
 import { LookCard } from "./LookCard";
