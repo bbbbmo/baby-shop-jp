@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound, useParams } from "next/navigation";
-import { getProduct } from "@/lib/products";
+import { getProduct } from "@/entities/product";
 import { ProductDetail } from "@/components/product/ProductDetail";
 
 export default function ProductDetailPage() {

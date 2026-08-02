@@ -3,8 +3,8 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { searchProducts } from "@/lib/products";
-import { ProductGrid } from "@/components/product/ProductGrid";
+import { searchProducts } from "@/entities/product";
+import { ProductGrid } from "@/entities/product";
 
 function SearchResults() {
   const { d } = useLocale();

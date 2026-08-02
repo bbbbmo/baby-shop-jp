@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Product } from "@/lib/types";
+import type { Product } from "../model/types";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { discountRate, formatYen } from "@/shared/lib/format";
 import { ProductThumb } from "./ProductThumb";

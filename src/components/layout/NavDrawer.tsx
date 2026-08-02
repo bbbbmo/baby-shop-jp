@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { menu, type MenuGroup } from "@/lib/categories";
+import { menu, type MenuGroup } from "@/entities/category";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
 import { CloseIcon, ChevronDownIcon } from "@/shared/ui/icons";

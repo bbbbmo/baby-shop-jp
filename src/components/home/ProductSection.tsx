@@ -1,8 +1,8 @@
 "use client";
 
-import type { Product } from "@/lib/types";
+import type { Product } from "@/entities/product";
 import { SectionHeader } from "@/shared/ui/SectionHeader";
-import { ProductGrid } from "@/components/product/ProductGrid";
+import { ProductGrid } from "@/entities/product";
 
 type Props = {
   title: string;

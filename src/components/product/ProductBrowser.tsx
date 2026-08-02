@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { ProductGrid } from "./ProductGrid";
+import { ProductGrid } from "@/entities/product";
 import { FilterBar, type SortKey, type SeasonKey } from "./FilterBar";
 
 const collectSizes = (products: Product[]): string[] => {

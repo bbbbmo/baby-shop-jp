@@ -1,4 +1,4 @@
-import type { CategorySlug, ClothingType } from "@/lib/types";
+import type { CategorySlug, ClothingType } from "@/entities/category";
 
 type Props = {
   category: CategorySlug;

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { formatYen } from "@/shared/lib/format";
 import { ChevronRightIcon } from "@/shared/ui/icons";
-import { ProductThumb } from "@/components/product/ProductThumb";
+import { ProductThumb } from "@/entities/product";
 
 type Props = {
   product: Product;

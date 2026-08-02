@@ -1,4 +1,5 @@
-import type { CategorySlug, Product } from "./types";
+import type { CategorySlug } from "@/entities/category";
+import type { Product } from "./types";
 
 const SIZES_BABY = ["50-60", "70", "80", "90", "95"];
 const SIZES_SMALL = ["70", "80", "90"];

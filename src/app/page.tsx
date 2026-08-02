@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { bestProducts, newProducts } from "@/lib/products";
+import { bestProducts, newProducts } from "@/entities/product";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { ProductSection } from "@/components/home/ProductSection";
 import { FriendsSection } from "@/components/friends/FriendsSection";

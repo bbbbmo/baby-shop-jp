@@ -1,8 +1,8 @@
 "use client";
 
 import { notFound, useParams } from "next/navigation";
-import { getCategoryTitle, isCategorySlug } from "@/lib/categories";
-import { getByCategory } from "@/lib/products";
+import { getCategoryTitle, isCategorySlug } from "@/entities/category";
+import { getByCategory } from "@/entities/product";
 import { ProductBrowser } from "@/components/product/ProductBrowser";
 
 export default function CategoryPage() {

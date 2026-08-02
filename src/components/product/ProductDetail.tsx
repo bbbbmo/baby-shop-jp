@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useCart } from "@/store/cart";
 import { discountRate, formatYen } from "@/shared/lib/format";
-import { getByCategory } from "@/lib/products";
-import { ProductThumb } from "./ProductThumb";
+import { getByCategory } from "@/entities/product";
+import { ProductThumb } from "@/entities/product";
 import { ColorPicker, SizePicker } from "./OptionPicker";
-import { RatingStars } from "./RatingStars";
-import { ProductGrid } from "./ProductGrid";
+import { RatingStars } from "@/entities/product";
+import { ProductGrid } from "@/entities/product";
 import { SectionHeader } from "@/shared/ui/SectionHeader";
 
 export function ProductDetail({ product }: { product: Product }) {
