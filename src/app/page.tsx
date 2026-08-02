@@ -2,9 +2,9 @@
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { bestProducts, newProducts } from "@/entities/product";
-import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { ProductSection } from "@/components/home/ProductSection";
-import { FriendsSection } from "@/components/friends/FriendsSection";
+import { HeroCarousel } from "@/widgets/home-hero";
+import { ProductSection } from "@/widgets/home-product-section";
+import { FriendsSection } from "@/widgets/friends-section";
 
 export default function HomePage() {
   const { d } = useLocale();

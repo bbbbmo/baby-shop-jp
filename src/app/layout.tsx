@@ -12,8 +12,8 @@ import {
 import "./globals.css";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { FontModeProvider } from "@/shared/i18n/FontModeProvider";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/widgets/header";
+import { Footer } from "@/widgets/footer";
 
 const notoJp = Noto_Sans_JP({
   variable: "--font-noto-jp",

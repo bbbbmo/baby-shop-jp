@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "@/shared/i18n/types";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { slides, type Slide } from "@/lib/slides";
+import { slides, type Slide } from "./slides";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/shared/ui/icons";
 
 const INTERVAL = 5000;

@@ -3,7 +3,7 @@
 import { notFound, useParams } from "next/navigation";
 import { getCategoryTitle, isCategorySlug } from "@/entities/category";
 import { getByCategory } from "@/entities/product";
-import { ProductBrowser } from "@/components/product/ProductBrowser";
+import { ProductBrowser } from "@/widgets/product-browser";
 
 export default function CategoryPage() {
   const params = useParams<{ category: string }>();

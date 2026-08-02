@@ -3,7 +3,7 @@
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { friendLooks } from "@/entities/look";
 import { SectionHeader } from "@/shared/ui/SectionHeader";
-import { FriendsGrid } from "@/components/friends/FriendsGrid";
+import { FriendsGrid } from "@/widgets/friends-section";
 
 export default function FriendsPage() {
   const { d } = useLocale();

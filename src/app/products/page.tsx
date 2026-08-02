@@ -2,7 +2,7 @@
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { products } from "@/entities/product";
-import { ProductBrowser } from "@/components/product/ProductBrowser";
+import { ProductBrowser } from "@/widgets/product-browser";
 
 export default function AllProductsPage() {
   const { d } = useLocale();
