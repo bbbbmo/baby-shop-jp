@@ -52,18 +52,27 @@ export function LookModal({ look, onClose }: Props) {
         {/*
           1단(기본)은 패널 전체가 스크롤한다. 2단(wide)은 반대로 패널이
           스크롤하지 않고 제품 컬럼만 스크롤하므로, 1단 기본값을
-          wide:overflow-hidden / wide:w-auto 로 빠짐없이 상쇄해야 한다.
+          wide:overflow-hidden 으로 상쇄해야 한다.
 
           2단 높이가 max-h 가 아니라 h 인 것이 이 레이아웃의 핵심이다.
           max-h 면 패널 높이가 콘텐츠에 의존해 순환 참조가 생기고,
           좌측 이미지의 h-full 이 해소되지 않는다. h 로 확정값을 주면
           이미지가 높이에서 폭을 파생시킬 수 있다(아래 참조).
+
+          패널 폭은 wide:w-auto(shrink-to-fit) 대신 calc() 로 직접 계산한다.
+          이미지 래퍼 자체는 aspect-3/4 + h-full 로 정확한 폭(예: 435px)을
+          갖지만, 브라우저가 조상의 shrink-to-fit 폭을 구할 때는 그 결과가
+          아니라 <img> 의 고유 크기(플레이스홀더 SVG 의 width=600)를 기준으로
+          삼아, 패널이 실제 콘텐츠보다 넓어지고 우측에 빈 여백이 남는다.
+          이미지 높이는 패널 높이가 아니라 (패널 높이 - 헤더 높이 3.75rem) 이고
+          폭은 그 0.75배, 제품 컬럼은 20rem(w-80) 고정이므로, 같은 공식으로
+          폭을 유도해 shrink-to-fit 추정에 기대지 않는다.
         */}
         <div
           role="dialog"
           aria-modal="true"
           aria-label={lookAlt(look, locale)}
-          className="como-sheet-up pointer-events-auto flex max-h-[calc(100svh-3rem)] w-full max-w-160 flex-col overflow-y-auto overscroll-contain bg-surface pb-6 shadow-xl wide:h-[min(calc(100svh-5rem),45rem)] wide:max-h-none wide:w-auto wide:max-w-[calc(100vw-5rem)] wide:overflow-hidden wide:pb-0"
+          className="como-sheet-up pointer-events-auto flex max-h-[calc(100svh-3rem)] w-full max-w-160 flex-col overflow-y-auto overscroll-contain bg-surface pb-6 shadow-xl wide:h-[min(calc(100svh-5rem),45rem)] wide:max-h-none wide:w-[calc(0.75*(min(calc(100svh-5rem),45rem)-3.75rem)+20rem)] wide:max-w-[calc(100vw-5rem)] wide:overflow-hidden wide:pb-0"
         >
           <div className="flex shrink-0 items-center justify-between px-4 py-3">
             {/*
