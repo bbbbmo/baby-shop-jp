@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import type { FriendLook } from "@/entities/look";
-import { lookAlt, lookProducts } from "@/entities/look";
+import { lookAlt, LookImage } from "@/entities/look";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
 import { useBodyScrollLock } from "@/shared/lib/useBodyScrollLock";
 import { CloseIcon } from "@/shared/ui/icons";
-import { LookImage } from "@/entities/look";
-import { WornItem } from "@/entities/look";
+import { WornItem } from "./WornItem";
+import { lookProducts } from "./lookProducts";
 
 type Props = {
   look: FriendLook | null;

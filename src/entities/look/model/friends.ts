@@ -1,7 +1,5 @@
 import type { FriendLook } from "./types";
-import type { Product } from "@/entities/product";
 import type { Locale } from "@/shared/i18n/types";
-import { getProduct } from "@/entities/product";
 
 export const friendLooks: FriendLook[] = [
   {
@@ -92,12 +90,6 @@ export const friendLooks: FriendLook[] = [
 
 /** 홈 섹션 캐러셀에 노출하는 룩. 전체 열람은 /friends 가 담당한다. */
 export const homeLooks = (): FriendLook[] => friendLooks.slice(0, 8);
-
-/** productIds 를 실제 제품으로 해석한다. */
-export const lookProducts = (look: FriendLook): Product[] =>
-  look.productIds
-    .map(getProduct)
-    .filter((p): p is Product => p !== undefined);
 
 /** 이미지 alt 문구. 룩별 코멘트가 없으므로 핸들과 모델정보를 조합한다. */
 export const lookAlt = (look: FriendLook, locale: Locale): string =>
