@@ -68,3 +68,39 @@ export function InstagramIcon({ className = base }: IconProps) {
     </svg>
   );
 }
+
+export function GoogleIcon({ className = base }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v4h4.5a4.5 4.5 0 1 1-1.3-5.2" />
+    </svg>
+  );
+}
+
+export function LineIcon({ className = base }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 11c0-4.4 3.6-8 8-8s8 3.6 8 8c0 4.8-5.4 9-8 11-.5-.4-1.4-1.1-2.4-2" />
+      <path d="M8 10v3M12 10v3M16 10v3M12 10l-2 3" />
+    </svg>
+  );
+}
