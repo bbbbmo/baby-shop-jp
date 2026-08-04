@@ -10,7 +10,7 @@ export function SocialLoginButtons({ onError }: SocialLoginButtonsProps) {
   const { d } = useLocale();
 
   const handleClick = async (provider: "google" | "line") => {
-    const { error } = await signInWithOAuth(provider);
+    const { error } = await signInWithOAuth(provider, "signup");
     if (error) onError(d.signup.errors[error as keyof typeof d.signup.errors]);
   };
 
