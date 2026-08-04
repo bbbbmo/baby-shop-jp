@@ -1,31 +1,32 @@
 "use client";
 
-import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { GoogleIcon, LineIcon } from "@/shared/ui/icons";
 import { signInWithOAuth } from "@/shared/api/supabase";
 
-type SocialLoginButtonsProps = { onError: (message: string) => void };
+type SocialLoginButtonsProps = {
+  from: "signup" | "signin";
+  googleLabel: string;
+  lineLabel: string;
+  errors: Record<string, string>;
+  onError: (message: string) => void;
+};
 
-export function SocialLoginButtons({ onError }: SocialLoginButtonsProps) {
-  const { d } = useLocale();
-
+export function SocialLoginButtons({
+  from,
+  googleLabel,
+  lineLabel,
+  errors,
+  onError,
+}: SocialLoginButtonsProps) {
   const handleClick = async (provider: "google" | "line") => {
-    const { error } = await signInWithOAuth(provider, "signup");
-    if (error) onError(d.signup.errors[error as keyof typeof d.signup.errors]);
+    const { error } = await signInWithOAuth(provider, from);
+    if (error) onError(errors[error] ?? errors.unknownError);
   };
 
   return (
     <div className="space-y-2">
-      <SocialButton
-        icon={<GoogleIcon />}
-        label={d.signup.googleButton}
-        onClick={() => handleClick("google")}
-      />
-      <SocialButton
-        icon={<LineIcon />}
-        label={d.signup.lineButton}
-        onClick={() => handleClick("line")}
-      />
+      <SocialButton icon={<GoogleIcon />} label={googleLabel} onClick={() => handleClick("google")} />
+      <SocialButton icon={<LineIcon />} label={lineLabel} onClick={() => handleClick("line")} />
     </div>
   );
 }

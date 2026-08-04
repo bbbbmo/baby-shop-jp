@@ -4,10 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { SignupForm } from "@/features/signup-form";
-
-type ErrorDict = Dictionary["signup"]["errors"];
+import { AuthErrorBanner } from "@/entities/auth";
 
 export function SignupView() {
   const { d } = useLocale();
@@ -18,18 +16,11 @@ export function SignupView() {
   return (
     <div className="mx-auto max-w-480 px-6 py-10 sm:px-10">
       <h1 className="mb-6 text-2xl font-bold text-foreground">{d.signup.title}</h1>
-      {authError && <AuthErrorBanner code={authError} errors={d.signup.errors} />}
+      {authError && (
+        <AuthErrorBanner code={authError} errors={d.signup.errors as Record<string, string>} />
+      )}
       {submitted ? <SuccessNotice /> : <SignupForm onSuccess={() => setSubmitted(true)} />}
     </div>
-  );
-}
-
-function AuthErrorBanner({ code, errors }: { code: string; errors: ErrorDict }) {
-  const message = errors[code as keyof ErrorDict] ?? errors.unknownError;
-  return (
-    <p className="mb-4 border border-border bg-sand px-4 py-3 text-sm text-foreground">
-      {message}
-    </p>
   );
 }
 
