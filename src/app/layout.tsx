@@ -12,8 +12,6 @@ import {
 import "./globals.css";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { FontModeProvider } from "@/shared/i18n/FontModeProvider";
-import { Header } from "@/widgets/header";
-import { Footer } from "@/widgets/footer";
 
 const notoJp = Noto_Sans_JP({
   variable: "--font-noto-jp",
@@ -83,11 +81,7 @@ export default function RootLayout({
     <html lang="ja" className={`${notoJp.variable} ${notoKr.variable} ${zillaSlab.variable} ${notoSerifJp.variable} ${notoSerifKr.variable} ${plexMono.variable} ${plexSansJp.variable} ${plexSansKr.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <LocaleProvider>
-          <FontModeProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </FontModeProvider>
+          <FontModeProvider>{children}</FontModeProvider>
         </LocaleProvider>
       </body>
     </html>
