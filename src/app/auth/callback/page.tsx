@@ -27,12 +27,13 @@ async function handleCallback(
   searchParams: ReadonlyURLSearchParams,
   router: ReturnType<typeof useRouter>,
 ): Promise<void> {
+  const from = searchParams.get("from") === "signin" ? "signin" : "signup";
   const code = searchParams.get("code");
   const oauthError = searchParams.get("error");
   if (oauthError || !code) {
-    router.replace(`/signup?authError=${oauthError ?? "oauthCancelled"}`);
+    router.replace(`/${from}?authError=${oauthError ?? "oauthCancelled"}`);
     return;
   }
   const { error } = await exchangeCodeForSession(code);
-  router.replace(error ? `/signup?authError=${error}` : "/");
+  router.replace(error ? `/${from}?authError=${error}` : "/");
 }
