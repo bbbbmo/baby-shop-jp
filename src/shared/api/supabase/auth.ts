@@ -52,17 +52,17 @@ export async function exchangeCodeForSession(
 }
 
 export async function signOut(): Promise<{ error: string | null }> {
-  const { error } = await supabase.auth.signOut();
+  // scope: "local" — 이 기기의 세션만 종료한다. 기본값(global)은 모든 기기의
+  // refresh token을 무효화해 다른 기기까지 로그아웃시킨다.
+  const { error } = await supabase.auth.signOut({ scope: "local" });
   return { error: error ? mapAuthError(error) : null };
 }
 
 export function subscribeToAuthChanges(
   onChange: (user: User | null) => void,
 ): () => void {
-  supabase.auth.getSession().then(({ data }) => {
-    onChange(data.session?.user ?? null);
-  });
-
+  // onAuthStateChange는 등록 즉시 INITIAL_SESSION 이벤트로 현재 세션(또는 null)을
+  // 한 번 방출하므로, 별도의 getSession() 초기 조회는 불필요하며 경쟁 상태만 만든다.
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((_event, session) => {

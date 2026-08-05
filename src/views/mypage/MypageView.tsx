@@ -46,7 +46,7 @@ function MypageContent({
         <p className="mb-6 text-sm text-foreground">
           <span className="text-muted">{d.mypage.emailLabel}</span>
           <br />
-          {email}
+          {email || "—"}
         </p>
         <button
           type="button"

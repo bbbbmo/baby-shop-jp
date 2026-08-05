@@ -65,8 +65,8 @@ export function Header() {
             <CartButton />
             <Link
               href={user ? "/mypage" : "/signin"}
-              aria-label="profile"
-              className="text-foreground"
+              aria-label={user ? d.mypage.title : d.signin.title}
+              className="p-2 -m-2 text-foreground"
             >
               <ProfileIcon className="h-6 w-6" />
             </Link>
