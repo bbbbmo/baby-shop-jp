@@ -1,8 +1,13 @@
 # 외부 데이터 스키마 (Product / FriendLook)
 
-Supabase 등 외부 백엔드에서 받아올 데이터의 형태입니다. 현재는 `src/lib/products.ts`,
-`src/lib/friends.ts`에 목업으로 존재하며, 실제 백엔드 연동 시에도 이 형태를 그대로 따릅니다.
-타입 원본: [`src/lib/types.ts`](../src/lib/types.ts)
+Supabase 등 외부 백엔드에서 받아올 데이터의 형태입니다. 현재는
+[`src/entities/product/model/products.ts`](../src/entities/product/model/products.ts),
+[`src/entities/look/model/friends.ts`](../src/entities/look/model/friends.ts)에 목업으로
+존재하며, 실제 백엔드 연동 시에도 이 형태를 그대로 따릅니다.
+타입 원본: [`Product`](../src/entities/product/model/types.ts),
+[`FriendLook`](../src/entities/look/model/types.ts),
+[`CategorySlug`/`Audience`](../src/entities/category/model/types.ts),
+[`Localized`](../src/shared/i18n/types.ts)
 
 ## Product (상품)
 
@@ -50,5 +55,6 @@ type Audience = "girl" | "boy" | "mom" | "accessory" | "gift";
 ## 참고
 
 - 외부 데이터 접근은 CLAUDE.md 방침에 따라 `shared/api`(Supabase 어댑터) 슬라이스에서만
-  이뤄지며, 이 슬라이스가 위 스키마와 동일한 형태를 반환해야 합니다.
+  이뤄지며, 이 슬라이스가 위 스키마와 동일한 형태를 반환해야 합니다. (현재 `shared/api` 슬라이스는
+  아직 없고, 목업 데이터를 각 entity가 직접 export합니다.)
 - 런타임 검증이 필요해지면 이 표를 기준으로 `zod` 스키마를 작성하세요 (현재는 미작성).
