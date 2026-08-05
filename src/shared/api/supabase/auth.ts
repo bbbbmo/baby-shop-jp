@@ -1,4 +1,4 @@
-import type { AuthError, Provider } from "@supabase/supabase-js";
+import type { AuthError, Provider, User } from "@supabase/supabase-js";
 import { supabase } from "./client";
 
 export type SignUpParams = {
@@ -50,6 +50,29 @@ export async function exchangeCodeForSession(
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   return { error: error ? mapAuthError(error) : null };
 }
+
+export async function signOut(): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.signOut();
+  return { error: error ? mapAuthError(error) : null };
+}
+
+export function subscribeToAuthChanges(
+  onChange: (user: User | null) => void,
+): () => void {
+  supabase.auth.getSession().then(({ data }) => {
+    onChange(data.session?.user ?? null);
+  });
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    onChange(session?.user ?? null);
+  });
+
+  return () => subscription.unsubscribe();
+}
+
+export type { User };
 
 function mapAuthError(error: AuthError): string {
   if (error.code === "user_already_exists" || error.code === "email_exists") {
