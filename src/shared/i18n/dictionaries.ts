@@ -128,6 +128,11 @@ export const dictionaries = {
         oauthCancelled: "ログインがキャンセルされました",
       },
     },
+    mypage: {
+      title: "マイページ",
+      emailLabel: "メールアドレス",
+      logoutButton: "ログアウト",
+    },
     legal: {
       termsTitle: "利用規約",
       privacyTitle: "プライバシーポリシー",
@@ -260,6 +265,11 @@ export const dictionaries = {
         unknownError: "오류가 발생했어요. 다시 시도해주세요",
         oauthCancelled: "로그인이 취소되었어요",
       },
+    },
+    mypage: {
+      title: "마이페이지",
+      emailLabel: "이메일",
+      logoutButton: "로그아웃",
     },
     legal: {
       termsTitle: "이용약관",

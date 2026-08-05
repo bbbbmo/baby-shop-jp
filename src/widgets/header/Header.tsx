@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { useSession } from "@/entities/auth";
 import { MenuIcon, ProfileIcon } from "@/shared/ui/icons";
 import { CartButton } from "./CartButton";
 import { NavDrawer } from "./NavDrawer";
 
 export function Header() {
   const { d } = useLocale();
+  const { user } = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -61,14 +63,13 @@ export function Header() {
           </Link>
           <div className="flex items-center gap-5">
             <CartButton />
-            <span
-              role="button"
-              tabIndex={0}
-              aria-label="profile"
-              className="text-foreground"
+            <Link
+              href={user ? "/mypage" : "/signin"}
+              aria-label={user ? d.mypage.title : d.signin.title}
+              className="p-2 -m-2 text-foreground"
             >
               <ProfileIcon className="h-6 w-6" />
-            </span>
+            </Link>
           </div>
         </div>
       </header>
