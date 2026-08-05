@@ -23,14 +23,23 @@ export async function signUpWithEmail(
   return { error: error ? mapAuthError(error) : null };
 }
 
+export async function signInWithEmail(
+  email: string,
+  password: string,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return { error: error ? mapAuthError(error) : null };
+}
+
 export async function signInWithOAuth(
   provider: "google" | "line",
+  from: "signup" | "signin",
 ): Promise<{ error: string | null }> {
   // "line"은 supabase-js의 내장 Provider 유니온에 없다 (Custom OAuth Provider로
   // Supabase Dashboard에 등록해야 런타임에서 동작). 타입만 캐스팅한다.
   const { error } = await supabase.auth.signInWithOAuth({
     provider: provider as Provider,
-    options: { redirectTo: `${window.location.origin}/auth/callback` },
+    options: { redirectTo: `${window.location.origin}/auth/callback?from=${from}` },
   });
   return { error: error ? mapAuthError(error) : null };
 }
@@ -48,6 +57,12 @@ function mapAuthError(error: AuthError): string {
   }
   if (error.code === "weak_password") {
     return "passwordTooWeak";
+  }
+  if (error.code === "invalid_credentials") {
+    return "invalidCredentials";
+  }
+  if (error.code === "email_not_confirmed") {
+    return "emailNotConfirmed";
   }
   return "unknownError";
 }

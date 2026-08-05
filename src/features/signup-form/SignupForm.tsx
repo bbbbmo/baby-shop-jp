@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useSignupForm } from "./model/useSignupForm";
-import { SocialLoginButtons } from "./SocialLoginButtons";
+import { SocialLoginButtons } from "@/entities/auth";
 import type { SignupFormErrors } from "./model/schema";
 
 type ErrorDict = Dictionary["signup"]["errors"];
@@ -87,9 +87,16 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       >
         {status === "submitting" ? d.signup.submitting : d.signup.submit}
       </button>
+      <SigninLink />
       <Divider label={d.signup.orDivider} />
       {oauthError && <p className="text-sm text-sale">{oauthError}</p>}
-      <SocialLoginButtons onError={setOauthError} />
+      <SocialLoginButtons
+        from="signup"
+        googleLabel={d.signup.googleButton}
+        lineLabel={d.signup.lineButton}
+        errors={d.signup.errors as Record<string, string>}
+        onError={setOauthError}
+      />
     </form>
   );
 }
@@ -181,5 +188,17 @@ function Divider({ label }: { label: string }) {
       <span className="text-xs text-muted">{label}</span>
       <div className="h-px flex-1 bg-border" />
     </div>
+  );
+}
+
+function SigninLink() {
+  const { d } = useLocale();
+  return (
+    <p className="text-center text-xs text-muted">
+      {d.signup.hasAccountLabel}{" "}
+      <Link href="/signin" className="underline underline-offset-2 text-foreground">
+        {d.signup.signinLink}
+      </Link>
+    </p>
   );
 }
