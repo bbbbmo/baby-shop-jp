@@ -80,6 +80,15 @@ test("mypage shows the email and logout button for a logged-in session", async (
   await expect(page.getByRole("button", { name: /ログアウト/ })).toBeVisible();
 });
 
+test("mypage profile card toggles into edit mode", async ({ page }) => {
+  await seedFakeSession(page);
+  await page.goto("/mypage");
+  await page.getByRole("button", { name: "情報を編集" }).click();
+  await expect(page.getByRole("textbox", { name: "電話番号" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "保存する" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "キャンセル" })).toBeVisible();
+});
+
 test("header profile link points to /mypage for a logged-in session", async ({
   page,
 }) => {
