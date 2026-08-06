@@ -89,6 +89,28 @@ test("mypage profile card toggles into edit mode", async ({ page }) => {
   await expect(page.getByRole("button", { name: "キャンセル" })).toBeVisible();
 });
 
+test("mypage profile edit shows a validation error for invalid furigana", async ({
+  page,
+}) => {
+  await seedFakeSession(page);
+  await page.goto("/mypage");
+  await page.getByRole("button", { name: "情報を編集" }).click();
+  await page.getByRole("textbox", { name: "お名前（フリガナ）" }).fill("やまだ");
+  await page.getByRole("button", { name: "保存する" }).click();
+  await expect(
+    page.getByText("フリガナはカタカナで入力してください"),
+  ).toBeVisible();
+});
+
+test("mypage profile edit cancel returns to view mode", async ({ page }) => {
+  await seedFakeSession(page);
+  await page.goto("/mypage");
+  await page.getByRole("button", { name: "情報を編集" }).click();
+  await page.getByRole("button", { name: "キャンセル" }).click();
+  await expect(page.getByRole("button", { name: "情報を編集" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "保存する" })).not.toBeVisible();
+});
+
 test("header profile link points to /mypage for a logged-in session", async ({
   page,
 }) => {

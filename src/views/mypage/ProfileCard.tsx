@@ -33,10 +33,11 @@ export function ProfileCard({ email, name, furigana, phone }: ProfileCardProps) 
 
   const handleSave = async () => {
     const validationErrors = validateProfileForm(values);
+    setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
       return;
     }
+    setSubmitError(null);
     setSaving(true);
     const { error } = await updateProfile(values);
     setSaving(false);
@@ -95,7 +96,7 @@ function ProfileView({
       <button
         type="button"
         onClick={onEdit}
-        className="w-full border border-border py-2.5 text-sm font-medium text-foreground hover:bg-sand"
+        className="w-full border border-border py-3 text-sm font-medium text-foreground hover:bg-sand"
       >
         {d.mypage.editButton}
       </button>
@@ -132,9 +133,15 @@ function ProfileEditForm({
 }) {
   const { d } = useLocale();
   const errorText = (key: string | undefined) =>
-    key ? d.signup.errors[key as keyof typeof d.signup.errors] : undefined;
+    key
+      ? (d.signup.errors[key as keyof typeof d.signup.errors] ?? d.signup.errors.unknownError)
+      : undefined;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave();
+  };
   return (
-    <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <TextField
         label={d.mypage.nameLabel}
         value={values.name}
@@ -151,6 +158,7 @@ function ProfileEditForm({
       />
       <TextField
         label={d.mypage.phoneLabel}
+        type="tel"
         value={values.phone}
         placeholder={d.signup.phonePlaceholder}
         error={errorText(errors.phone)}
@@ -161,31 +169,33 @@ function ProfileEditForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 border border-border py-2.5 text-sm font-medium text-foreground hover:bg-sand"
+          disabled={saving}
+          className="flex-1 border border-border py-3 text-sm font-medium text-foreground hover:bg-sand disabled:cursor-not-allowed disabled:opacity-40"
         >
           {d.mypage.cancelButton}
         </button>
         <button
-          type="button"
-          onClick={onSave}
+          type="submit"
           disabled={saving}
-          className="flex-1 bg-foreground py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex-1 bg-foreground py-3 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {d.mypage.saveButton}
         </button>
       </div>
-    </div>
+    </form>
   );
 }
 
 function TextField({
   label,
+  type = "text",
   value,
   placeholder,
   error,
   onChange,
 }: {
   label: string;
+  type?: string;
   value: string;
   placeholder?: string;
   error?: string;
@@ -195,7 +205,7 @@ function TextField({
     <label className="block text-sm text-foreground">
       {label}
       <input
-        type="text"
+        type={type}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}

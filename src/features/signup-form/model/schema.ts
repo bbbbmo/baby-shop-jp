@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// views/mypage/model/schema.ts와 동일한 규칙 — 한쪽만 고치지 말 것
 const KATAKANA_PATTERN = /^[ァ-ヶー\s]+$/;
 const PHONE_PATTERN = /^[0-9\-\s]+$/;
 
