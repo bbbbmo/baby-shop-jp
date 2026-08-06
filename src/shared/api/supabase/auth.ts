@@ -64,6 +64,15 @@ export async function signOut(): Promise<{ error: string | null }> {
   return { error: error ? mapAuthError(error) : null };
 }
 
+export async function updateProfile(params: {
+  name: string;
+  furigana: string;
+  phone: string;
+}): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.updateUser({ data: params });
+  return { error: error ? mapAuthError(error) : null };
+}
+
 export function subscribeToAuthChanges(
   onChange: (user: User | null) => void,
 ): () => void {
