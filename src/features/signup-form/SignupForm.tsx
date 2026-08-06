@@ -65,6 +65,14 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         error={errorText(errors, "furigana", d.signup.errors)}
         onChange={(v) => setField("furigana", v)}
       />
+      <TextField
+        label={d.signup.phoneLabel}
+        type="tel"
+        value={values.phone}
+        placeholder={d.signup.phonePlaceholder}
+        error={errorText(errors, "phone", d.signup.errors)}
+        onChange={(v) => setField("phone", v)}
+      />
       <Checkbox
         label={d.signup.agreeRequiredLabel}
         checked={values.agreeRequired}

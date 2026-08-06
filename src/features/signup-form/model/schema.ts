@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 const KATAKANA_PATTERN = /^[ァ-ヶー\s]+$/;
+const PHONE_PATTERN = /^[0-9\-\s]+$/;
+
+function isValidPhoneDigitCount(phone: string): boolean {
+  return phone.replace(/[^0-9]/g, "").length >= 9;
+}
 
 export const signupSchema = z
   .object({
@@ -12,6 +17,11 @@ export const signupSchema = z
       .string()
       .min(1, "required")
       .regex(KATAKANA_PATTERN, "furiganaInvalid"),
+    phone: z
+      .string()
+      .min(1, "required")
+      .regex(PHONE_PATTERN, "invalidPhone")
+      .refine(isValidPhoneDigitCount, { message: "invalidPhone" }),
     agreeRequired: z.boolean(),
     agreeMarketing: z.boolean(),
   })
@@ -34,6 +44,7 @@ export const initialSignupFormValues: SignupFormValues = {
   passwordConfirm: "",
   name: "",
   furigana: "",
+  phone: "",
   agreeRequired: false,
   agreeMarketing: false,
 };

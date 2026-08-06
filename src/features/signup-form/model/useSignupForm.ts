@@ -63,6 +63,7 @@ async function submitSignup(
     password: values.password,
     name: values.name,
     furigana: values.furigana,
+    phone: values.phone,
     marketingOptIn: values.agreeMarketing,
   });
   if (error) {
