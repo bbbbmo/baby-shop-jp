@@ -18,6 +18,11 @@ export async function signUpWithEmail(
     password,
     options: {
       data: { name, furigana, marketing_opt_in: marketingOptIn },
+      // emailRedirectTo를 안 넘기면 Supabase 대시보드에 고정된 Site URL로
+      // 확인 메일 링크가 가버려, 배포 도메인에서 가입해도 로컬 주소 등
+      // 엉뚱한 곳으로 리다이렉트된다. signInWithOAuth와 동일하게 실제
+      // 요청이 온 origin을 그대로 넘긴다.
+      emailRedirectTo: window.location.origin,
     },
   });
   return { error: error ? mapAuthError(error) : null };
