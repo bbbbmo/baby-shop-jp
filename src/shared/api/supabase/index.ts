@@ -4,6 +4,7 @@ export {
   signInWithOAuth,
   exchangeCodeForSession,
   signOut,
+  updateProfile,
   subscribeToAuthChanges,
   type SignUpParams,
   type User,
