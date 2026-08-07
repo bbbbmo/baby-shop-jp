@@ -36,8 +36,6 @@ export const signupSchema = z
   });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
-export type SignupFormField = keyof SignupFormValues;
-export type SignupFormErrors = Partial<Record<SignupFormField, string>>;
 
 export const initialSignupFormValues: SignupFormValues = {
   email: "",
@@ -49,22 +47,3 @@ export const initialSignupFormValues: SignupFormValues = {
   agreeRequired: false,
   agreeMarketing: false,
 };
-
-export function validateSignupForm(values: SignupFormValues): SignupFormErrors {
-  const result = signupSchema.safeParse(values);
-  if (result.success) return {};
-  return collectFieldErrors(result.error.issues);
-}
-
-function collectFieldErrors(
-  issues: readonly { path: PropertyKey[]; message: string }[],
-): SignupFormErrors {
-  const errors: SignupFormErrors = {};
-  for (const issue of issues) {
-    const field = issue.path[0] as SignupFormField | undefined;
-    if (field && !errors[field]) {
-      errors[field] = issue.message;
-    }
-  }
-  return errors;
-}
