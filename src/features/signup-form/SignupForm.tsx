@@ -71,7 +71,9 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         registration={register("agreeMarketing")}
       />
       {submitError && (
-        <p className="text-sm text-sale">{d.signup.errors[submitError as keyof ErrorDict]}</p>
+        <p className="text-sm text-sale">
+          {d.signup.errors[submitError as keyof ErrorDict] ?? d.signup.errors.unknownError}
+        </p>
       )}
       <button
         type="submit"

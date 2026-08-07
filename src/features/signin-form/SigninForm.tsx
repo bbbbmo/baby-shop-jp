@@ -35,7 +35,9 @@ export function SigninForm({ onSuccess }: SigninFormProps) {
         error={errorText(errors.password?.message)}
       />
       {submitError && (
-        <p className="text-sm text-sale">{d.signin.errors[submitError as keyof ErrorDict]}</p>
+        <p className="text-sm text-sale">
+          {d.signin.errors[submitError as keyof ErrorDict] ?? d.signin.errors.unknownError}
+        </p>
       )}
       <button
         type="submit"

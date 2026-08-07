@@ -121,7 +121,7 @@ function ProfileEditForm({
   errors: FieldErrors<ProfileFormValues>;
   saving: boolean;
   submitError: string | null;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
   onCancel: () => void;
 }) {
   const { d } = useLocale();
