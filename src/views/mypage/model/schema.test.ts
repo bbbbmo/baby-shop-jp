@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateProfileForm, type ProfileFormValues } from "./schema";
+import { profileSchema, type ProfileFormValues } from "./schema";
 
 const valid: ProfileFormValues = {
   name: "山田太郎",
@@ -7,33 +7,39 @@ const valid: ProfileFormValues = {
   phone: "090-1234-5678",
 };
 
-describe("validateProfileForm", () => {
-  it("returns no errors for valid input", () => {
-    expect(validateProfileForm(valid)).toEqual({});
+function issueMessage(
+  values: ProfileFormValues,
+  field: keyof ProfileFormValues,
+): string | undefined {
+  const result = profileSchema.safeParse(values);
+  if (result.success) return undefined;
+  return result.error.issues.find((issue) => issue.path[0] === field)?.message;
+}
+
+describe("profileSchema", () => {
+  it("accepts valid input", () => {
+    expect(profileSchema.safeParse(valid).success).toBe(true);
   });
 
   it("rejects an empty name", () => {
-    const errors = validateProfileForm({ ...valid, name: "" });
-    expect(errors.name).toBe("required");
+    expect(issueMessage({ ...valid, name: "" }, "name")).toBe("required");
   });
 
   it("rejects furigana written in hiragana instead of katakana", () => {
-    const errors = validateProfileForm({ ...valid, furigana: "やまだたろう" });
-    expect(errors.furigana).toBe("furiganaInvalid");
+    expect(issueMessage({ ...valid, furigana: "やまだたろう" }, "furigana")).toBe(
+      "furiganaInvalid",
+    );
   });
 
   it("rejects an empty phone number", () => {
-    const errors = validateProfileForm({ ...valid, phone: "" });
-    expect(errors.phone).toBe("required");
+    expect(issueMessage({ ...valid, phone: "" }, "phone")).toBe("required");
   });
 
   it("rejects a phone number that is too short", () => {
-    const errors = validateProfileForm({ ...valid, phone: "090-123" });
-    expect(errors.phone).toBe("invalidPhone");
+    expect(issueMessage({ ...valid, phone: "090-123" }, "phone")).toBe("invalidPhone");
   });
 
   it("accepts a phone number without hyphens", () => {
-    const errors = validateProfileForm({ ...valid, phone: "09012345678" });
-    expect(errors.phone).toBeUndefined();
+    expect(issueMessage({ ...valid, phone: "09012345678" }, "phone")).toBeUndefined();
   });
 });
