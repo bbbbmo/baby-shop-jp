@@ -22,24 +22,3 @@ export const profileSchema = z.object({
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
-export type ProfileFormField = keyof ProfileFormValues;
-export type ProfileFormErrors = Partial<Record<ProfileFormField, string>>;
-
-export function validateProfileForm(values: ProfileFormValues): ProfileFormErrors {
-  const result = profileSchema.safeParse(values);
-  if (result.success) return {};
-  return collectFieldErrors(result.error.issues);
-}
-
-function collectFieldErrors(
-  issues: readonly { path: PropertyKey[]; message: string }[],
-): ProfileFormErrors {
-  const errors: ProfileFormErrors = {};
-  for (const issue of issues) {
-    const field = issue.path[0] as ProfileFormField | undefined;
-    if (field && !errors[field]) {
-      errors[field] = issue.message;
-    }
-  }
-  return errors;
-}

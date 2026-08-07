@@ -1,67 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import {
-  initialSigninFormValues,
-  validateSigninForm,
-  type SigninFormErrors,
-  type SigninFormField,
-  type SigninFormValues,
-} from "./schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signinSchema, initialSigninFormValues, type SigninFormValues } from "./schema";
 import { signInWithEmail } from "@/shared/api/supabase";
 
-export type SigninStatus = "idle" | "submitting" | "success" | "error";
+export function useSigninForm(onSuccess: () => void) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SigninFormValues>({
+    resolver: zodResolver(signinSchema),
+    defaultValues: initialSigninFormValues,
+  });
 
-type SigninFormState = {
-  values: SigninFormValues;
-  errors: SigninFormErrors;
-  status: SigninStatus;
-  submitError: string | null;
-};
-
-const initialState: SigninFormState = {
-  values: initialSigninFormValues,
-  errors: {},
-  status: "idle",
-  submitError: null,
-};
-
-export function useSigninForm() {
-  const [state, setState] = useState<SigninFormState>(initialState);
-
-  const setField = (field: SigninFormField, value: string) => {
-    setState((prev) => ({
-      ...prev,
-      values: { ...prev.values, [field]: value },
-    }));
-  };
-
-  const submit = async () => {
-    const errors = validateSigninForm(state.values);
-    if (Object.keys(errors).length > 0) {
-      setState((prev) => ({ ...prev, errors }));
+  const onSubmit = handleSubmit(async (values) => {
+    setSubmitError(null);
+    const { error } = await signInWithEmail(values.email, values.password);
+    if (error) {
+      setSubmitError(error);
       return;
     }
-    await submitSignin(state.values, setState);
-  };
+    onSuccess();
+  });
 
-  return { ...state, setField, submit };
-}
-
-async function submitSignin(
-  values: SigninFormValues,
-  setState: React.Dispatch<React.SetStateAction<SigninFormState>>,
-): Promise<void> {
-  setState((prev) => ({
-    ...prev,
-    status: "submitting",
-    submitError: null,
-    errors: {},
-  }));
-  const { error } = await signInWithEmail(values.email, values.password);
-  if (error) {
-    setState((prev) => ({ ...prev, status: "error", submitError: error }));
-    return;
-  }
-  setState((prev) => ({ ...prev, status: "success" }));
+  return { register, errors, isSubmitting, submitError, onSubmit };
 }

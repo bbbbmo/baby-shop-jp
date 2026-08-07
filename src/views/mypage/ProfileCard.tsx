@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useForm, type FieldErrors, type UseFormRegister } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { updateProfile } from "@/shared/api/supabase";
-import {
-  validateProfileForm,
-  type ProfileFormErrors,
-  type ProfileFormField,
-  type ProfileFormValues,
-} from "./model/schema";
+import { FormField } from "@/shared/ui/FormField";
+import { profileSchema, type ProfileFormValues } from "./model/schema";
 
 type ProfileCardProps = {
   email: string;
@@ -19,34 +17,32 @@ type ProfileCardProps = {
 
 export function ProfileCard({ email, name, furigana, phone }: ProfileCardProps) {
   const [editing, setEditing] = useState(false);
-  const [values, setValues] = useState<ProfileFormValues>({ name, furigana, phone });
-  const [errors, setErrors] = useState<ProfileFormErrors>({});
-  const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name, furigana, phone },
+  });
 
   const startEditing = () => {
-    setValues({ name, furigana, phone });
-    setErrors({});
+    reset({ name, furigana, phone });
     setSubmitError(null);
     setEditing(true);
   };
 
-  const handleSave = async () => {
-    const validationErrors = validateProfileForm(values);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
+  const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
-    setSaving(true);
     const { error } = await updateProfile(values);
-    setSaving(false);
     if (error) {
       setSubmitError(error);
       return;
     }
     setEditing(false);
-  };
+  });
 
   if (!editing) {
     return (
@@ -62,12 +58,11 @@ export function ProfileCard({ email, name, furigana, phone }: ProfileCardProps) 
 
   return (
     <ProfileEditForm
-      values={values}
+      register={register}
       errors={errors}
-      saving={saving}
+      saving={isSubmitting}
       submitError={submitError}
-      onChange={(field, value) => setValues((prev) => ({ ...prev, [field]: value }))}
-      onSave={handleSave}
+      onSubmit={onSubmit}
       onCancel={() => setEditing(false)}
     />
   );
@@ -115,20 +110,18 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 function ProfileEditForm({
-  values,
+  register,
   errors,
   saving,
   submitError,
-  onChange,
-  onSave,
+  onSubmit,
   onCancel,
 }: {
-  values: ProfileFormValues;
-  errors: ProfileFormErrors;
+  register: UseFormRegister<ProfileFormValues>;
+  errors: FieldErrors<ProfileFormValues>;
   saving: boolean;
   submitError: string | null;
-  onChange: (field: ProfileFormField, value: string) => void;
-  onSave: () => void;
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
   onCancel: () => void;
 }) {
   const { d } = useLocale();
@@ -136,33 +129,26 @@ function ProfileEditForm({
     key
       ? (d.signup.errors[key as keyof typeof d.signup.errors] ?? d.signup.errors.unknownError)
       : undefined;
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave();
-  };
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <TextField
+    <form onSubmit={onSubmit} className="space-y-4">
+      <FormField
         label={d.mypage.nameLabel}
-        value={values.name}
         placeholder={d.signup.namePlaceholder}
-        error={errorText(errors.name)}
-        onChange={(v) => onChange("name", v)}
+        registration={register("name")}
+        error={errorText(errors.name?.message)}
       />
-      <TextField
+      <FormField
         label={d.mypage.furiganaLabel}
-        value={values.furigana}
         placeholder={d.signup.furiganaPlaceholder}
-        error={errorText(errors.furigana)}
-        onChange={(v) => onChange("furigana", v)}
+        registration={register("furigana")}
+        error={errorText(errors.furigana?.message)}
       />
-      <TextField
+      <FormField
         label={d.mypage.phoneLabel}
         type="tel"
-        value={values.phone}
         placeholder={d.signup.phonePlaceholder}
-        error={errorText(errors.phone)}
-        onChange={(v) => onChange("phone", v)}
+        registration={register("phone")}
+        error={errorText(errors.phone?.message)}
       />
       {submitError && <p className="text-sm text-sale">{errorText(submitError)}</p>}
       <div className="flex gap-2">
@@ -183,35 +169,5 @@ function ProfileEditForm({
         </button>
       </div>
     </form>
-  );
-}
-
-function TextField({
-  label,
-  type = "text",
-  value,
-  placeholder,
-  error,
-  onChange,
-}: {
-  label: string;
-  type?: string;
-  value: string;
-  placeholder?: string;
-  error?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="block text-sm text-foreground">
-      {label}
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 h-11 w-full border border-border bg-surface px-3 text-sm outline-none placeholder:text-muted focus:border-sage"
-      />
-      {error && <span className="mt-1 block text-xs text-sale">{error}</span>}
-    </label>
   );
 }

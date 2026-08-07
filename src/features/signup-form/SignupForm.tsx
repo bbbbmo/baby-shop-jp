@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import type { UseFormRegisterReturn } from "react-hook-form";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useSignupForm } from "./model/useSignupForm";
 import { SocialLoginButtons } from "@/entities/auth";
-import type { SignupFormErrors } from "./model/schema";
+import { FormField } from "@/shared/ui/FormField";
 
 type ErrorDict = Dictionary["signup"]["errors"];
 
@@ -14,86 +15,72 @@ type SignupFormProps = { onSuccess: () => void };
 
 export function SignupForm({ onSuccess }: SignupFormProps) {
   const { d } = useLocale();
-  const { values, errors, status, submitError, setField, submit } = useSignupForm();
+  const { register, errors, isSubmitting, submitError, onSubmit } = useSignupForm(onSuccess);
   const [oauthError, setOauthError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === "success") onSuccess();
-  }, [status, onSuccess]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await submit();
-  };
+  const errorText = (key: string | undefined) =>
+    key ? d.signup.errors[key as keyof ErrorDict] : undefined;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <TextField
+    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <FormField
         label={d.signup.emailLabel}
         type="email"
-        value={values.email}
-        error={errorText(errors, "email", d.signup.errors)}
-        onChange={(v) => setField("email", v)}
+        registration={register("email")}
+        error={errorText(errors.email?.message)}
       />
-      <TextField
+      <FormField
         label={d.signup.passwordLabel}
         type="password"
-        value={values.password}
-        error={errorText(errors, "password", d.signup.errors)}
-        onChange={(v) => setField("password", v)}
+        registration={register("password")}
+        error={errorText(errors.password?.message)}
       />
-      <TextField
+      <FormField
         label={d.signup.passwordConfirmLabel}
         type="password"
-        value={values.passwordConfirm}
-        error={errorText(errors, "passwordConfirm", d.signup.errors)}
-        onChange={(v) => setField("passwordConfirm", v)}
+        registration={register("passwordConfirm")}
+        error={errorText(errors.passwordConfirm?.message)}
       />
-      <TextField
+      <FormField
         label={d.signup.nameLabel}
-        type="text"
-        value={values.name}
         placeholder={d.signup.namePlaceholder}
-        error={errorText(errors, "name", d.signup.errors)}
-        onChange={(v) => setField("name", v)}
+        registration={register("name")}
+        error={errorText(errors.name?.message)}
       />
-      <TextField
+      <FormField
         label={d.signup.furiganaLabel}
-        type="text"
-        value={values.furigana}
         placeholder={d.signup.furiganaPlaceholder}
-        error={errorText(errors, "furigana", d.signup.errors)}
-        onChange={(v) => setField("furigana", v)}
+        registration={register("furigana")}
+        error={errorText(errors.furigana?.message)}
       />
-      <TextField
+      <FormField
         label={d.signup.phoneLabel}
         type="tel"
-        value={values.phone}
         placeholder={d.signup.phonePlaceholder}
-        error={errorText(errors, "phone", d.signup.errors)}
-        onChange={(v) => setField("phone", v)}
+        registration={register("phone")}
+        error={errorText(errors.phone?.message)}
       />
       <Checkbox
         label={d.signup.agreeRequiredLabel}
-        checked={values.agreeRequired}
-        error={errorText(errors, "agreeRequired", d.signup.errors)}
-        onChange={(v) => setField("agreeRequired", v)}
+        registration={register("agreeRequired")}
+        error={errorText(errors.agreeRequired?.message)}
       />
       <LegalLinks />
       <Checkbox
         label={d.signup.agreeMarketingLabel}
-        checked={values.agreeMarketing}
-        onChange={(v) => setField("agreeMarketing", v)}
+        registration={register("agreeMarketing")}
       />
       {submitError && (
-        <p className="text-sm text-sale">{d.signup.errors[submitError as keyof ErrorDict]}</p>
+        <p className="text-sm text-sale">
+          {d.signup.errors[submitError as keyof ErrorDict] ?? d.signup.errors.unknownError}
+        </p>
       )}
       <button
         type="submit"
-        disabled={status === "submitting"}
+        disabled={isSubmitting}
         className="w-full bg-foreground py-3 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {status === "submitting" ? d.signup.submitting : d.signup.submit}
+        {isSubmitting ? d.signup.submitting : d.signup.submit}
       </button>
       <SigninLink />
       <Divider label={d.signup.orDivider} />
@@ -109,62 +96,20 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
   );
 }
 
-function errorText(
-  errors: SignupFormErrors,
-  field: keyof SignupFormErrors,
-  dict: ErrorDict,
-): string | undefined {
-  const key = errors[field];
-  return key ? dict[key as keyof ErrorDict] : undefined;
-}
-
-function TextField({
-  label,
-  type,
-  value,
-  placeholder,
-  error,
-  onChange,
-}: {
-  label: string;
-  type: string;
-  value: string;
-  placeholder?: string;
-  error?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="block text-sm text-foreground">
-      {label}
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 h-11 w-full border border-border bg-surface px-3 text-sm outline-none placeholder:text-muted focus:border-sage"
-      />
-      {error && <span className="mt-1 block text-xs text-sale">{error}</span>}
-    </label>
-  );
-}
-
 function Checkbox({
   label,
-  checked,
+  registration,
   error,
-  onChange,
 }: {
   label: string;
-  checked: boolean;
+  registration: UseFormRegisterReturn;
   error?: string;
-  onChange: (value: boolean) => void;
 }) {
   return (
     <label className="flex items-start gap-2 text-sm text-foreground">
       <input
         type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        {...registration}
         className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
       />
       <span>
