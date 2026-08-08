@@ -17,7 +17,7 @@ function SearchResults() {
     <QueryGuard isLoading={isLoading} error={error}>
       <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
         <h1 className="text-xl font-bold text-foreground">
-          <span className="text-sage">"{query}"</span>
+          <span className="text-sage">“{query}”</span>
           {d.search.resultFor}
         </h1>
         <p className="mt-1 text-sm text-muted">
