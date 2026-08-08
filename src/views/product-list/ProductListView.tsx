@@ -1,10 +1,17 @@
 "use client";
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { products } from "@/entities/product";
+import { useProducts } from "@/entities/product";
 import { ProductBrowser } from "@/widgets/product-browser";
+import { QueryGuard } from "@/shared/ui/QueryGuard";
 
 export function ProductListView() {
   const { d } = useLocale();
-  return <ProductBrowser title={d.nav.all} products={products} />;
+  const { data: products = [], isLoading, error } = useProducts();
+
+  return (
+    <QueryGuard isLoading={isLoading} error={error}>
+      <ProductBrowser title={d.nav.all} products={products} />
+    </QueryGuard>
+  );
 }
