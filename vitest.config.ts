@@ -1,6 +1,11 @@
 import { defineConfig } from "vitest/config";
-import { loadEnv } from "vite";
 import path from "node:path";
+
+try {
+  process.loadEnvFile(".env.local");
+} catch {
+  // .env.local is optional (e.g. absent in CI) — tests that need it will fail with a clear error instead
+}
 
 export default defineConfig({
   resolve: {
@@ -11,6 +16,5 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
-    env: loadEnv("", process.cwd(), ""),
   },
 });
