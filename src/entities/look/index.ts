@@ -1,3 +1,4 @@
 export type { FriendLook } from "./model/types";
-export { friendLooks, homeLooks, lookAlt } from "./model/friends";
+export { useFriendLooks } from "./model/useFriendLooks";
+export { homeLooks, lookAlt } from "./model/helpers";
 export { LookImage } from "./ui/LookImage";
