@@ -3,30 +3,38 @@
 import Link from "next/link";
 import { useCart, useCartHydrated, type CartItem } from "@/entities/cart";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { getProduct } from "@/entities/product";
+import { useProducts } from "@/entities/product";
 import { formatYen } from "@/shared/lib/format";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 import type { Product } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
 import { QuantityStepper } from "@/entities/cart";
+import { QueryGuard } from "@/shared/ui/QueryGuard";
 
 type Line = CartItem & { product: Product };
 
-const enrich = (items: CartItem[]): Line[] =>
-  items
-    .map((item) => ({ ...item, product: getProduct(item.productId) }))
+const enrich = (items: CartItem[], products: Product[]): Line[] => {
+  const byId = new Map(products.map((p) => [p.id, p]));
+  return items
+    .map((item) => ({ ...item, product: byId.get(item.productId) }))
     .filter((item): item is Line => Boolean(item.product));
+};
 
 export function CartView() {
-  const { d } = useLocale();
   const items = useCart((s) => s.items);
   const hydrated = useCartHydrated();
+  const { data: products = [], isLoading, error } = useProducts();
 
-  if (!hydrated) {
-    return <div className="mx-auto max-w-480 px-6 py-16 sm:px-10" />;
-  }
+  return (
+    <QueryGuard isLoading={!hydrated || isLoading} error={error}>
+      <CartBody items={items} products={products} />
+    </QueryGuard>
+  );
+}
 
-  const lines = enrich(items);
+function CartBody({ items, products }: { items: CartItem[]; products: Product[] }) {
+  const { d } = useLocale();
+  const lines = enrich(items, products);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
   return (
