@@ -1,12 +1,12 @@
 export type { Product } from "./model/types";
+export { useProducts } from "./model/useProducts";
+export { useProduct } from "./model/useProduct";
 export {
-  products,
-  getProduct,
   getByCategory,
   bestProducts,
   newProducts,
   searchProducts,
-} from "./model/products";
+} from "./model/filters";
 export { ProductCard } from "./ui/ProductCard";
 export { ProductThumb } from "./ui/ProductThumb";
 export { ProductGrid } from "./ui/ProductGrid";
