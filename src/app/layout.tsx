@@ -13,6 +13,7 @@ import "./globals.css";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { FontModeProvider } from "@/shared/i18n/FontModeProvider";
 import { SessionProvider } from "@/entities/auth";
+import { QueryProvider } from "@/shared/api/QueryProvider";
 
 const notoJp = Noto_Sans_JP({
   variable: "--font-noto-jp",
@@ -81,11 +82,13 @@ export default function RootLayout({
   return (
     <html lang="ja" className={`${notoJp.variable} ${notoKr.variable} ${zillaSlab.variable} ${notoSerifJp.variable} ${notoSerifKr.variable} ${plexMono.variable} ${plexSansJp.variable} ${plexSansKr.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <SessionProvider>
-          <LocaleProvider>
-            <FontModeProvider>{children}</FontModeProvider>
-          </LocaleProvider>
-        </SessionProvider>
+        <QueryProvider>
+          <SessionProvider>
+            <LocaleProvider>
+              <FontModeProvider>{children}</FontModeProvider>
+            </LocaleProvider>
+          </SessionProvider>
+        </QueryProvider>
       </body>
     </html>
   );
