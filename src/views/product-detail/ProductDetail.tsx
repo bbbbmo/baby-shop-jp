@@ -5,7 +5,7 @@ import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useCart } from "@/entities/cart";
 import { discountRate, formatYen } from "@/shared/lib/format";
-import { getByCategory } from "@/entities/product";
+import { useProducts, getByCategory } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
 import { ColorPicker, SizePicker } from "@/features/product-options";
 import { RatingStars } from "@/entities/product";
@@ -165,7 +165,8 @@ function RelatedSection({
   product: Product;
   title: string;
 }) {
-  const related = getByCategory(product.category)
+  const { data: products = [] } = useProducts();
+  const related = getByCategory(products, product.category)
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
   if (related.length === 0) {
