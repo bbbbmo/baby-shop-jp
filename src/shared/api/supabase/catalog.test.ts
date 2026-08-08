@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapDbProductToProduct } from "./catalog";
+import { mapDbProductToProduct, mapDbFriendLookToFriendLook } from "./catalog";
 
 describe("mapDbProductToProduct", () => {
   it("maps a DB row to the Product shape, deduping variant colors/sizes", () => {
@@ -66,5 +66,32 @@ describe("mapDbProductToProduct", () => {
     };
 
     expect(mapDbProductToProduct(row).description).toEqual({ ja: "", ko: "" });
+  });
+});
+
+describe("mapDbFriendLookToFriendLook", () => {
+  it("maps a DB row to the FriendLook shape", () => {
+    const row = {
+      id: "33333333-3333-3333-3333-333333333333",
+      handle: "@hana_mam",
+      image_src: "/friends/look-01.svg",
+      model_info_ja: "24ヶ月 / 88cm",
+      model_info_ko: "24개월 / 88cm",
+      friend_look_products: [
+        { product_id: "11111111-1111-1111-1111-111111111111" },
+        { product_id: "44444444-4444-4444-4444-444444444444" },
+      ],
+    };
+
+    expect(mapDbFriendLookToFriendLook(row)).toEqual({
+      id: "33333333-3333-3333-3333-333333333333",
+      handle: "@hana_mam",
+      imageSrc: "/friends/look-01.svg",
+      modelInfo: { ja: "24ヶ月 / 88cm", ko: "24개월 / 88cm" },
+      productIds: [
+        "11111111-1111-1111-1111-111111111111",
+        "44444444-4444-4444-4444-444444444444",
+      ],
+    });
   });
 });

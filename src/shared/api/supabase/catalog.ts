@@ -1,5 +1,6 @@
 import type { CategorySlug } from "@/entities/category";
 import type { Product } from "@/entities/product";
+import type { FriendLook } from "@/entities/look";
 import { supabase } from "./client";
 
 type ProductRow = {
@@ -90,4 +91,36 @@ export async function getProductVariants(
     throw new Error(error.message);
   }
   return data ?? [];
+}
+
+type FriendLookRow = {
+  id: string;
+  handle: string;
+  image_src: string;
+  model_info_ja: string | null;
+  model_info_ko: string | null;
+  friend_look_products: { product_id: string }[];
+};
+
+export function mapDbFriendLookToFriendLook(row: FriendLookRow): FriendLook {
+  return {
+    id: row.id,
+    handle: row.handle,
+    imageSrc: row.image_src,
+    modelInfo: { ja: row.model_info_ja ?? "", ko: row.model_info_ko ?? "" },
+    productIds: row.friend_look_products.map((p) => p.product_id),
+  };
+}
+
+export async function listFriendLooks(): Promise<FriendLook[]> {
+  const { data, error } = await supabase
+    .from("friend_looks")
+    .select(
+      "id, handle, image_src, model_info_ja, model_info_ko, friend_look_products ( product_id )",
+    )
+    .order("created_at", { ascending: true });
+  if (error) {
+    throw new Error(error.message);
+  }
+  return (data as unknown as FriendLookRow[]).map(mapDbFriendLookToFriendLook);
 }
