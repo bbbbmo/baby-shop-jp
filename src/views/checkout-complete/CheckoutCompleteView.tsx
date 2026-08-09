@@ -15,8 +15,10 @@ function CheckoutCompleteContent() {
   const clear = useCart((s) => s.clear);
 
   useEffect(() => {
-    clear();
-  }, [clear]);
+    if (orderNumber) {
+      clear();
+    }
+  }, [clear, orderNumber]);
 
   return (
     <div className="mx-auto max-w-480 px-6 py-16 text-center sm:px-10">
@@ -28,7 +30,7 @@ function CheckoutCompleteContent() {
       </p>
       <Link
         href="/"
-        className="mt-8 inline-flex rounded-full bg-foreground px-6 py-2.5 text-sm text-white hover:opacity-90"
+        className="mt-8 inline-flex bg-foreground px-6 py-2.5 text-sm text-white hover:opacity-90"
       >
         {d.checkoutComplete.backToHome}
       </Link>

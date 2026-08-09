@@ -104,7 +104,7 @@ function OrderSummary({ lines, subtotal }: { lines: EnrichedCartItem[]; subtotal
   const shipping = free ? 0 : SHIPPING_FEE;
 
   return (
-    <aside className="h-fit rounded-2xl bg-surface p-5 ring-1 ring-border">
+    <aside className="h-fit bg-surface p-5 ring-1 ring-border">
       <h2 className="mb-3 text-sm font-medium text-foreground">{d.checkout.orderSummaryTitle}</h2>
       <ul className="divide-y divide-border">
         {lines.map((line) => (
