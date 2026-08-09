@@ -11,6 +11,7 @@ export function SigninView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const authError = searchParams.get("authError");
+  const redirect = searchParams.get("redirect") ?? "/";
 
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
@@ -22,7 +23,7 @@ export function SigninView() {
         {authError && (
           <AuthErrorBanner code={authError} errors={d.signin.errors as Record<string, string>} />
         )}
-        <SigninForm onSuccess={() => router.replace("/")} />
+        <SigninForm onSuccess={() => router.replace(redirect)} />
       </div>
     </div>
   );
