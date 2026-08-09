@@ -33,6 +33,7 @@ export function MypageView() {
 
   return (
     <MypageContent
+      userId={user.id}
       email={user.email ?? ""}
       name={readMetadataField(user.user_metadata, "name")}
       furigana={readMetadataField(user.user_metadata, "furigana")}
@@ -48,12 +49,14 @@ function readMetadataField(metadata: Record<string, unknown>, key: string): stri
 }
 
 function MypageContent({
+  userId,
   email,
   name,
   furigana,
   phone,
   onLogout,
 }: {
+  userId: string;
   email: string;
   name: string;
   furigana: string;
@@ -61,7 +64,7 @@ function MypageContent({
   onLogout: () => void;
 }) {
   const { d } = useLocale();
-  const { data: orders = [], isLoading } = useMyOrders(true);
+  const { data: orders = [], isLoading } = useMyOrders(userId);
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
       <div className="mx-auto max-w-md">

@@ -11,7 +11,9 @@ export function SigninView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const authError = searchParams.get("authError");
-  const redirect = searchParams.get("redirect") ?? "/";
+  const rawRedirect = searchParams.get("redirect");
+  const redirect =
+    rawRedirect?.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/";
 
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
