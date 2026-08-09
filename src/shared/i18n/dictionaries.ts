@@ -98,6 +98,20 @@ export const dictionaries = {
       memberNotice: "マイページからもご確認いただけます。",
       backToHome: "トップページへ戻る",
     },
+    orderLookup: {
+      title: "注文照会",
+      orderNumberLabel: "注文番号",
+      emailLabel: "メールアドレス",
+      submit: "照会する",
+      submitting: "照会中…",
+      notFound: "注文番号またはメールアドレスをご確認ください",
+      statusLabel: "ステータス",
+      statusPendingPayment: "支払い待ち",
+      errors: {
+        required: "必須項目です",
+        invalidEmail: "メールアドレスの形式が正しくありません",
+      },
+    },
     footer: {
       about: "会社概要",
       contact: "お問い合わせ",
@@ -282,6 +296,20 @@ export const dictionaries = {
       guestNotice: "이 주문번호와 이메일을 저장해 주세요.",
       memberNotice: "마이페이지에서도 확인하실 수 있어요.",
       backToHome: "홈으로 돌아가기",
+    },
+    orderLookup: {
+      title: "주문 조회",
+      orderNumberLabel: "주문번호",
+      emailLabel: "이메일",
+      submit: "조회하기",
+      submitting: "조회 중…",
+      notFound: "주문번호 또는 이메일을 확인해주세요",
+      statusLabel: "상태",
+      statusPendingPayment: "결제 대기",
+      errors: {
+        required: "필수 항목입니다",
+        invalidEmail: "이메일 형식이 올바르지 않습니다",
+      },
     },
     footer: {
       about: "회사 소개",
