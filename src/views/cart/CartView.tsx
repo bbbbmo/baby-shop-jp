@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCart, useCartHydrated, type CartItem } from "@/entities/cart";
+import { useCart, useCartHydrated, enrichCartLines, type CartItem, type EnrichedCartItem } from "@/entities/cart";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useProducts } from "@/entities/product";
 import { formatYen } from "@/shared/lib/format";
@@ -10,15 +10,6 @@ import type { Product } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
 import { QuantityStepper } from "@/entities/cart";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
-
-type Line = CartItem & { product: Product };
-
-const enrich = (items: CartItem[], products: Product[]): Line[] => {
-  const byId = new Map(products.map((p) => [p.id, p]));
-  return items
-    .map((item) => ({ ...item, product: byId.get(item.productId) }))
-    .filter((item): item is Line => Boolean(item.product));
-};
 
 export function CartView() {
   const items = useCart((s) => s.items);
@@ -34,7 +25,7 @@ export function CartView() {
 
 function CartBody({ items, products }: { items: CartItem[]; products: Product[] }) {
   const { d } = useLocale();
-  const lines = enrich(items, products);
+  const lines = enrichCartLines(items, products);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
   return (
@@ -72,7 +63,7 @@ function EmptyState() {
   );
 }
 
-function CartLine({ line }: { line: Line }) {
+function CartLine({ line }: { line: EnrichedCartItem }) {
   const { locale, d } = useLocale();
   const { updateQuantity, remove } = useCart();
   return (
