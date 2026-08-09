@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { subscribeToAuthChanges, type User } from "@/shared/api/supabase";
+import { subscribeToAuthChanges, linkGuestOrdersToCurrentUser, type User } from "@/shared/api/supabase";
 
 type SessionContextValue = {
   user: User | null;
@@ -25,9 +25,12 @@ export function SessionProvider({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    return subscribeToAuthChanges((nextUser) => {
+    return subscribeToAuthChanges((nextUser, event) => {
       setUser(nextUser);
       setLoading(false);
+      if (event === "SIGNED_IN" && nextUser?.email) {
+        void linkGuestOrdersToCurrentUser(nextUser.email);
+      }
     });
   }, []);
 

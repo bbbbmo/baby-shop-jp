@@ -1,4 +1,4 @@
-import type { AuthError, Provider, User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, AuthError, Provider, User } from "@supabase/supabase-js";
 import { supabase } from "./client";
 
 export type SignUpParams = {
@@ -74,14 +74,14 @@ export async function updateProfile(params: {
 }
 
 export function subscribeToAuthChanges(
-  onChange: (user: User | null) => void,
+  onChange: (user: User | null, event: AuthChangeEvent) => void,
 ): () => void {
   // onAuthStateChange는 등록 즉시 INITIAL_SESSION 이벤트로 현재 세션(또는 null)을
   // 한 번 방출하므로, 별도의 getSession() 초기 조회는 불필요하며 경쟁 상태만 만든다.
   const {
     data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    onChange(session?.user ?? null);
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    onChange(session?.user ?? null, event);
   });
 
   return () => subscription.unsubscribe();
