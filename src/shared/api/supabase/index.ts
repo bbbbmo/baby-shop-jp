@@ -9,3 +9,4 @@ export {
   type SignUpParams,
   type User,
 } from "./auth";
+export { lookupOrder, listMyOrders, linkGuestOrdersToCurrentUser } from "./orders";
