@@ -38,7 +38,7 @@ export const useCart = create<CartState>()(
       },
       clear: () => set({ items: [] }),
     }),
-    { name: "komo.cart" },
+    { name: "komo.cart", version: 1, migrate: () => ({ items: [] }) },
   ),
 );
 
