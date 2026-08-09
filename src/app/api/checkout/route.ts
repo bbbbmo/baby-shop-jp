@@ -37,16 +37,9 @@ async function resolveUserId(request: Request): Promise<string | null> {
   return error || !data.user ? null : data.user.id;
 }
 
-async function processCheckout(
-  body: CheckoutRequestBody,
-  userId: string | null,
-): Promise<CheckoutResult> {
+async function processCheckout(body: CheckoutRequestBody, userId: string | null): Promise<CheckoutResult> {
   const parsed = checkoutSchema.safeParse(body.shipping);
-  const itemsValid =
-    Array.isArray(body.items) &&
-    body.items.length > 0 &&
-    body.items.every((i) => Number.isInteger(i.quantity) && i.quantity > 0);
-  if (!parsed.success || !itemsValid) {
+  if (!parsed.success || !hasValidItems(body.items)) {
     return { status: 400, body: { error: "invalidInput" } };
   }
   const resolved = await resolveOrderItems(body.items);
@@ -54,6 +47,11 @@ async function processCheckout(
     return { status: 409, body: { error: "soldOut", productName: resolved.error } };
   }
   return createOrder(userId, parsed.data, resolved.items);
+}
+
+function hasValidItems(items: CheckoutItem[]): boolean {
+  return Array.isArray(items) && items.length > 0 &&
+    items.every((i) => Number.isInteger(i.quantity) && i.quantity > 0);
 }
 
 async function createOrder(
