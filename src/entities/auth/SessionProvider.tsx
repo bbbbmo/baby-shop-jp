@@ -28,8 +28,8 @@ export function SessionProvider({
     return subscribeToAuthChanges((nextUser, event) => {
       setUser(nextUser);
       setLoading(false);
-      if (event === "SIGNED_IN" && nextUser?.email) {
-        void linkGuestOrdersToCurrentUser(nextUser.email);
+      if (event === "SIGNED_IN") {
+        void linkGuestOrdersToCurrentUser();
       }
     });
   }, []);

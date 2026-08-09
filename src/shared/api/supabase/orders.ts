@@ -33,10 +33,8 @@ export async function listMyOrders(): Promise<Order[]> {
   return (data as unknown as OrderRow[]).map(mapDbOrderToOrder);
 }
 
-export async function linkGuestOrdersToCurrentUser(email: string): Promise<void> {
-  const { error } = await supabase.rpc("link_guest_orders_to_current_user", {
-    p_email: email,
-  });
+export async function linkGuestOrdersToCurrentUser(): Promise<void> {
+  const { error } = await supabase.rpc("link_guest_orders_to_current_user");
   if (error) {
     console.error(error);
   }
