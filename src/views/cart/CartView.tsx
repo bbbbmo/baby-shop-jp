@@ -122,12 +122,12 @@ function CartSummary({ subtotal }: { subtotal: number }) {
           {formatYen(subtotal + shipping)}
         </span>
       </div>
-      <button
-        type="button"
-        className="mt-5 w-full rounded-full bg-foreground py-3 text-sm font-medium text-white hover:opacity-90"
+      <Link
+        href="/checkout"
+        className="mt-5 block w-full rounded-full bg-foreground py-3 text-center text-sm font-medium text-white hover:opacity-90"
       >
         {d.cart.checkout}
-      </button>
+      </Link>
       <p className="mt-3 text-[11px] leading-relaxed text-muted">
         {d.cart.demoNotice}
       </p>

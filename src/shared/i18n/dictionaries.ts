@@ -61,7 +61,7 @@ export const dictionaries = {
       checkout: "レジに進む",
       freeShipMet: "送料無料の対象です 🎉",
       freeShipRemain: "あと {amount} で送料無料",
-      demoNotice: "※ これはフロントエンドのデモです。決済は行われません。",
+      demoNotice: "※ 決済連携は準備中です。ご注文は保存されますが、実際の決済は発生しません。",
     },
     checkout: {
       title: "ご注文手続き",
@@ -246,7 +246,7 @@ export const dictionaries = {
       checkout: "결제하기",
       freeShipMet: "무료배송 대상이에요 🎉",
       freeShipRemain: "{amount} 더 담으면 무료배송",
-      demoNotice: "※ 본 화면은 프론트엔드 데모입니다. 실제 결제는 되지 않아요.",
+      demoNotice: "※ 결제 연동은 준비 중입니다. 주문은 저장되지만 실제 결제는 발생하지 않아요.",
     },
     checkout: {
       title: "주문서 작성",
