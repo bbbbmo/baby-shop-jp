@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import {
   Noto_Sans_JP,
   Noto_Sans_KR,
@@ -11,6 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
+import { LOCALE_COOKIE_KEY, isLocale } from "@/shared/i18n/types";
 import { FontModeProvider } from "@/shared/i18n/FontModeProvider";
 import { SessionProvider } from "@/entities/auth";
 import { QueryProvider } from "@/shared/api/QueryProvider";
@@ -76,15 +78,19 @@ export const metadata: Metadata = {
   description: "赤ちゃんにやさしい素材のベビー服セレクトショップ（デモ）",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const storedLocale = cookieStore.get(LOCALE_COOKIE_KEY)?.value;
+  const locale = isLocale(storedLocale) ? storedLocale : "ja";
+
   return (
-    <html lang="ja" className={`${notoJp.variable} ${notoKr.variable} ${zillaSlab.variable} ${notoSerifJp.variable} ${notoSerifKr.variable} ${plexMono.variable} ${plexSansJp.variable} ${plexSansKr.variable} h-full`}>
+    <html lang={locale} className={`${notoJp.variable} ${notoKr.variable} ${zillaSlab.variable} ${notoSerifJp.variable} ${notoSerifKr.variable} ${plexMono.variable} ${plexSansJp.variable} ${plexSansKr.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <QueryProvider>
           <SessionProvider>
-            <LocaleProvider>
+            <LocaleProvider initialLocale={locale}>
               <FontModeProvider>{children}</FontModeProvider>
             </LocaleProvider>
           </SessionProvider>

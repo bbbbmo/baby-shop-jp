@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { Locale } from "./types";
+import { LOCALE_COOKIE_KEY, type Locale } from "./types";
 import { dictionaries, type Dictionary } from "./dictionaries";
 
 type LocaleContextValue = {
@@ -21,18 +21,14 @@ type LocaleContextValue = {
 const STORAGE_KEY = "komo.locale";
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-const isLocale = (value: unknown): value is Locale =>
-  value === "ja" || value === "ko";
-
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("ja");
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (isLocale(stored)) {
-      setLocaleState(stored);
-    }
-  }, []);
+export function LocaleProvider({
+  children,
+  initialLocale = "ja",
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -41,6 +37,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
     window.localStorage.setItem(STORAGE_KEY, next);
+    document.cookie = `${LOCALE_COOKIE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
   }, []);
 
   const toggleLocale = useCallback(() => {
