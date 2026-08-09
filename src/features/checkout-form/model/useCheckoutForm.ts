@@ -29,12 +29,16 @@ export function useCheckoutForm(
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
-    const result = await submitCheckout(items, values);
-    if ("error" in result) {
-      setSubmitError({ code: result.error, productName: result.productName });
-      return;
+    try {
+      const result = await submitCheckout(items, values);
+      if ("error" in result) {
+        setSubmitError({ code: result.error, productName: result.productName });
+        return;
+      }
+      onSuccess(result.orderNumber);
+    } catch {
+      setSubmitError({ code: "unknownError" });
     }
-    onSuccess(result.orderNumber);
   });
 
   return { register, errors, isSubmitting, submitError, onSubmit };
