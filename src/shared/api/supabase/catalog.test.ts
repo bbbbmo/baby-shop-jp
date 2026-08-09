@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapDbProductToProduct, mapDbFriendLookToFriendLook } from "./catalog";
+import { mapDbProductToProduct, mapDbFriendLookToFriendLook } from "./catalog.mappers";
 
 describe("mapDbProductToProduct", () => {
   it("maps a DB row to the Product shape, deduping variant colors/sizes", () => {
@@ -33,7 +33,7 @@ describe("mapDbProductToProduct", () => {
       category: "boy-setup",
       price: 2980,
       listPrice: 3800,
-      colors: ["#e9dfd2", "#dfe5d9"],
+      colors: ["#dfe5d9", "#e9dfd2"],
       sizes: ["70", "80"],
       season: "aw",
       isNew: true,
@@ -66,6 +66,42 @@ describe("mapDbProductToProduct", () => {
     };
 
     expect(mapDbProductToProduct(row).description).toEqual({ ja: "", ko: "" });
+  });
+
+  it("returns colors/sizes in a stable order regardless of variant row order", () => {
+    const baseRow = {
+      id: "55555555-5555-5555-5555-555555555555",
+      category: "girl-setup" as const,
+      name_ja: "テスト",
+      name_ko: "테스트",
+      description_ja: null,
+      description_ko: null,
+      price: 1000,
+      list_price: 1000,
+      season: "all" as const,
+      is_new: false,
+      is_best: false,
+      sold_out: false,
+      rating: 4.5,
+      review_count: 1,
+      brands: { name_ja: "hinata" },
+    };
+
+    // Deliberately scrambled — Postgres gives no ordering guarantee on an
+    // unordered embedded relation, so the mapper must not depend on input order.
+    const scrambled = mapDbProductToProduct({
+      ...baseRow,
+      product_variants: [
+        { color: "#f4e2df", size: "90" },
+        { color: "#dfe5d9", size: "50-60" },
+        { color: "#e9dfd2", size: "80" },
+        { color: "#dfe5d9", size: "70" },
+        { color: "#f4e2df", size: "95" },
+      ],
+    });
+
+    expect(scrambled.colors).toEqual(["#dfe5d9", "#e9dfd2", "#f4e2df"]);
+    expect(scrambled.sizes).toEqual(["50-60", "70", "80", "90", "95"]);
   });
 });
 
