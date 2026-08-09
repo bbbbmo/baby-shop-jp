@@ -8,7 +8,7 @@ import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
 import { useBodyScrollLock } from "@/shared/lib/useBodyScrollLock";
 import { CloseIcon } from "@/shared/ui/icons";
 import { WornItem } from "./WornItem";
-import { lookProducts } from "./lookProducts";
+import { useLookProducts } from "./useLookProducts";
 
 type Props = {
   look: FriendLook | null;
@@ -19,6 +19,7 @@ export function LookModal({ look, onClose }: Props) {
   const { locale, d } = useLocale();
   const closeRef = useRef<HTMLButtonElement>(null);
   const open = look !== null;
+  const products = useLookProducts(look);
 
   useEscapeToClose(open, onClose);
   useBodyScrollLock(open);
@@ -137,7 +138,7 @@ export function LookModal({ look, onClose }: Props) {
                 {d.friends.wearing}
               </h3>
               <ul>
-                {lookProducts(look).map((product) => (
+                {products.map((product) => (
                   <WornItem
                     key={product.id}
                     product={product}
