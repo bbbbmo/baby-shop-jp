@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, initialCheckoutFormValues, type CheckoutFormValues } from "./schema";
 import type { CartItem } from "@/entities/cart";
+import { getAccessToken } from "@/shared/api/supabase";
 
 type SubmitError = { code: string; productName?: string };
 type CheckoutItem = { productId: string; color: string; size: string; quantity: number };
@@ -13,7 +14,6 @@ type CheckoutSuccessResponse = { orderNumber: string };
 
 export function useCheckoutForm(
   items: CartItem[],
-  userId: string | null,
   prefill: Partial<CheckoutFormValues>,
   onSuccess: (orderNumber: string) => void,
 ) {
@@ -29,7 +29,7 @@ export function useCheckoutForm(
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
-    const result = await submitCheckout(items, userId, values);
+    const result = await submitCheckout(items, values);
     if ("error" in result) {
       setSubmitError({ code: result.error, productName: result.productName });
       return;
@@ -42,7 +42,6 @@ export function useCheckoutForm(
 
 async function submitCheckout(
   items: CartItem[],
-  userId: string | null,
   shipping: CheckoutFormValues,
 ): Promise<CheckoutSuccessResponse | CheckoutErrorResponse> {
   const checkoutItems: CheckoutItem[] = items.map((i) => ({
@@ -51,10 +50,15 @@ async function submitCheckout(
     size: i.size,
     quantity: i.quantity,
   }));
+  const token = await getAccessToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const res = await fetch("/api/checkout", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items: checkoutItems, shipping, userId }),
+    headers,
+    body: JSON.stringify({ items: checkoutItems, shipping }),
   });
   if (!res.ok) {
     return (await res.json()) as CheckoutErrorResponse;

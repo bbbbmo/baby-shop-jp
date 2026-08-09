@@ -11,16 +11,14 @@ type ErrorDict = Dictionary["checkout"]["errors"];
 
 type CheckoutFormProps = {
   items: CartItem[];
-  userId: string | null;
   prefill: Partial<CheckoutFormValues>;
   onSuccess: (orderNumber: string) => void;
 };
 
-export function CheckoutForm({ items, userId, prefill, onSuccess }: CheckoutFormProps) {
+export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
   const { d } = useLocale();
   const { register, errors, isSubmitting, submitError, onSubmit } = useCheckoutForm(
     items,
-    userId,
     prefill,
     onSuccess,
   );

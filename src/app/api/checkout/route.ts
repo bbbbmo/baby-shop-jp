@@ -4,7 +4,7 @@ import { checkoutSchema, type CheckoutFormValues } from "@/features/checkout-for
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 
 type CheckoutItem = { productId: string; color: string; size: string; quantity: number };
-type CheckoutRequestBody = { items: CheckoutItem[]; shipping: unknown; userId?: string | null };
+type CheckoutRequestBody = { items: CheckoutItem[]; shipping: unknown };
 type ResolvedItem = {
   variant_id: string;
   product_name_ja: string;
@@ -17,21 +17,43 @@ type ResolvedItem = {
 type CheckoutResult = { status: number; body: Record<string, unknown> };
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as CheckoutRequestBody;
-  const result = await processCheckout(body);
-  return NextResponse.json(result.body, { status: result.status });
+  try {
+    const body = (await request.json()) as CheckoutRequestBody;
+    const userId = await resolveUserId(request);
+    const result = await processCheckout(body, userId);
+    return NextResponse.json(result.body, { status: result.status });
+  } catch {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  }
 }
 
-async function processCheckout(body: CheckoutRequestBody): Promise<CheckoutResult> {
+async function resolveUserId(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) {
+    return null;
+  }
+  const { data, error } = await supabaseServer.auth.getUser(token);
+  return error || !data.user ? null : data.user.id;
+}
+
+async function processCheckout(
+  body: CheckoutRequestBody,
+  userId: string | null,
+): Promise<CheckoutResult> {
   const parsed = checkoutSchema.safeParse(body.shipping);
-  if (!parsed.success || !Array.isArray(body.items) || body.items.length === 0) {
+  const itemsValid =
+    Array.isArray(body.items) &&
+    body.items.length > 0 &&
+    body.items.every((i) => Number.isInteger(i.quantity) && i.quantity > 0);
+  if (!parsed.success || !itemsValid) {
     return { status: 400, body: { error: "invalidInput" } };
   }
   const resolved = await resolveOrderItems(body.items);
   if ("error" in resolved) {
     return { status: 409, body: { error: "soldOut", productName: resolved.error } };
   }
-  return createOrder(body.userId ?? null, parsed.data, resolved.items);
+  return createOrder(userId, parsed.data, resolved.items);
 }
 
 async function createOrder(
@@ -45,10 +67,14 @@ async function createOrder(
     return { status: 500, body: { error: "unknownError" } };
   }
   const itemsOk = await insertOrderItems(orderId, items);
-  if (!itemsOk) {
-    return { status: 500, body: { error: "unknownError" } };
-  }
-  return { status: 200, body: { orderNumber } };
+  return itemsOk
+    ? { status: 200, body: { orderNumber } }
+    : await rollbackOrder(orderId);
+}
+
+async function rollbackOrder(orderId: string): Promise<CheckoutResult> {
+  await supabaseServer.from("orders").delete().eq("id", orderId);
+  return { status: 500, body: { error: "unknownError" } };
 }
 
 function generateOrderNumber(): string {
@@ -77,26 +103,40 @@ async function resolveOrderItems(
 async function resolveOneItem(
   item: CheckoutItem,
 ): Promise<{ item: ResolvedItem } | { error: string }> {
-  const { data, error } = await supabaseServer
+  const { data, error } = await fetchVariantWithProduct(item);
+  const product = extractProduct(data);
+  if (error || !data || data.stock < item.quantity || !product) {
+    return { error: product?.name_ja ?? item.productId };
+  }
+  return { item: buildResolvedItem(item, data.id, product) };
+}
+
+async function fetchVariantWithProduct(item: CheckoutItem) {
+  return supabaseServer
     .from("product_variants")
     .select("id, stock, products ( name_ja, price )")
     .eq("product_id", item.productId)
     .eq("color", item.color)
     .eq("size", item.size)
     .maybeSingle();
-  const product = data?.products as unknown as { name_ja: string; price: number } | undefined;
-  if (error || !data || data.stock < item.quantity || !product) {
-    return { error: product?.name_ja ?? item.productId };
-  }
+}
+
+function extractProduct(data: { products?: unknown } | null) {
+  return data?.products as { name_ja: string; price: number } | undefined;
+}
+
+function buildResolvedItem(
+  item: CheckoutItem,
+  variantId: string,
+  product: { name_ja: string; price: number },
+): ResolvedItem {
   return {
-    item: {
-      variant_id: data.id,
-      product_name_ja: product.name_ja,
-      color: item.color,
-      size: item.size,
-      unit_price: product.price,
-      quantity: item.quantity,
-    },
+    variant_id: variantId,
+    product_name_ja: product.name_ja,
+    color: item.color,
+    size: item.size,
+    unit_price: product.price,
+    quantity: item.quantity,
   };
 }
 
