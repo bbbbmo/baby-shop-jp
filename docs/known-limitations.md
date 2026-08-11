@@ -1,0 +1,56 @@
+# 알려진 한계 (Known Limitations)
+
+각 항목은 특정 기능 구현 시 의도적으로 스코프 밖으로 남긴 것입니다. 머지 블로커는
+아니지만, 관련 기능을 더 다루기 전에 확인해야 합니다.
+
+## 게스트 체크아웃 ([2026-08-09-guest-checkout-plan.md](superpowers/plans/2026-08-09-guest-checkout-plan.md))
+
+최종 전체 브랜치 리뷰에서 발견된 Critical/Important 6건은 모두 수정 후 병합됨
+(`58c6221`, `f22f13e`, `bdfcbab`, `997f8b1`). 아래 4건은 리뷰에서 낮은 우선순위로
+판단되어 의도적으로 남겨둔 항목.
+
+### 1. 주문 조회 RPC에 rate limit 없음
+
+- 위치: [`supabase/migrations/20260809020000_order_rpcs.sql:55`](../supabase/migrations/20260809020000_order_rpcs.sql)
+  — `grant execute on function get_order_by_number_and_email(text, text) to anon, authenticated;`
+- `/orders/lookup`이 로그인 없이 호출 가능한 RPC라 요청 빈도 제한이 없음.
+- **위험도: 낮음.** 주문번호 엔트로피가 10자리 hex(약 40비트)로 넓어져 있어
+  브루트포스로 맞추는 건 사실상 불가능. 일반적인 API 위생 수준의 이슈.
+- 고치려면: `/orders/lookup` 관련 API 경로에 IP 기준 rate limiter 추가 (예:
+  Upstash ratelimit, Vercel 엣지 미들웨어).
+
+### 2. 체크아웃에 idempotency key 없음
+
+- 위치: [`src/app/api/checkout/route.ts`](../src/app/api/checkout/route.ts)의
+  `POST` 핸들러, `generateOrderNumber()` 호출부 근처.
+- 네트워크 에러 발생 시 사용자에게 에러를 보여주도록 고쳤지만(최종 리뷰 Important
+  #5), 재시도 자체를 막지는 않음 — 서버가 재시도 요청과 새 주문 요청을 구분할
+  방법이 없어 중복 `orders` 행이 생길 수 있음.
+- **위험도: 낮음~중간.** 결제 연동 전인 지금은 금전적 피해 없음. **결제 붙이기
+  전에 반드시 처리 필요** (중복 결제로 직결).
+- 고치려면: 클라이언트가 폼 제출 시 `crypto.randomUUID()`로 키를 한 번 생성해
+  `Idempotency-Key` 헤더로 전송, 서버는 `orders`에 유니크 컬럼으로 저장해 같은
+  키의 재요청은 새로 만들지 않고 기존 주문을 반환.
+
+### 3. 재고를 확인만 하고 차감하지 않음
+
+- 위치: [`src/app/api/checkout/route.ts:107`](../src/app/api/checkout/route.ts)
+  (`resolveOneItem` 내부) — `data.stock < item.quantity`로 확인만 하고, 주문
+  생성 시 `product_variants.stock`을 차감하는 코드 없음.
+- 동시에 여러 명이 같은 재고에 체크아웃하면 둘 다 통과하는 경쟁 조건(TOCTOU).
+- **위험도: 낮음(지금은), 결제 연동 전 필수.** 아직 실제 결제가 없어 되돌리면
+  그만이지만, 이 상태로 실제 상거래라고 홍보하면 안 됨.
+- 고치려면: `product_variants` UPDATE를
+  `stock = stock - :quantity where stock >= :quantity` 조건부로 만들어
+  원자적으로 처리, 영향받은 행이 0개면 `soldOut`으로 되돌림.
+
+### 4. 품절 에러가 실제 DB 오류와 진짜 품절을 구분하지 않음
+
+- 위치: [`src/app/api/checkout/route.ts:107-108`](../src/app/api/checkout/route.ts)
+  — `error`(쿼리 실패), `!data`(variant 없음), `stock < quantity`(진짜 품절)가
+  전부 같은 분기에서 `409 soldOut`으로 처리됨. `product`가 없으면 상품명 대신
+  `item.productId`(UUID)가 그대로 에러 메시지에 노출됨.
+- **위험도: 낮음.** 일시적 DB 장애를 품절로 오인시키고, 드물게 내부 UUID를
+  사용자에게 보여주는 정도의 UX/정보노출 흠집.
+- 고치려면: `error`/`!data`는 `500 unknownError`로 분리하고, 진짜
+  `stock < quantity`인 경우에만 `409 soldOut` + 상품명 반환.
