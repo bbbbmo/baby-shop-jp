@@ -22,7 +22,7 @@ export const variantsRequestSchema = z.object({
 
 export const productFieldsSchema = z.object({
   brandId: z.string().min(1, "required"),
-  category: z.string().refine(isCategorySlug, { message: "required" }),
+  category: z.string().refine((value): boolean => isCategorySlug(value), { message: "required" }),
   nameJa: z.string().min(1, "required"),
   nameKo: z.string().min(1, "required"),
   descriptionJa: z.string().optional().default(""),
