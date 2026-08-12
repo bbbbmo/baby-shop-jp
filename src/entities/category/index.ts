@@ -9,4 +9,4 @@ export type {
   MenuGroup,
   MenuEntry,
 } from "./model/categories";
-export { menu, isCategorySlug, getCategoryTitle } from "./model/categories";
+export { menu, isCategorySlug, getCategoryTitle, ALL_CATEGORY_SLUGS } from "./model/categories";

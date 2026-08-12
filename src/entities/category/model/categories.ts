@@ -76,7 +76,7 @@ export const menu: MenuEntry[] = [
   { kind: "link", href: "/friends", label: "COMO Friends" },
 ];
 
-const ALL_CATEGORY_SLUGS: CategorySlug[] = menu.flatMap((entry) =>
+export const ALL_CATEGORY_SLUGS: CategorySlug[] = menu.flatMap((entry) =>
   entry.kind === "group"
     ? entry.children.map((c) => c.slug)
     : entry.slug
