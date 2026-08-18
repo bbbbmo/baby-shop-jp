@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminProducts } from "./model/useAdminProducts";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
@@ -56,12 +57,27 @@ function ProductTable({ products }: { products: AdminProductListItem[] }) {
   );
 }
 
+const DELETE_FAILED = "삭제에 실패했습니다";
+const ORDER_HISTORY_EXISTS = "주문 이력이 있어 삭제할 수 없습니다. 품절 처리해 주세요.";
+
+async function deleteProduct(id: string): Promise<string | null> {
+  try {
+    const res = await adminFetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    if (res.status === 409) return ORDER_HISTORY_EXISTS;
+    return res.ok ? null : DELETE_FAILED;
+  } catch {
+    return DELETE_FAILED;
+  }
+}
+
 function ProductRow({ product }: { product: AdminProductListItem }) {
   const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
   const onDelete = async () => {
     if (!window.confirm(`"${product.nameJa}"을(를) 삭제하시겠습니까?`)) return;
-    await adminFetch(`/api/admin/products/${product.id}`, { method: "DELETE" });
-    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    const message = await deleteProduct(product.id);
+    setError(message);
+    if (!message) queryClient.invalidateQueries({ queryKey: ["admin-products"] });
   };
   return (
     <tr className="border-b border-border">
@@ -82,6 +98,7 @@ function ProductRow({ product }: { product: AdminProductListItem }) {
       <td className="py-2 pr-3 whitespace-nowrap">
         <Link href={`/admin/products/${product.id}/edit`} className="mr-3 underline">수정</Link>
         <button type="button" onClick={onDelete} className="text-sale underline">삭제</button>
+        {error && <p className="mt-1 max-w-40 whitespace-normal text-xs text-sale">{error}</p>}
       </td>
     </tr>
   );

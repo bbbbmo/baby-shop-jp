@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { productFieldsSchema, toProductRowPayload } from "@/features/admin-product-form/model/schema";
-import { productImageUrls, removeProductImageFiles } from "@/shared/api/supabase/adminServer";
+import {
+  failureStatus,
+  productImageUrls,
+  removeProductImageFiles,
+  toFailureCode,
+} from "@/shared/api/supabase/adminServer";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -32,8 +37,9 @@ export async function DELETE(request: Request, { params }: Params): Promise<Next
   // 파일은 남으므로, 지우기 전에 url을 모아 두었다가 함께 제거한다.
   const urls = await productImageUrls(id);
   const { error } = await supabaseServer.from("products").delete().eq("id", id);
-  if (error) {
-    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  const failure = toFailureCode(error);
+  if (failure) {
+    return NextResponse.json({ error: failure }, { status: failureStatus(failure) });
   }
   await removeProductImageFiles(urls);
   return NextResponse.json({ ok: true });

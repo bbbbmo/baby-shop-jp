@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
+import { failureStatus, toFailureCode } from "@/shared/api/supabase/adminServer";
 import { variantsRequestSchema, type VariantInput } from "@/features/admin-product-form/model/schema";
 import { diffVariants, type VariantDiff } from "@/features/admin-product-form/model/variantDiff";
 
@@ -16,19 +17,19 @@ export async function PUT(request: Request, { params }: Params): Promise<NextRes
     return NextResponse.json({ error: "invalidInput" }, { status: 400 });
   }
   const { id: productId } = await params;
-  const ok = await applyVariants(productId, parsed.data.variants);
-  return ok
-    ? NextResponse.json({ ok: true })
-    : NextResponse.json({ error: "unknownError" }, { status: 500 });
+  const failure = await applyVariants(productId, parsed.data.variants);
+  return failure
+    ? NextResponse.json({ error: failure }, { status: failureStatus(failure) })
+    : NextResponse.json({ ok: true });
 }
 
-async function applyVariants(productId: string, incoming: VariantInput[]): Promise<boolean> {
+async function applyVariants(productId: string, incoming: VariantInput[]): Promise<string | null> {
   const { data: existing, error } = await supabaseServer
     .from("product_variants")
     .select("id, color, size, stock")
     .eq("product_id", productId);
   if (error) {
-    return false;
+    return "unknownError";
   }
   return runVariantWrites(productId, diffVariants(existing ?? [], incoming));
 }
@@ -37,32 +38,32 @@ async function applyVariants(productId: string, incoming: VariantInput[]): Promi
 // delete → 임시값 update → 실제값 update → insert 순으로 쓴다. 원자적이지
 // 않아 쓰기 도중 크래시하면 `__tmp_` 값이 잠깐 보일 수 있지만 드물고 재저장으로
 // 복구된다 — 원자성이 필요해지면 deferrable unique 제약 + Postgres RPC로 옮긴다.
-async function runVariantWrites(productId: string, diff: VariantDiff): Promise<boolean> {
+async function runVariantWrites(productId: string, diff: VariantDiff): Promise<string | null> {
   return (
-    (await deleteVariants(productId, diff.toDeleteIds)) &&
-    (await updateVariants(productId, diff.toUpdate, true)) &&
-    (await updateVariants(productId, diff.toUpdate, false)) &&
+    (await deleteVariants(productId, diff.toDeleteIds)) ??
+    (await updateVariants(productId, diff.toUpdate, true)) ??
+    (await updateVariants(productId, diff.toUpdate, false)) ??
     (await insertVariants(productId, diff.toInsert))
   );
 }
 
-async function deleteVariants(productId: string, ids: string[]): Promise<boolean> {
+async function deleteVariants(productId: string, ids: string[]): Promise<string | null> {
   if (ids.length === 0) {
-    return true;
+    return null;
   }
   const { error } = await supabaseServer
     .from("product_variants")
     .delete()
     .eq("product_id", productId)
     .in("id", ids);
-  return !error;
+  return toFailureCode(error);
 }
 
 async function updateVariants(
   productId: string,
   items: VariantDiff["toUpdate"],
   placeholder: boolean,
-): Promise<boolean> {
+): Promise<string | null> {
   for (const v of items) {
     // 1단계는 행마다 고유한 임시 size로 기존 (color, size) 조합을 비워 둔다.
     const payload = placeholder
@@ -73,16 +74,17 @@ async function updateVariants(
       .update(payload)
       .eq("id", v.id)
       .eq("product_id", productId);
-    if (error) return false;
+    if (error) return toFailureCode(error);
   }
-  return true;
+  return null;
 }
 
-async function insertVariants(productId: string, items: VariantDiff["toInsert"]): Promise<boolean> {
+async function insertVariants(productId: string, items: VariantDiff["toInsert"]): Promise<string | null> {
   if (items.length === 0) {
-    return true;
+    return null;
   }
   const rows = items.map((v) => ({ product_id: productId, color: v.color, size: v.size, stock: v.stock }));
   const { error } = await supabaseServer.from("product_variants").insert(rows);
-  return !error;
+  return toFailureCode(error);
 }
+
