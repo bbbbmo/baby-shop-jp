@@ -33,26 +33,56 @@ async function applyVariants(productId: string, incoming: VariantInput[]): Promi
   return runVariantWrites(productId, diffVariants(existing ?? [], incoming));
 }
 
+// ponytail: unique (product_id, color, size) 충돌을 피하려고 트랜잭션 없이
+// delete → 임시값 update → 실제값 update → insert 순으로 쓴다. 원자적이지
+// 않아 쓰기 도중 크래시하면 `__tmp_` 값이 잠깐 보일 수 있지만 드물고 재저장으로
+// 복구된다 — 원자성이 필요해지면 deferrable unique 제약 + Postgres RPC로 옮긴다.
 async function runVariantWrites(productId: string, diff: VariantDiff): Promise<boolean> {
-  if (diff.toDeleteIds.length > 0) {
-    const { error } = await supabaseServer.from("product_variants").delete().in("id", diff.toDeleteIds);
-    if (error) return false;
-  }
-  if (diff.toInsert.length > 0) {
-    const rows = diff.toInsert.map((v) => ({ product_id: productId, color: v.color, size: v.size, stock: v.stock }));
-    const { error } = await supabaseServer.from("product_variants").insert(rows);
-    if (error) return false;
-  }
-  return updateVariants(diff.toUpdate);
+  return (
+    (await deleteVariants(productId, diff.toDeleteIds)) &&
+    (await updateVariants(productId, diff.toUpdate, true)) &&
+    (await updateVariants(productId, diff.toUpdate, false)) &&
+    (await insertVariants(productId, diff.toInsert))
+  );
 }
 
-async function updateVariants(items: VariantDiff["toUpdate"]): Promise<boolean> {
+async function deleteVariants(productId: string, ids: string[]): Promise<boolean> {
+  if (ids.length === 0) {
+    return true;
+  }
+  const { error } = await supabaseServer
+    .from("product_variants")
+    .delete()
+    .eq("product_id", productId)
+    .in("id", ids);
+  return !error;
+}
+
+async function updateVariants(
+  productId: string,
+  items: VariantDiff["toUpdate"],
+  placeholder: boolean,
+): Promise<boolean> {
   for (const v of items) {
+    // 1단계는 행마다 고유한 임시 size로 기존 (color, size) 조합을 비워 둔다.
+    const payload = placeholder
+      ? { size: `__tmp_${v.id}` }
+      : { color: v.color, size: v.size, stock: v.stock };
     const { error } = await supabaseServer
       .from("product_variants")
-      .update({ color: v.color, size: v.size, stock: v.stock })
-      .eq("id", v.id);
+      .update(payload)
+      .eq("id", v.id)
+      .eq("product_id", productId);
     if (error) return false;
   }
   return true;
+}
+
+async function insertVariants(productId: string, items: VariantDiff["toInsert"]): Promise<boolean> {
+  if (items.length === 0) {
+    return true;
+  }
+  const rows = items.map((v) => ({ product_id: productId, color: v.color, size: v.size, stock: v.stock }));
+  const { error } = await supabaseServer.from("product_variants").insert(rows);
+  return !error;
 }
