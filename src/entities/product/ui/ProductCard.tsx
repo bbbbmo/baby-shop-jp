@@ -14,11 +14,20 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link href={href} className="group block">
       <div className="relative aspect-square rounded-card bg-sand">
-        <ProductThumb
-          category={product.category}
-          color={product.colors[0]}
-          className="h-full w-full rounded-card transition-transform duration-300 group-hover:scale-[1.03]"
-        />
+        {product.images[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.images[0]}
+            alt=""
+            className="h-full w-full rounded-card object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <ProductThumb
+            category={product.category}
+            color={product.colors[0]}
+            className="h-full w-full rounded-card transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        )}
         <CardBadges product={product} labels={d.product} />
         {product.soldOut && (
           <div className="absolute inset-0 flex items-center justify-center rounded-card bg-white/55">

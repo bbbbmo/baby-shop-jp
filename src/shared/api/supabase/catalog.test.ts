@@ -24,6 +24,10 @@ describe("mapDbProductToProduct", () => {
         { color: "#e9dfd2", size: "80" },
         { color: "#dfe5d9", size: "70" },
       ],
+      product_images: [
+        { url: "https://x/2.jpg", sort_order: 2 },
+        { url: "https://x/1.jpg", sort_order: 1 },
+      ],
     };
 
     expect(mapDbProductToProduct(row)).toEqual({
@@ -42,10 +46,11 @@ describe("mapDbProductToProduct", () => {
       rating: 4.8,
       reviewCount: 132,
       description: { ja: "やわらかな綿100%。", ko: "부드러운 면 100%." },
+      images: ["https://x/1.jpg", "https://x/2.jpg"],
     });
   });
 
-  it("falls back to empty strings when description is null", () => {
+  it("falls back to empty strings when description is null, and to an empty images array when there are none", () => {
     const row = {
       id: "22222222-2222-2222-2222-222222222222",
       category: "gift" as const,
@@ -63,9 +68,12 @@ describe("mapDbProductToProduct", () => {
       review_count: 128,
       brands: { name_ja: "hinata" },
       product_variants: [{ color: "#e9dfd2", size: "70" }],
+      product_images: [],
     };
 
-    expect(mapDbProductToProduct(row).description).toEqual({ ja: "", ko: "" });
+    const result = mapDbProductToProduct(row);
+    expect(result.description).toEqual({ ja: "", ko: "" });
+    expect(result.images).toEqual([]);
   });
 
   it("returns colors/sizes in a stable order regardless of variant row order", () => {
@@ -85,6 +93,7 @@ describe("mapDbProductToProduct", () => {
       rating: 4.5,
       review_count: 1,
       brands: { name_ja: "hinata" },
+      product_images: [],
     };
 
     // Deliberately scrambled — Postgres gives no ordering guarantee on an

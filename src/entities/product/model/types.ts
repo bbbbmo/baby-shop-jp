@@ -17,4 +17,5 @@ export type Product = {
   rating: number;
   reviewCount: number;
   description: Localized;
+  images: string[];
 };

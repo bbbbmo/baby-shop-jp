@@ -19,6 +19,7 @@ export type ProductRow = {
   review_count: number;
   brands: { name_ja: string } | null;
   product_variants: { color: string; size: string }[];
+  product_images: { url: string; sort_order: number }[];
 };
 
 export function mapDbProductToProduct(row: ProductRow): Product {
@@ -38,6 +39,7 @@ export function mapDbProductToProduct(row: ProductRow): Product {
     rating: row.rating,
     reviewCount: row.review_count,
     description: { ja: row.description_ja ?? "", ko: row.description_ko ?? "" },
+    images: sortedImageUrls(row.product_images),
   };
 }
 
@@ -58,6 +60,10 @@ function uniqueSizes(values: string[]): string[] {
 function sizeRank(size: string): number {
   const match = size.match(/\d+/);
   return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+}
+
+function sortedImageUrls(images: { url: string; sort_order: number }[]): string[] {
+  return [...images].sort((a, b) => a.sort_order - b.sort_order).map((i) => i.url);
 }
 
 export type FriendLookRow = {

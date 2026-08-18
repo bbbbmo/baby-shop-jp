@@ -31,11 +31,12 @@ export function ProductDetail({ product }: { product: Product }) {
   return (
     <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
       <div className="grid gap-8 md:grid-cols-2">
-        <ProductThumb
-          category={product.category}
-          color={color}
-          className="aspect-square rounded-3xl"
-        />
+        {product.images[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={product.images[0]} alt="" className="aspect-square w-full object-cover" />
+        ) : (
+          <ProductThumb category={product.category} color={color} className="aspect-square rounded-3xl" />
+        )}
         <div>
           <p className="text-xs uppercase tracking-wider text-muted">
             {product.brand}

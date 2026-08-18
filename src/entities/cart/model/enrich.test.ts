@@ -19,6 +19,7 @@ const product = (overrides: Partial<Product>): Product => ({
   rating: 4.5,
   reviewCount: 10,
   description: { ja: "説明", ko: "설명" },
+  images: [],
   ...overrides,
 });
 

@@ -15,7 +15,8 @@ const PRODUCT_SELECT = `
   id, category, name_ja, name_ko, description_ja, description_ko,
   price, list_price, season, is_new, is_best, sold_out, rating, review_count,
   brands ( name_ja ),
-  product_variants ( color, size )
+  product_variants ( color, size ),
+  product_images ( url, sort_order )
 `;
 
 export async function listProducts(): Promise<Product[]> {
