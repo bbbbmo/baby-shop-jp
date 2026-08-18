@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
+import {
+  PRODUCT_IMAGES_BUCKET as BUCKET,
+  removeProductImageFiles,
+} from "@/shared/api/supabase/adminServer";
 
-const BUCKET = "product-images";
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params): Promise<NextResponse> {
@@ -61,11 +64,14 @@ export async function DELETE(request: Request): Promise<NextResponse> {
   if (!imageId) {
     return NextResponse.json({ error: "invalidInput" }, { status: 400 });
   }
-  // ponytail: Storage의 실제 파일은 지우지 않고 DB row만 지운다 (path를
-  // 별도 컬럼에 저장하지 않아 url에서 역산해야 함 — 필요해지면 product_images에
-  // path 컬럼을 추가해 storage.remove()까지 같이 호출하도록 확장).
-  const { error } = await supabaseServer.from("product_images").delete().eq("id", imageId);
-  return error
-    ? NextResponse.json({ error: "unknownError" }, { status: 500 })
-    : NextResponse.json({ ok: true });
+  const { data, error } = await supabaseServer
+    .from("product_images")
+    .delete()
+    .eq("id", imageId)
+    .select("url");
+  if (error) {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  }
+  await removeProductImageFiles((data ?? []).map((row) => row.url));
+  return NextResponse.json({ ok: true });
 }

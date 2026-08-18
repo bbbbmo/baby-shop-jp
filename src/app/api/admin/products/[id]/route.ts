@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { productFieldsSchema, toProductRowPayload } from "@/features/admin-product-form/model/schema";
+import { productImageUrls, removeProductImageFiles } from "@/shared/api/supabase/adminServer";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -27,11 +28,13 @@ export async function DELETE(request: Request, { params }: Params): Promise<Next
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
   const { id } = await params;
-  // ponytail: product_variants/product_images는 FK on delete cascade로
-  // 같이 지워지지만, Storage에 올린 실제 이미지 파일은 안 지워지고 남는다.
-  // 업로드 개수가 많아지면 여기서 storage.remove()도 같이 호출하도록 확장.
+  // product_variants/product_images는 FK cascade로 같이 지워지지만 Storage
+  // 파일은 남으므로, 지우기 전에 url을 모아 두었다가 함께 제거한다.
+  const urls = await productImageUrls(id);
   const { error } = await supabaseServer.from("products").delete().eq("id", id);
-  return error
-    ? NextResponse.json({ error: "unknownError" }, { status: 500 })
-    : NextResponse.json({ ok: true });
+  if (error) {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  }
+  await removeProductImageFiles(urls);
+  return NextResponse.json({ ok: true });
 }
