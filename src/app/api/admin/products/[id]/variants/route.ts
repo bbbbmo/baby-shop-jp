@@ -6,6 +6,7 @@ import { variantsRequestSchema, type VariantInput } from "@/features/admin-produ
 import { diffVariants, type VariantDiff } from "@/features/admin-product-form/model/variantDiff";
 
 type Params = { params: Promise<{ id: string }> };
+type SavedVariant = { id: string; color: string; size: string; stock: number };
 
 export async function PUT(request: Request, { params }: Params): Promise<NextResponse> {
   const auth = await requireAdmin(request);
@@ -20,7 +21,7 @@ export async function PUT(request: Request, { params }: Params): Promise<NextRes
   const failure = await applyVariants(productId, parsed.data.variants);
   return failure
     ? NextResponse.json({ error: failure }, { status: failureStatus(failure) })
-    : NextResponse.json({ ok: true });
+    : NextResponse.json({ variants: await listVariants(productId) });
 }
 
 async function applyVariants(productId: string, incoming: VariantInput[]): Promise<string | null> {
@@ -88,3 +89,10 @@ async function insertVariants(productId: string, items: VariantDiff["toInsert"])
   return toFailureCode(error);
 }
 
+async function listVariants(productId: string): Promise<SavedVariant[]> {
+  const { data } = await supabaseServer
+    .from("product_variants")
+    .select("id, color, size, stock")
+    .eq("product_id", productId);
+  return data ?? [];
+}

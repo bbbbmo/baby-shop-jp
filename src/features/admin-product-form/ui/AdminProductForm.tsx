@@ -20,7 +20,7 @@ export function AdminProductForm({ productId, defaultValues, brands }: Props) {
       <BasicFields register={register} errors={formState.errors} brands={brands} />
       <FlagFields register={register} />
       <VariantRows register={register} errors={formState.errors} fields={variantFields} />
-      {submitError && <p className="text-sm text-sale">저장에 실패했습니다</p>}
+      {submitError && <p className="text-sm text-sale">{submitError}</p>}
       <SubmitBar isSubmitting={formState.isSubmitting} />
     </form>
   );
