@@ -16,8 +16,18 @@ export const variantInputSchema = z.object({
 
 export type VariantInput = z.infer<typeof variantInputSchema>;
 
+const hasUniqueColorSize = (variants: { color: string; size: string }[]): boolean =>
+  new Set(variants.map((v) => JSON.stringify([v.color, v.size]))).size === variants.length;
+
+// unique (product_id, color, size) 제약을 DB까지 가기 전에 막는다. 폼/라우트가
+// 같은 배열 스키마를 공유하므로 검사도 한 곳에만 둔다.
+export const variantsArraySchema = z
+  .array(variantInputSchema)
+  .min(1, "variantsRequired")
+  .refine(hasUniqueColorSize, { message: "색상 × 사이즈가 중복된 행이 있습니다" });
+
 export const variantsRequestSchema = z.object({
-  variants: z.array(variantInputSchema).min(1, "variantsRequired"),
+  variants: variantsArraySchema,
 });
 
 export const productFieldsSchema = z.object({
@@ -38,7 +48,7 @@ export const productFieldsSchema = z.object({
 export type ProductFieldsValues = z.infer<typeof productFieldsSchema>;
 
 export const productFormSchema = productFieldsSchema.extend({
-  variants: z.array(variantInputSchema).min(1, "variantsRequired"),
+  variants: variantsArraySchema,
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

@@ -36,9 +36,11 @@ async function applyVariants(productId: string, incoming: VariantInput[]): Promi
 }
 
 // ponytail: unique (product_id, color, size) 충돌을 피하려고 트랜잭션 없이
-// delete → 임시값 update → 실제값 update → insert 순으로 쓴다. 원자적이지
-// 않아 쓰기 도중 크래시하면 `__tmp_` 값이 잠깐 보일 수 있지만 드물고 재저장으로
-// 복구된다 — 원자성이 필요해지면 deferrable unique 제약 + Postgres RPC로 옮긴다.
+// delete → 임시값 update → 실제값 update → insert 순으로 쓴다. 원자적이지 않아
+// 도중에 실패하면 `__tmp_` size가 DB에 남을 수 있고, 재저장이 항상 복구해 주지는
+// 않는다(원인이 남아 있으면 같은 지점에서 다시 멈춘다). 흔한 원인이던 중복
+// (color, size)는 schema.ts에서 미리 막아 이 경로로 들어오지 못하게 했다 —
+// 원자성이 필요해지면 deferrable unique 제약 + Postgres RPC로 옮긴다.
 async function runVariantWrites(productId: string, diff: VariantDiff): Promise<string | null> {
   return (
     (await deleteVariants(productId, diff.toDeleteIds)) ??
@@ -89,10 +91,12 @@ async function insertVariants(productId: string, items: VariantDiff["toInsert"])
   return toFailureCode(error);
 }
 
-async function listVariants(productId: string): Promise<SavedVariant[]> {
-  const { data } = await supabaseServer
+// 쓰기는 이미 성공했으므로 읽기 실패를 에러 응답으로 뒤집지 않는다. 대신 null로
+// 알려서 클라이언트가 빈 배열을 "저장된 결과"로 오해하고 id를 지우지 않게 한다.
+async function listVariants(productId: string): Promise<SavedVariant[] | null> {
+  const { data, error } = await supabaseServer
     .from("product_variants")
     .select("id, color, size, stock")
     .eq("product_id", productId);
-  return data ?? [];
+  return error ? null : (data ?? []);
 }

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { productFieldsSchema, variantInputSchema, variantsRequestSchema } from "./schema";
+import {
+  productFieldsSchema,
+  productFormSchema,
+  variantInputSchema,
+  variantsRequestSchema,
+} from "./schema";
 
 const validFields = {
   brandId: "11111111-1111-1111-1111-111111111111",
@@ -78,5 +83,52 @@ describe("variantsRequestSchema", () => {
       variantsRequestSchema.safeParse({ variants: [{ color: "#fff", size: "70", stock: 0 }] })
         .success,
     ).toBe(true);
+  });
+
+  it("rejects two variants sharing the same color and size", () => {
+    expect(
+      variantsRequestSchema.safeParse({
+        variants: [
+          { color: "#fff", size: "70", stock: 1 },
+          { color: "#fff", size: "70", stock: 2 },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts variants that differ only by color or only by size", () => {
+    expect(
+      variantsRequestSchema.safeParse({
+        variants: [
+          { color: "#fff", size: "70", stock: 1 },
+          { color: "#fff", size: "80", stock: 1 },
+          { color: "#000", size: "70", stock: 1 },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("productFormSchema", () => {
+  it("rejects duplicate (color, size) on the client side too", () => {
+    const result = productFormSchema.safeParse({
+      ...validFields,
+      variants: [
+        { id: "v1", color: "white", size: "70", stock: 5 },
+        { id: "v2", color: "white", size: "70", stock: 3 },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("does not confuse a color/size pair split differently", () => {
+    const result = productFormSchema.safeParse({
+      ...validFields,
+      variants: [
+        { color: "a b", size: "c", stock: 1 },
+        { color: "a", size: "b c", stock: 1 },
+      ],
+    });
+    expect(result.success).toBe(true);
   });
 });

@@ -73,9 +73,14 @@ async function saveAll(
 
 /** (color, size)는 상품 안에서 유일하므로 이걸로 서버가 준 id를 되붙인다. */
 function withServerIds(values: VariantInput[], saved: SavedVariant[]): VariantInput[] {
+  // 저장은 성공했는데 재조회가 실패하면 빈 배열이 온다. 이때 id를 지워 버리면
+  // 다음 저장이 delete+insert로 갈리므로, 확인 못 한 경우엔 그대로 둔다.
+  if (saved.length === 0) {
+    return values;
+  }
   return values.map((v) => ({
     ...v,
-    id: saved.find((s) => s.color === v.color && s.size === v.size)?.id,
+    id: saved.find((s) => s.color === v.color && s.size === v.size)?.id ?? v.id,
   }));
 }
 
@@ -101,5 +106,5 @@ async function saveVariants(
   });
   if (res.status === 409) return ORDER_HISTORY_EXISTS;
   if (!res.ok) return SAVE_FAILED;
-  return ((await res.json()) as { variants: SavedVariant[] }).variants;
+  return ((await res.json()) as { variants: SavedVariant[] | null }).variants ?? [];
 }
