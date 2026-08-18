@@ -27,8 +27,8 @@ async function handleUpload(files: FileList | null, productId: string, setUpload
   try {
     setError(null);
     const results = await Promise.all(Array.from(files).map((f) => uploadOne(productId, f)));
-    if (!results.every((r) => r.ok)) { setError("일부 이미지 업로드에 실패했습니다"); return; }
-    invalidate();
+    if (!results.every((r) => r.ok)) setError("일부 이미지 업로드에 실패했습니다");
+    if (results.some((r) => r.ok)) invalidate();
   } catch { setError("이미지 업로드 중 오류가 발생했습니다"); }
   finally { setUploading(false); }
 }
