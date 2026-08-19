@@ -18,7 +18,7 @@ export type ProductRow = {
   rating: number;
   review_count: number;
   brands: { name_ja: string } | null;
-  product_variants: { color: string; size: string }[];
+  product_variants: { colors: { hex: string } | null; sizes: { value: string } | null }[];
   product_images: { url: string; sort_order: number }[];
 };
 
@@ -30,8 +30,8 @@ export function mapDbProductToProduct(row: ProductRow): Product {
     category: row.category,
     price: row.price,
     listPrice: row.list_price,
-    colors: uniqueColors(row.product_variants.map((v) => v.color)),
-    sizes: uniqueSizes(row.product_variants.map((v) => v.size)),
+    colors: uniqueColors(row.product_variants.map((v) => v.colors?.hex ?? "")),
+    sizes: uniqueSizes(row.product_variants.map((v) => v.sizes?.value ?? "")),
     season: row.season,
     isNew: row.is_new,
     isBest: row.is_best,
@@ -64,6 +64,17 @@ function sizeRank(size: string): number {
 
 function sortedImageUrls(images: { url: string; sort_order: number }[]): string[] {
   return [...images].sort((a, b) => a.sort_order - b.sort_order).map((i) => i.url);
+}
+
+export type JoinedVariantRow = {
+  id: string;
+  stock: number;
+  colors: { hex: string } | null;
+  sizes: { value: string } | null;
+};
+
+export function mapVariantRow(row: JoinedVariantRow): { id: string; color: string; size: string; stock: number } {
+  return { id: row.id, color: row.colors?.hex ?? "", size: row.sizes?.value ?? "", stock: row.stock };
 }
 
 export type FriendLookRow = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapDbProductToProduct, mapDbFriendLookToFriendLook } from "./catalog.mappers";
+import { mapDbProductToProduct, mapDbFriendLookToFriendLook, mapVariantRow } from "./catalog.mappers";
 
 describe("mapDbProductToProduct", () => {
   it("maps a DB row to the Product shape, deduping variant colors/sizes", () => {
@@ -20,9 +20,9 @@ describe("mapDbProductToProduct", () => {
       review_count: 132,
       brands: { name_ja: "hinata" },
       product_variants: [
-        { color: "#e9dfd2", size: "70" },
-        { color: "#e9dfd2", size: "80" },
-        { color: "#dfe5d9", size: "70" },
+        { colors: { hex: "#e9dfd2" }, sizes: { value: "70" } },
+        { colors: { hex: "#e9dfd2" }, sizes: { value: "80" } },
+        { colors: { hex: "#dfe5d9" }, sizes: { value: "70" } },
       ],
       product_images: [
         { url: "https://x/2.jpg", sort_order: 2 },
@@ -67,7 +67,7 @@ describe("mapDbProductToProduct", () => {
       rating: 4.7,
       review_count: 128,
       brands: { name_ja: "hinata" },
-      product_variants: [{ color: "#e9dfd2", size: "70" }],
+      product_variants: [{ colors: { hex: "#e9dfd2" }, sizes: { value: "70" } }],
       product_images: [],
     };
 
@@ -96,21 +96,31 @@ describe("mapDbProductToProduct", () => {
       product_images: [],
     };
 
-    // Deliberately scrambled — Postgres gives no ordering guarantee on an
-    // unordered embedded relation, so the mapper must not depend on input order.
     const scrambled = mapDbProductToProduct({
       ...baseRow,
       product_variants: [
-        { color: "#f4e2df", size: "90" },
-        { color: "#dfe5d9", size: "50-60" },
-        { color: "#e9dfd2", size: "80" },
-        { color: "#dfe5d9", size: "70" },
-        { color: "#f4e2df", size: "95" },
+        { colors: { hex: "#f4e2df" }, sizes: { value: "90" } },
+        { colors: { hex: "#dfe5d9" }, sizes: { value: "50-60" } },
+        { colors: { hex: "#e9dfd2" }, sizes: { value: "80" } },
+        { colors: { hex: "#dfe5d9" }, sizes: { value: "70" } },
+        { colors: { hex: "#f4e2df" }, sizes: { value: "95" } },
       ],
     });
 
     expect(scrambled.colors).toEqual(["#dfe5d9", "#e9dfd2", "#f4e2df"]);
     expect(scrambled.sizes).toEqual(["50-60", "70", "80", "90", "95"]);
+  });
+});
+
+describe("mapVariantRow", () => {
+  it("maps a joined variant row to the flat ProductVariantRow shape", () => {
+    const row = { id: "v1", stock: 5, colors: { hex: "#e9dfd2" }, sizes: { value: "70" } };
+    expect(mapVariantRow(row)).toEqual({ id: "v1", color: "#e9dfd2", size: "70", stock: 5 });
+  });
+
+  it("falls back to empty strings when the color or size join is missing", () => {
+    const row = { id: "v2", stock: 3, colors: null, sizes: null };
+    expect(mapVariantRow(row)).toEqual({ id: "v2", color: "", size: "", stock: 3 });
   });
 });
 

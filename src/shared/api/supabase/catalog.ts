@@ -2,20 +2,22 @@ import { supabase } from "./client";
 import {
   mapDbFriendLookToFriendLook,
   mapDbProductToProduct,
+  mapVariantRow,
   type FriendLookRow,
+  type JoinedVariantRow,
   type ProductRow,
 } from "./catalog.mappers";
 import type { Product } from "@/entities/product";
 import type { FriendLook } from "@/entities/look";
 
-export { mapDbProductToProduct, mapDbFriendLookToFriendLook };
-export type { ProductRow, FriendLookRow };
+export { mapDbProductToProduct, mapDbFriendLookToFriendLook, mapVariantRow };
+export type { ProductRow, FriendLookRow, JoinedVariantRow };
 
 const PRODUCT_SELECT = `
   id, category, name_ja, name_ko, description_ja, description_ko,
   price, list_price, season, is_new, is_best, sold_out, rating, review_count,
   brands ( name_ja ),
-  product_variants ( color, size ),
+  product_variants ( colors ( hex ), sizes ( value ) ),
   product_images ( url, sort_order )
 `;
 
@@ -54,12 +56,12 @@ export async function getProductVariants(
 ): Promise<ProductVariantRow[]> {
   const { data, error } = await supabase
     .from("product_variants")
-    .select("id, color, size, stock")
+    .select("id, stock, colors ( hex ), sizes ( value )")
     .eq("product_id", productId);
   if (error) {
     throw new Error(error.message);
   }
-  return data ?? [];
+  return ((data ?? []) as unknown as JoinedVariantRow[]).map(mapVariantRow);
 }
 
 export async function listFriendLooks(): Promise<FriendLook[]> {
