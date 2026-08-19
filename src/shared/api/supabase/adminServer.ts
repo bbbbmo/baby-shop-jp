@@ -13,6 +13,11 @@ export async function productImageUrls(productId: string): Promise<string[]> {
   return (data ?? []).map((row) => row.url);
 }
 
+/** 비-ASCII/특수문자를 Storage 키에 안전한 문자로 치환한다 (업로드 500 방지). */
+export function sanitizeStorageFilename(name: string): string {
+  return name.replace(/[^A-Za-z0-9._-]/g, "_");
+}
+
 /** 공개 URL에서 Storage 객체 경로를 역산해 실제 파일까지 지운다. */
 export async function removeProductImageFiles(urls: string[]): Promise<void> {
   const paths = urls.flatMap(toStoragePath);

@@ -4,6 +4,7 @@ import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import {
   PRODUCT_IMAGES_BUCKET as BUCKET,
   removeProductImageFiles,
+  sanitizeStorageFilename,
 } from "@/shared/api/supabase/adminServer";
 
 type Params = { params: Promise<{ id: string }> };
@@ -25,7 +26,7 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
 }
 
 async function uploadAndInsert(productId: string, file: File) {
-  const path = `${productId}/${Date.now()}-${file.name}`;
+  const path = `${productId}/${Date.now()}-${sanitizeStorageFilename(file.name)}`;
   const { error: uploadError } = await supabaseServer.storage.from(BUCKET).upload(path, file);
   if (uploadError) {
     return null;
