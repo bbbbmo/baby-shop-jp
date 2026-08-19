@@ -102,7 +102,11 @@ async function resolveOrderItems(
 async function resolveOneItem(
   item: CheckoutItem,
 ): Promise<{ item: ResolvedItem } | { error: string }> {
-  const { data, error } = await fetchVariantWithProduct(item);
+  const ids = await resolveColorSizeIds(item.color, item.size);
+  if (!ids) {
+    return { error: item.productId };
+  }
+  const { data, error } = await fetchVariantWithProduct(item, ids);
   const product = extractProduct(data);
   if (error || !data || data.stock < item.quantity || !product) {
     return { error: product?.name_ja ?? item.productId };
@@ -110,13 +114,24 @@ async function resolveOneItem(
   return { item: buildResolvedItem(item, data.id, product) };
 }
 
-async function fetchVariantWithProduct(item: CheckoutItem) {
+async function resolveColorSizeIds(
+  hex: string,
+  size: string,
+): Promise<{ colorId: string; sizeId: string } | null> {
+  const [color, sizeRow] = await Promise.all([
+    supabaseServer.from("colors").select("id").eq("hex", hex).maybeSingle(),
+    supabaseServer.from("sizes").select("id").eq("value", size).maybeSingle(),
+  ]);
+  return color.data && sizeRow.data ? { colorId: color.data.id, sizeId: sizeRow.data.id } : null;
+}
+
+function fetchVariantWithProduct(item: CheckoutItem, ids: { colorId: string; sizeId: string }) {
   return supabaseServer
     .from("product_variants")
     .select("id, stock, products ( name_ja, price )")
     .eq("product_id", item.productId)
-    .eq("color", item.color)
-    .eq("size", item.size)
+    .eq("color_id", ids.colorId)
+    .eq("size_id", ids.sizeId)
     .maybeSingle();
 }
 
