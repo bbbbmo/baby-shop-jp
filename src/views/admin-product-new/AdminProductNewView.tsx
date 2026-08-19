@@ -1,8 +1,6 @@
 "use client";
 
-import { useBrands } from "@/features/admin-product-form/model/useBrands";
-import { AdminProductForm } from "@/features/admin-product-form/ui/AdminProductForm";
-import { EMPTY_PRODUCT_FORM_VALUES } from "@/features/admin-product-form/model/schema";
+import { useBrands, AdminProductForm, EMPTY_PRODUCT_FORM_VALUES } from "@/features/admin-product-form";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
 
 export function AdminProductNewView() {

@@ -2,13 +2,11 @@
 
 import { useParams } from "next/navigation";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
-import { useBrands } from "@/features/admin-product-form/model/useBrands";
+import { useBrands, AdminProductForm, ImageUploader } from "@/features/admin-product-form";
 import { useAdminProduct } from "./model/useAdminProduct";
 import { useAdminVariants } from "./model/useAdminVariants";
 import { buildFormDefaults } from "./model/buildFormDefaults";
-import { AdminProductForm } from "@/features/admin-product-form/ui/AdminProductForm";
 import { useProductImages } from "./model/useProductImages";
-import { ImageUploader } from "@/features/admin-product-form/ui/ImageUploader";
 
 export function AdminProductEditView() {
   const { id } = useParams<{ id: string }>();

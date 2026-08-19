@@ -1,6 +1,6 @@
 import type { AdminProductDetail } from "@/shared/api/supabase/admin";
 import type { ProductVariantRow } from "@/shared/api/supabase/catalog";
-import type { ProductFormValues } from "@/features/admin-product-form/model/schema";
+import type { ProductFormValues } from "@/features/admin-product-form";
 
 export function buildFormDefaults(
   product: AdminProductDetail,

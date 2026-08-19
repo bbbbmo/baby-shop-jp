@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { failureStatus, toFailureCode } from "@/shared/api/supabase/adminServer";
-import { variantsRequestSchema, type VariantInput } from "@/features/admin-product-form/model/schema";
-import { diffVariants, type VariantDiff } from "@/features/admin-product-form/model/variantDiff";
+import { variantsRequestSchema, diffVariants, type VariantInput, type VariantDiff } from "@/features/admin-product-form";
 
 type Params = { params: Promise<{ id: string }> };
 type SavedVariant = { id: string; color: string; size: string; stock: number };

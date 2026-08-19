@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
-import { productFieldsSchema, toProductRowPayload } from "@/features/admin-product-form/model/schema";
+import { productFieldsSchema, toProductRowPayload } from "@/features/admin-product-form";
 
 export async function POST(request: Request): Promise<NextResponse> {
   const auth = await requireAdmin(request);
