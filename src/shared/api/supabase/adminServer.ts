@@ -39,5 +39,7 @@ export function toFailureCode(error: { code?: string } | null): string | null {
 }
 
 export function failureStatus(code: string): number {
-  return code === "orderHistoryExists" ? 409 : 500;
+  if (code === "orderHistoryExists") return 409;
+  if (code === "invalidColor" || code === "invalidSize") return 400;
+  return 500;
 }
