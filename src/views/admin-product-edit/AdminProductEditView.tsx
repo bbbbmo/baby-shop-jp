@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
-import { useBrands, AdminProductForm, ImageUploader } from "@/features/admin-product-form";
+import { useBrands, useColors, useSizes, AdminProductForm, ImageUploader } from "@/features/admin-product-form";
 import { useAdminProduct } from "./model/useAdminProduct";
 import { useAdminVariants } from "./model/useAdminVariants";
 import { buildFormDefaults } from "./model/buildFormDefaults";
@@ -11,12 +11,14 @@ import { useProductImages } from "./model/useProductImages";
 export function AdminProductEditView() {
   const { id } = useParams<{ id: string }>();
   const brands = useBrands();
+  const colors = useColors();
+  const sizes = useSizes();
   const product = useAdminProduct(id);
   const variants = useAdminVariants(id);
   const images = useProductImages(id);
 
-  const isLoading = brands.isLoading || product.isLoading || variants.isLoading || images.isLoading;
-  const error = brands.error ?? product.error ?? variants.error ?? images.error;
+  const isLoading = brands.isLoading || colors.isLoading || sizes.isLoading || product.isLoading || variants.isLoading || images.isLoading;
+  const error = brands.error ?? colors.error ?? sizes.error ?? product.error ?? variants.error ?? images.error;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -28,6 +30,8 @@ export function AdminProductEditView() {
               productId={id}
               defaultValues={buildFormDefaults(product.data, variants.data ?? [])}
               brands={brands.data ?? []}
+              colors={colors.data ?? []}
+              sizes={sizes.data ?? []}
             />
             <ImageUploader productId={id} images={images.data ?? []} />
           </>

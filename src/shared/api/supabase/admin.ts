@@ -71,3 +71,29 @@ export async function listBrands(): Promise<AdminBrand[]> {
   }
   return (data ?? []).map((r) => ({ id: r.id, nameJa: r.name_ja }));
 }
+
+export type AdminColor = { id: string; hex: string; name: string; aliases: string[] };
+
+export async function listColors(): Promise<AdminColor[]> {
+  const { data, error } = await supabase
+    .from("colors")
+    .select("id, hex, name, aliases")
+    .order("sort_order", { ascending: true });
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data ?? [];
+}
+
+export type AdminSize = { id: string; value: string };
+
+export async function listSizes(): Promise<AdminSize[]> {
+  const { data, error } = await supabase
+    .from("sizes")
+    .select("id, value")
+    .order("sort_order", { ascending: true });
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data ?? [];
+}

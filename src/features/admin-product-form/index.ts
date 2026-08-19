@@ -1,4 +1,6 @@
 export { useBrands } from "./model/useBrands";
+export { useColors } from "./model/useColors";
+export { useSizes } from "./model/useSizes";
 export { AdminProductForm } from "./ui/AdminProductForm";
 export { ImageUploader } from "./ui/ImageUploader";
 export {

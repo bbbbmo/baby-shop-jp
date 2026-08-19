@@ -6,12 +6,18 @@ import { useAdminProductForm } from "../model/useAdminProductForm";
 import { VariantRows } from "./VariantRows";
 import { ALL_CATEGORY_SLUGS, getCategoryTitle } from "@/entities/category";
 import { FormField } from "@/shared/ui/FormField";
-import type { AdminBrand } from "@/shared/api/supabase/admin";
+import type { AdminBrand, AdminColor, AdminSize } from "@/shared/api/supabase/admin";
 import type { ProductFormValues } from "../model/schema";
 
-type Props = { productId: string | null; defaultValues: ProductFormValues; brands: AdminBrand[] };
+type Props = {
+  productId: string | null;
+  defaultValues: ProductFormValues;
+  brands: AdminBrand[];
+  colors: AdminColor[];
+  sizes: AdminSize[];
+};
 
-export function AdminProductForm({ productId, defaultValues, brands }: Props) {
+export function AdminProductForm({ productId, defaultValues, brands, colors, sizes }: Props) {
   const { form, variantFields, onSubmit, submitError } = useAdminProductForm(productId, defaultValues);
   const { register, formState } = form;
 
@@ -19,7 +25,7 @@ export function AdminProductForm({ productId, defaultValues, brands }: Props) {
     <form onSubmit={onSubmit} className="space-y-6" noValidate>
       <BasicFields register={register} errors={formState.errors} brands={brands} />
       <FlagFields register={register} />
-      <VariantRows register={register} errors={formState.errors} fields={variantFields} />
+      <VariantRows register={register} errors={formState.errors} fields={variantFields} colors={colors} sizes={sizes} />
       {submitError && <p className="text-sm text-sale">{submitError}</p>}
       <SubmitBar isSubmitting={formState.isSubmitting} />
     </form>
