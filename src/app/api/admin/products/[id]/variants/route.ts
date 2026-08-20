@@ -46,33 +46,40 @@ async function fetchExisting(productId: string) {
   return { data: rows.map(mapVariantRow), error };
 }
 
+// 조회 자체가 실패한 것(DB 오류)과 값이 정말 테이블에 없는 것(입력 오류)을
+// 구분해야 앞의 경우를 관리자 입력 탓(400)으로 잘못 돌리지 않는다.
+type ResolveResult = { ids: Map<string, string> } | { dbError: true } | { notFound: true };
+
 async function fetchLookup(incoming: VariantInput[]): Promise<IdLookup | { error: string }> {
-  const colorIdByHex = await resolveColorIds(incoming);
-  if (!colorIdByHex) {
-    return { error: "invalidColor" };
+  const colorResult = await resolveColorIds(incoming);
+  if (!("ids" in colorResult)) {
+    return { error: "dbError" in colorResult ? "unknownError" : "invalidColor" };
   }
-  const sizeIdByValue = await resolveSizeIds(incoming);
-  return sizeIdByValue ? { colorIdByHex, sizeIdByValue } : { error: "invalidSize" };
+  const sizeResult = await resolveSizeIds(incoming);
+  if (!("ids" in sizeResult)) {
+    return { error: "dbError" in sizeResult ? "unknownError" : "invalidSize" };
+  }
+  return { colorIdByHex: colorResult.ids, sizeIdByValue: sizeResult.ids };
 }
 
-async function resolveColorIds(incoming: VariantInput[]): Promise<Map<string, string> | null> {
+async function resolveColorIds(incoming: VariantInput[]): Promise<ResolveResult> {
   const hexes = Array.from(new Set(incoming.map((v) => v.color)));
   const { data, error } = await supabaseServer.from("colors").select("id, hex").in("hex", hexes);
   if (error || !data) {
-    return null;
+    return { dbError: true };
   }
   const byHex = new Map(data.map((c) => [c.hex, c.id]));
-  return hexes.every((h) => byHex.has(h)) ? byHex : null;
+  return hexes.every((h) => byHex.has(h)) ? { ids: byHex } : { notFound: true };
 }
 
-async function resolveSizeIds(incoming: VariantInput[]): Promise<Map<string, string> | null> {
+async function resolveSizeIds(incoming: VariantInput[]): Promise<ResolveResult> {
   const values = Array.from(new Set(incoming.map((v) => v.size)));
   const { data, error } = await supabaseServer.from("sizes").select("id, value").in("value", values);
   if (error || !data) {
-    return null;
+    return { dbError: true };
   }
   const byValue = new Map(data.map((s) => [s.value, s.id]));
-  return values.every((v) => byValue.has(v)) ? byValue : null;
+  return values.every((v) => byValue.has(v)) ? { ids: byValue } : { notFound: true };
 }
 
 // ponytail: unique (product_id, color_id, size_id) 충돌을 피하려고 트랜잭션 없이
