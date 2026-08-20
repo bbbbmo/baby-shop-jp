@@ -110,6 +110,35 @@ describe("mapDbProductToProduct", () => {
     expect(scrambled.colors).toEqual(["#dfe5d9", "#e9dfd2", "#f4e2df"]);
     expect(scrambled.sizes).toEqual(["50-60", "70", "80", "90", "95"]);
   });
+
+  it("filters out a variant with a missing color/size join (mid-save null) instead of exposing a blank option", () => {
+    const row = {
+      id: "66666666-6666-6666-6666-666666666666",
+      category: "girl-setup" as const,
+      name_ja: "テスト",
+      name_ko: "테스트",
+      description_ja: null,
+      description_ko: null,
+      price: 1000,
+      list_price: 1000,
+      season: "all" as const,
+      is_new: false,
+      is_best: false,
+      sold_out: false,
+      rating: 4.5,
+      review_count: 1,
+      brands: { name_ja: "hinata" },
+      product_variants: [
+        { colors: { hex: "#e9dfd2" }, sizes: { value: "70" } },
+        { colors: null, sizes: null },
+      ],
+      product_images: [],
+    };
+
+    const result = mapDbProductToProduct(row);
+    expect(result.colors).toEqual(["#e9dfd2"]);
+    expect(result.sizes).toEqual(["70"]);
+  });
 });
 
 describe("mapVariantRow", () => {

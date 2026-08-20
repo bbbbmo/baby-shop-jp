@@ -46,12 +46,19 @@ export function mapDbProductToProduct(row: ProductRow): Product {
 // Postgres gives no ordering guarantee on the embedded product_variants rows
 // (and it will change the instant a variant row is UPDATEd), so colors/sizes
 // are deduped and sorted here rather than relying on DB row order.
+//
+// "" is filtered out here (not in mapVariantRow below) because color_id/size_id
+// are nullable — mid-save (see the two-phase update in variants/route.ts) a row
+// can briefly have a null join, which maps to "". The storefront must never
+// offer a blank color/size, but the admin form's ProductVariantRow SHOULD see
+// the broken row so its existing zod validation forces a re-pick. Don't "fix"
+// one to match the other.
 function uniqueColors(values: string[]): string[] {
-  return Array.from(new Set(values)).sort();
+  return Array.from(new Set(values.filter(Boolean))).sort();
 }
 
 function uniqueSizes(values: string[]): string[] {
-  return Array.from(new Set(values)).sort((a, b) => sizeRank(a) - sizeRank(b));
+  return Array.from(new Set(values.filter(Boolean))).sort((a, b) => sizeRank(a) - sizeRank(b));
 }
 
 // Sizes look like "50-60", "70", "90", "95" — rank by the leading number so
