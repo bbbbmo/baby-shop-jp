@@ -46,11 +46,19 @@
 
 ### 4. 품절 에러가 실제 DB 오류와 진짜 품절을 구분하지 않음
 
-- 위치: [`src/app/api/checkout/route.ts:107-108`](../src/app/api/checkout/route.ts)
-  — `error`(쿼리 실패), `!data`(variant 없음), `stock < quantity`(진짜 품절)가
-  전부 같은 분기에서 `409 soldOut`으로 처리됨. `product`가 없으면 상품명 대신
-  `item.productId`(UUID)가 그대로 에러 메시지에 노출됨.
+- 위치: [`src/app/api/checkout/route.ts:111-112`](../src/app/api/checkout/route.ts)
+  (`resolveOneItem` 내부) — `error`(쿼리 실패), `!data`(variant 없음),
+  `stock < quantity`(진짜 품절)가 전부 같은 분기에서 `409 soldOut`으로 처리됨.
+  `product`가 없으면 상품명 대신 `item.productId`(UUID)가 그대로 에러 메시지에
+  노출됨.
+- 색상/사이즈 마스터 리스트 도입(`color_id`/`size_id` FK화) 이후 같은
+  `409 soldOut`으로 가는 세 번째 경로가 생김: [`resolveColorSizeIds`](../src/app/api/checkout/route.ts)
+  (`resolveOneItem` 바로 위, 117-126행)가 hex/사이즈 값으로 `colors`/`sizes`를
+  조회하다 실패하면(쿼리 오류든 매칭 없음이든 구분 없이) `null`을 반환하고,
+  이 역시 상품명 대신 `item.productId`가 노출되는 동일한 `409 soldOut`으로
+  이어짐.
 - **위험도: 낮음.** 일시적 DB 장애를 품절로 오인시키고, 드물게 내부 UUID를
   사용자에게 보여주는 정도의 UX/정보노출 흠집.
-- 고치려면: `error`/`!data`는 `500 unknownError`로 분리하고, 진짜
-  `stock < quantity`인 경우에만 `409 soldOut` + 상품명 반환.
+- 고치려면: `error`/`!data`/`resolveColorSizeIds`의 DB 오류 케이스는
+  `500 unknownError`로 분리하고, 진짜 `stock < quantity`(또는 진짜 hex/사이즈
+  불일치)인 경우에만 `409 soldOut` + 상품명 반환.
