@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { exchangeCodeForSession } from "@/shared/api/supabase";
 
@@ -14,8 +14,14 @@ export default function AuthCallbackPage() {
 
 function AuthCallbackHandler() {
   const searchParams = useSearchParams();
+  const handled = useRef(false);
 
   useEffect(() => {
+    // React StrictMode(dev)가 effect를 두 번 실행하는데, OAuth code는
+    // 한 번 쓰면 무효화되는 일회용 값이라 두 번째 exchange는 항상 실패한다.
+    // ref로 막아 실제 처리가 한 번만 일어나게 한다.
+    if (handled.current) return;
+    handled.current = true;
     handleCallback(searchParams);
   }, [searchParams]);
 
