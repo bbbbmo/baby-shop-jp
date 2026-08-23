@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
@@ -12,14 +12,19 @@ import { ProfileCard } from "./ProfileCard";
 export function MypageView() {
   const router = useRouter();
   const { user, loading } = useSession();
+  const loggingOut = useRef(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    // signOut() 직후에도 user가 null이 되면서 이 effect가 도는데, 로그아웃
+    // 버튼 핸들러가 이미 "/"로 보내려는 참이라 여기서 또 "/signin"으로
+    // 보내면 의도한 목적지와 경합한다. 의도적인 로그아웃 중에는 건너뛴다.
+    if (!loading && !user && !loggingOut.current) {
       router.replace("/signin");
     }
   }, [loading, user, router]);
 
   const handleLogout = async () => {
+    loggingOut.current = true;
     const { error } = await signOut();
     if (error) {
       console.error(error);
