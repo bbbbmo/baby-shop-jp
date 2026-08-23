@@ -41,13 +41,17 @@ export async function signInWithOAuth(
   provider: "google" | "line",
   from: "signup" | "signin",
 ): Promise<{ error: string | null }> {
-  // "line"은 supabase-js의 내장 Provider 유니온에 없다 (Custom OAuth Provider로
-  // Supabase Dashboard에 등록해야 런타임에서 동작). 타입만 캐스팅한다.
   const { error } = await supabase.auth.signInWithOAuth({
-    provider: provider as Provider,
+    provider: toSupabaseProvider(provider),
     options: { redirectTo: `${window.location.origin}/auth/callback?from=${from}` },
   });
   return { error: error ? mapAuthError(error) : null };
+}
+
+// "line"은 supabase-js의 내장 Provider 유니온에 없다 — Supabase Dashboard에
+// Custom OAuth Provider로 등록한 식별자(custom:line)를 그대로 넘겨야 한다.
+function toSupabaseProvider(provider: "google" | "line"): Provider {
+  return (provider === "line" ? "custom:line" : provider) as Provider;
 }
 
 export async function exchangeCodeForSession(
