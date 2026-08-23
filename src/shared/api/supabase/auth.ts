@@ -111,5 +111,9 @@ function mapAuthError(error: AuthError): string {
   if (error.code === "email_not_confirmed") {
     return "emailNotConfirmed";
   }
-  return "unknownError";
+  // 알려진 케이스가 아니면 원래 코드(없으면 에러 클래스 이름)를 그대로
+  // 내보낸다. UI는 어차피 errors[code] ?? errors.unknownError로 안전하게
+  // 폴백해 문구는 그대로면서, URL(authError=...)에 실제 원인이 남아 다음
+  // 재현 때 바로 알 수 있다.
+  return error.code ?? error.name ?? "unknownError";
 }
