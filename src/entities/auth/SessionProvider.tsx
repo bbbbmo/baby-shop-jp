@@ -34,6 +34,19 @@ export function SessionProvider({
     });
   }, []);
 
+  useEffect(() => {
+    // 뒤로가기로 bfcache에서 페이지가 복원되면 마운트/세션 재확인이 다시
+    // 돌지 않아, 로그아웃 이후에도 로그인 당시 렌더링이 그대로 보인다.
+    // 강제로 새로고침해 실제 세션 상태를 다시 확인하게 한다.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   const value = useMemo<SessionContextValue>(
     () => ({ user, loading }),
     [user, loading],
