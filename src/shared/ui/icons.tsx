@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Star,
   User,
+  Shield,
 } from "lucide-react";
 
 type IconProps = { className?: string };
@@ -28,6 +29,10 @@ export function MenuIcon({ className = base }: IconProps) {
 
 export function ProfileIcon({ className = base }: IconProps) {
   return <User className={className} strokeWidth={1.6} aria-hidden />;
+}
+
+export function ShieldIcon({ className = base }: IconProps) {
+  return <Shield className={className} strokeWidth={1.6} aria-hidden />;
 }
 
 export function CloseIcon({ className = base }: IconProps) {

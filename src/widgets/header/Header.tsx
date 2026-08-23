@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
-import { MenuIcon, ProfileIcon } from "@/shared/ui/icons";
+import { isAdminEmail } from "@/shared/lib/adminAuth";
+import { MenuIcon, ProfileIcon, ShieldIcon } from "@/shared/ui/icons";
 import { CartButton } from "./CartButton";
 import { NavDrawer } from "./NavDrawer";
 
 export function Header() {
   const { d } = useLocale();
   const { user } = useSession();
+  const isAdmin = isAdminEmail(user?.email);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -62,6 +64,15 @@ export function Header() {
             {d.brandName}
           </Link>
           <div className="flex items-center gap-5">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                aria-label={d.admin.title}
+                className="p-2 -m-2 text-foreground"
+              >
+                <ShieldIcon className="h-6 w-6" />
+              </Link>
+            )}
             <CartButton />
             <Link
               href={user ? "/mypage" : "/signin"}

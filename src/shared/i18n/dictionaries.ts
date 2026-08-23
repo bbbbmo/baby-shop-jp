@@ -196,6 +196,9 @@ export const dictionaries = {
       saveButton: "保存する",
       cancelButton: "キャンセル",
     },
+    admin: {
+      title: "管理者ページ",
+    },
     legal: {
       termsTitle: "利用規約",
       privacyTitle: "プライバシーポリシー",
@@ -396,6 +399,9 @@ export const dictionaries = {
       ordersEmpty: "주문 내역이 없어요.",
       saveButton: "저장",
       cancelButton: "취소",
+    },
+    admin: {
+      title: "관리자 페이지",
     },
     legal: {
       termsTitle: "이용약관",
