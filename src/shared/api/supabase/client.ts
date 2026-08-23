@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,11 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// supabase-js 기본값은 flowType: "implicit"이라, OAuth 성공 시 세션 토큰이
-// URL 쿼리(code)가 아니라 해시 프래그먼트(#access_token=...)로 온다.
-// auth/callback 페이지는 code를 exchangeCodeForSession으로 교환하는
-// PKCE 흐름을 전제로 하므로, implicit 기본값에서는 code가 항상 없다고
-// 판단해 로그인이 실제로는 성공했는데도 "취소됨"으로 잘못 표시된다.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { flowType: "pkce" },
-});
+// createBrowserClient는 PKCE 플로우 + 쿠키 저장을 기본으로 쓴다
+// (localStorage 대신) — OAuth 리다이렉트를 왕복하는 사이 code_verifier가
+// 유실되던 문제(pkce_code_verifier_not_found)를 근본적으로 해결한다.
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
