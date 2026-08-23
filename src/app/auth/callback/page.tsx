@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
+import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { exchangeCodeForSession } from "@/shared/api/supabase";
 
 export default function AuthCallbackPage() {
@@ -13,27 +13,23 @@ export default function AuthCallbackPage() {
 }
 
 function AuthCallbackHandler() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    handleCallback(searchParams, router);
-  }, [searchParams, router]);
+    handleCallback(searchParams);
+  }, [searchParams]);
 
   return <div className="mx-auto max-w-480 px-6 py-20 sm:px-10" />;
 }
 
-async function handleCallback(
-  searchParams: ReadonlyURLSearchParams,
-  router: ReturnType<typeof useRouter>,
-): Promise<void> {
+async function handleCallback(searchParams: ReadonlyURLSearchParams): Promise<void> {
   const from = searchParams.get("from") === "signin" ? "signin" : "signup";
   const code = searchParams.get("code");
   const oauthError = searchParams.get("error");
   if (oauthError || !code) {
-    router.replace(`/${from}?authError=${oauthError ?? "oauthCancelled"}`);
+    window.location.replace(`/${from}?authError=${oauthError ?? "oauthCancelled"}`);
     return;
   }
   const { error } = await exchangeCodeForSession(code);
-  router.replace(error ? `/${from}?authError=${error}` : "/");
+  window.location.replace(error ? `/${from}?authError=${error}` : "/");
 }
