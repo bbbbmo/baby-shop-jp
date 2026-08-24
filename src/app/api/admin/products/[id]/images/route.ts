@@ -10,7 +10,7 @@ import {
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireAdmin(request);
+  const auth = await requireAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
@@ -57,7 +57,7 @@ async function nextSortOrder(productId: string): Promise<number> {
 }
 
 export async function DELETE(request: Request): Promise<NextResponse> {
-  const auth = await requireAdmin(request);
+  const auth = await requireAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }

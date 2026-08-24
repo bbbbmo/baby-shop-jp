@@ -4,7 +4,7 @@ import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { productFieldsSchema, toProductRowPayload } from "@/features/admin-product-form";
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const auth = await requireAdmin(request);
+  const auth = await requireAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }

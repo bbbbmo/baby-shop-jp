@@ -10,7 +10,7 @@ type SavedVariant = { id: string; color: string; size: string; stock: number };
 type IdLookup = { colorIdByHex: Map<string, string>; sizeIdByValue: Map<string, string> };
 
 export async function PUT(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireAdmin(request);
+  const auth = await requireAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }

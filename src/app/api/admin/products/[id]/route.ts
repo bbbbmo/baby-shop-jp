@@ -12,7 +12,7 @@ import {
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireAdmin(request);
+  const auth = await requireAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
@@ -28,7 +28,7 @@ export async function PATCH(request: Request, { params }: Params): Promise<NextR
 }
 
 export async function DELETE(request: Request, { params }: Params): Promise<NextResponse> {
-  const auth = await requireAdmin(request);
+  const auth = await requireAdmin();
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
