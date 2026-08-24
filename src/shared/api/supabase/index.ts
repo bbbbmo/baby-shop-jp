@@ -6,7 +6,6 @@ export {
   signOut,
   updateProfile,
   subscribeToAuthChanges,
-  getAccessToken,
   type SignUpParams,
   type User,
 } from "./auth";

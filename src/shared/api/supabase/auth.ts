@@ -91,11 +91,6 @@ export function subscribeToAuthChanges(
   return () => subscription.unsubscribe();
 }
 
-export async function getAccessToken(): Promise<string | null> {
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
-}
-
 export type { User };
 
 function mapAuthError(error: AuthError): string {
