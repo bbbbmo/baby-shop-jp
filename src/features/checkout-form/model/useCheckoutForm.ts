@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, initialCheckoutFormValues, type CheckoutFormValues } from "./schema";
 import type { CartItem } from "@/entities/cart";
-import { getAccessToken } from "@/shared/api/supabase";
 
 type SubmitError = { code: string; productName?: string };
 type CheckoutItem = { productId: string; color: string; size: string; quantity: number };
@@ -54,14 +53,9 @@ async function submitCheckout(
     size: i.size,
     quantity: i.quantity,
   }));
-  const token = await getAccessToken();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
   const res = await fetch("/api/checkout", {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items: checkoutItems, shipping }),
   });
   if (!res.ok) {

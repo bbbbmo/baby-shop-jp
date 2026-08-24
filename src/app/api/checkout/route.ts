@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
+import { createServerAuthClient } from "@/shared/api/supabase/serverAuthClient";
 import { checkoutSchema, type CheckoutFormValues } from "@/features/checkout-form/model/schema";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 
@@ -20,7 +21,7 @@ type CheckoutResult = { status: number; body: Record<string, unknown> };
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const body = (await request.json()) as CheckoutRequestBody;
-    const userId = await resolveUserId(request);
+    const userId = await resolveUserId();
     const result = await processCheckout(body, userId);
     return NextResponse.json(result.body, { status: result.status });
   } catch {
@@ -28,14 +29,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 
-async function resolveUserId(request: Request): Promise<string | null> {
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token) {
-    return null;
-  }
-  const { data, error } = await supabaseServer.auth.getUser(token);
-  return error || !data.user ? null : data.user.id;
+async function resolveUserId(): Promise<string | null> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase.auth.getClaims();
+  return error || !data ? null : data.claims.sub;
 }
 
 async function processCheckout(body: CheckoutRequestBody, userId: string | null): Promise<CheckoutResult> {
