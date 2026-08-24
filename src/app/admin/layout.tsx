@@ -1,28 +1,16 @@
-"use client";
-
-import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/entities/auth";
+import { redirect } from "next/navigation";
+import { createServerAuthClient } from "@/shared/api/supabase/serverAuthClient";
 import { isAdminEmail } from "@/shared/lib/adminAuth";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      router.replace("/signin?redirect=/admin/products");
-      return;
-    }
-    if (!isAdminEmail(user.email)) {
-      router.replace("/");
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user || !isAdminEmail(user.email)) {
-    return null;
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data) {
+    redirect("/signin?redirect=/admin/products");
+  }
+  if (!isAdminEmail(data.claims.email)) {
+    redirect("/");
   }
   return (
     <div className="min-h-screen bg-background">
