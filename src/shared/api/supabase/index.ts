@@ -2,7 +2,7 @@ export {
   signUpWithEmail,
   signInWithEmail,
   signInWithOAuth,
-  exchangeCodeForSession,
+  hasSession,
   signOut,
   updateProfile,
   subscribeToAuthChanges,

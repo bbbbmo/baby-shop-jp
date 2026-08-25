@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
-import { exchangeCodeForSession } from "@/shared/api/supabase";
+import { hasSession } from "@/shared/api/supabase";
 
 export default function AuthCallbackPage() {
   return (
@@ -36,6 +36,9 @@ async function handleCallback(searchParams: ReadonlyURLSearchParams): Promise<vo
     window.location.replace(`/${from}?authError=${oauthError ?? "oauthCancelled"}`);
     return;
   }
-  const { error } = await exchangeCodeForSession(code);
-  window.location.replace(error ? `/${from}?authError=${error}` : "/");
+  // 여기서 code를 직접 교환하면 안 된다. supabase-js가 detectSessionInUrl로
+  // 이 화면에서 이미 교환을 끝내고 일회용 code_verifier를 삭제하기 때문에,
+  // 두 번째 교환은 항상 pkce_code_verifier_not_found로 실패한다.
+  // 그 실패가 로그인 성공을 에러 화면으로 덮어쓰던 것이 원래 버그였다.
+  window.location.replace((await hasSession()) ? "/" : `/${from}?authError=unknownError`);
 }

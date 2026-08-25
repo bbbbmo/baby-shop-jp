@@ -54,11 +54,12 @@ function toSupabaseProvider(provider: "google" | "line"): Provider {
   return (provider === "line" ? "custom:line" : provider) as Provider;
 }
 
-export async function exchangeCodeForSession(
-  code: string,
-): Promise<{ error: string | null }> {
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  return { error: error ? mapAuthError(error) : null };
+// getSession()은 내부적으로 클라이언트 초기화(initializePromise) 완료를
+// 기다린다. OAuth 콜백 화면에서는 detectSessionInUrl이 수행하는 코드 교환이
+// 끝난 뒤의 결과를 보게 되므로, 교환 완료를 기다리는 용도로도 안전하다.
+export async function hasSession(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
+  return data.session !== null;
 }
 
 export async function signOut(): Promise<{ error: string | null }> {
