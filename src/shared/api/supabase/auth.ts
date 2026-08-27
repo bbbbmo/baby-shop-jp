@@ -1,4 +1,9 @@
-import type { AuthChangeEvent, AuthError, Provider, User } from "@supabase/supabase-js";
+import type {
+  AuthChangeEvent,
+  AuthError,
+  Provider,
+  User,
+} from "@supabase/supabase-js";
 import { supabase } from "./client";
 
 export type SignUpParams = {
@@ -11,7 +16,7 @@ export type SignUpParams = {
 };
 
 export async function signUpWithEmail(
-  params: SignUpParams,
+  params: SignUpParams
 ): Promise<{ error: string | null }> {
   const { email, password, name, furigana, phone, marketingOptIn } = params;
   const { error } = await supabase.auth.signUp({
@@ -31,26 +36,28 @@ export async function signUpWithEmail(
 
 export async function signInWithEmail(
   email: string,
-  password: string,
+  password: string
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   return { error: error ? mapAuthError(error) : null };
 }
 
 export async function signInWithOAuth(
-  provider: "google" | "line",
-  from: "signup" | "signin",
+  provider: "google" | "line" | "kakao",
+  from: "signup" | "signin"
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: toSupabaseProvider(provider),
-    options: { redirectTo: `${window.location.origin}/auth/callback?from=${from}` },
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback?from=${from}`,
+    },
   });
   return { error: error ? mapAuthError(error) : null };
 }
 
 // "line"은 supabase-js의 내장 Provider 유니온에 없다 — Supabase Dashboard에
 // Custom OAuth Provider로 등록한 식별자(custom:line)를 그대로 넘겨야 한다.
-function toSupabaseProvider(provider: "google" | "line"): Provider {
+function toSupabaseProvider(provider: "google" | "line" | "kakao"): Provider {
   return (provider === "line" ? "custom:line" : provider) as Provider;
 }
 
@@ -79,7 +86,7 @@ export async function updateProfile(params: {
 }
 
 export function subscribeToAuthChanges(
-  onChange: (user: User | null, event: AuthChangeEvent) => void,
+  onChange: (user: User | null, event: AuthChangeEvent) => void
 ): () => void {
   // onAuthStateChange는 등록 즉시 INITIAL_SESSION 이벤트로 현재 세션(또는 null)을
   // 한 번 방출하므로, 별도의 getSession() 초기 조회는 불필요하며 경쟁 상태만 만든다.
