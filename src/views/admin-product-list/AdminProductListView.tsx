@@ -42,7 +42,7 @@ function ProductTable({ products }: { products: AdminProductListItem[] }) {
           <th className="py-2 pr-3 font-normal">상품명</th>
           <th className="py-2 pr-3 font-normal">브랜드</th>
           <th className="py-2 pr-3 font-normal">카테고리</th>
-          <th className="py-2 pr-3 font-normal">가격</th>
+          <th className="py-2 pr-3 font-normal">가격 (엔 / 원)</th>
           <th className="py-2 pr-3 font-normal">재고</th>
           <th className="py-2 pr-3 font-normal">상태</th>
           <th className="py-2 pr-3" />
@@ -92,8 +92,13 @@ function ProductRow({ product }: { product: AdminProductListItem }) {
       <td className="py-2 pr-3">{product.nameJa}</td>
       <td className="py-2 pr-3">{product.brandName}</td>
       <td className="py-2 pr-3">{product.category}</td>
-      {/* /admin은 [market] 밖이라 MarketProvider가 없다. 엔화로 고정한다(Task 6에서 원화 열 추가 예정). */}
-      <td className="py-2 pr-3">{formatPrice(product.price, "JPY")}</td>
+      {/* /admin은 [market] 밖이라 MarketProvider가 없다. 통화를 명시해 표기한다. */}
+      <td className="py-2 pr-3">
+        <div>{formatPrice(product.priceJpy, "JPY")}</div>
+        <div className="text-xs text-muted">
+          {product.priceKrw === null ? "—" : formatPrice(product.priceKrw, "KRW")}
+        </div>
+      </td>
       <td className="py-2 pr-3">{product.totalStock}</td>
       <td className="py-2 pr-3">{product.soldOut ? "품절" : "판매중"}</td>
       <td className="py-2 pr-3 whitespace-nowrap">

@@ -30,26 +30,43 @@ export const variantsRequestSchema = z.object({
   variants: variantsArraySchema,
 });
 
-export const productFieldsSchema = z.object({
+const productFieldsObjectSchema = z.object({
   brandId: z.string().min(1, "required"),
   category: z.string().refine((value): boolean => isCategorySlug(value), { message: "required" }),
   nameJa: z.string().min(1, "required"),
   nameKo: z.string().min(1, "required"),
   descriptionJa: z.string().optional().default(""),
   descriptionKo: z.string().optional().default(""),
-  price: positiveInt("priceInvalid"),
-  listPrice: positiveInt("priceInvalid"),
+  priceJpy: positiveInt("priceInvalid"),
+  listPriceJpy: positiveInt("priceInvalid"),
+  priceKrw: z.number().int().min(0, "priceInvalid"),
+  listPriceKrw: z.number().int().min(0, "priceInvalid"),
   season: z.enum(["ss", "aw", "all"]),
   isNew: z.boolean(),
   isBest: z.boolean(),
   soldOut: z.boolean(),
 });
 
+// 원화 판매가와 정가는 함께 채우거나 함께 비운다. 한쪽만 있으면 할인율 계산이
+// 깨지고, 0은 "값 없음"을 뜻해 한국 마켓 카탈로그에서 제외된다.
+const KRW_PRICE_PAIR_ISSUE = {
+  message: "판매가와 정가를 함께 입력해주세요",
+  path: ["priceKrw"],
+};
+
+const hasKrwPricePair = (v: { priceKrw: number; listPriceKrw: number }): boolean =>
+  (v.priceKrw > 0) === (v.listPriceKrw > 0);
+
+export const productFieldsSchema = productFieldsObjectSchema.refine(
+  hasKrwPricePair,
+  KRW_PRICE_PAIR_ISSUE,
+);
+
 export type ProductFieldsValues = z.infer<typeof productFieldsSchema>;
 
-export const productFormSchema = productFieldsSchema.extend({
-  variants: variantsArraySchema,
-});
+export const productFormSchema = productFieldsObjectSchema
+  .extend({ variants: variantsArraySchema })
+  .refine(hasKrwPricePair, KRW_PRICE_PAIR_ISSUE);
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
@@ -60,8 +77,10 @@ export const EMPTY_PRODUCT_FORM_VALUES: ProductFormValues = {
   nameKo: "",
   descriptionJa: "",
   descriptionKo: "",
-  price: 0,
-  listPrice: 0,
+  priceJpy: 0,
+  listPriceJpy: 0,
+  priceKrw: 0,
+  listPriceKrw: 0,
   season: "all",
   isNew: false,
   isBest: false,
@@ -77,8 +96,10 @@ export function toProductRowPayload(v: ProductFieldsValues) {
     name_ko: v.nameKo,
     description_ja: v.descriptionJa || null,
     description_ko: v.descriptionKo || null,
-    price: v.price,
-    list_price: v.listPrice,
+    price_jpy: v.priceJpy,
+    list_price_jpy: v.listPriceJpy,
+    price_krw: v.priceKrw > 0 ? v.priceKrw : null,
+    list_price_krw: v.listPriceKrw > 0 ? v.listPriceKrw : null,
     season: v.season,
     is_new: v.isNew,
     is_best: v.isBest,

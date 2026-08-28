@@ -49,8 +49,11 @@ function BasicFields({
       <FormField label="상품명 (한국어)" registration={register("nameKo")} error={errors.nameKo?.message} />
       <FormField label="설명 (일본어)" registration={register("descriptionJa")} />
       <FormField label="설명 (한국어)" registration={register("descriptionKo")} />
-      <FormField label="가격" type="number" registration={register("price")} error={errors.price?.message} />
-      <FormField label="정가" type="number" registration={register("listPrice")} error={errors.listPrice?.message} />
+      <FormField label="판매가 (엔)" type="number" registration={register("priceJpy")} error={errors.priceJpy?.message} />
+      <FormField label="정가 (엔)" type="number" registration={register("listPriceJpy")} error={errors.listPriceJpy?.message} />
+      <FormField label="판매가 (원)" type="number" registration={register("priceKrw")} error={errors.priceKrw?.message} />
+      <FormField label="정가 (원)" type="number" registration={register("listPriceKrw")} error={errors.listPriceKrw?.message} />
+      <p className="col-span-2 -mt-2 text-xs text-muted">비워두면(0) 한국 마켓에 노출되지 않습니다.</p>
       <SeasonSelect register={register} />
     </div>
   );

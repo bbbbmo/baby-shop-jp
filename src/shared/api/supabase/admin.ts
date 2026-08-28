@@ -11,7 +11,7 @@ import {
 export type { AdminProductListItem, AdminProductDetail };
 
 const ADMIN_LIST_SELECT = `
-  id, name_ja, category, price, sold_out,
+  id, name_ja, category, price_jpy, price_krw, sold_out,
   brands ( name_ja ),
   product_variants ( stock ),
   product_images ( url, sort_order )
@@ -30,7 +30,7 @@ export async function listAdminProducts(): Promise<AdminProductListItem[]> {
 
 const ADMIN_DETAIL_SELECT = `
   id, brand_id, category, name_ja, name_ko, description_ja, description_ko,
-  price, list_price, season, is_new, is_best, sold_out
+  price_jpy, list_price_jpy, price_krw, list_price_krw, season, is_new, is_best, sold_out
 `;
 
 export async function getAdminProduct(id: string): Promise<AdminProductDetail | null> {

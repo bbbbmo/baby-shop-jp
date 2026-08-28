@@ -4,7 +4,8 @@ export type AdminProductListRow = {
   id: string;
   name_ja: string;
   category: CategorySlug;
-  price: number;
+  price_jpy: number;
+  price_krw: number | null;
   sold_out: boolean;
   brands: { name_ja: string } | null;
   product_variants: { stock: number }[];
@@ -16,7 +17,8 @@ export type AdminProductListItem = {
   nameJa: string;
   brandName: string;
   category: CategorySlug;
-  price: number;
+  priceJpy: number;
+  priceKrw: number | null;
   soldOut: boolean;
   totalStock: number;
   thumbnailUrl: string | null;
@@ -28,7 +30,8 @@ export function mapAdminProductListRow(row: AdminProductListRow): AdminProductLi
     nameJa: row.name_ja,
     brandName: row.brands?.name_ja ?? "",
     category: row.category,
-    price: row.price,
+    priceJpy: row.price_jpy,
+    priceKrw: row.price_krw,
     soldOut: row.sold_out,
     totalStock: row.product_variants.reduce((sum, v) => sum + v.stock, 0),
     thumbnailUrl: firstImageUrl(row.product_images),
@@ -50,8 +53,10 @@ export type AdminProductDetailRow = {
   name_ko: string;
   description_ja: string | null;
   description_ko: string | null;
-  price: number;
-  list_price: number;
+  price_jpy: number;
+  list_price_jpy: number;
+  price_krw: number | null;
+  list_price_krw: number | null;
   season: "ss" | "aw" | "all";
   is_new: boolean;
   is_best: boolean;
@@ -66,8 +71,10 @@ export type AdminProductDetail = {
   nameKo: string;
   descriptionJa: string;
   descriptionKo: string;
-  price: number;
-  listPrice: number;
+  priceJpy: number;
+  listPriceJpy: number;
+  priceKrw: number | null;
+  listPriceKrw: number | null;
   season: "ss" | "aw" | "all";
   isNew: boolean;
   isBest: boolean;
@@ -83,8 +90,10 @@ export function mapAdminProductDetailRow(row: AdminProductDetailRow): AdminProdu
     nameKo: row.name_ko,
     descriptionJa: row.description_ja ?? "",
     descriptionKo: row.description_ko ?? "",
-    price: row.price,
-    listPrice: row.list_price,
+    priceJpy: row.price_jpy,
+    listPriceJpy: row.list_price_jpy,
+    priceKrw: row.price_krw,
+    listPriceKrw: row.list_price_krw,
     season: row.season,
     isNew: row.is_new,
     isBest: row.is_best,

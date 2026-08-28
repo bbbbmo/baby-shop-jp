@@ -11,8 +11,10 @@ const validFields = {
   category: "boy-setup",
   nameJa: "テスト商品",
   nameKo: "테스트 상품",
-  price: 1000,
-  listPrice: 1200,
+  priceJpy: 1000,
+  listPriceJpy: 1200,
+  priceKrw: 0,
+  listPriceKrw: 0,
   season: "all",
   isNew: false,
   isBest: false,
@@ -31,7 +33,7 @@ describe("productFieldsSchema", () => {
   });
 
   it("rejects a zero price", () => {
-    expect(productFieldsSchema.safeParse({ ...validFields, price: 0 }).success).toBe(false);
+    expect(productFieldsSchema.safeParse({ ...validFields, priceJpy: 0 }).success).toBe(false);
   });
 
   it("rejects an empty Japanese name", () => {
@@ -42,6 +44,26 @@ describe("productFieldsSchema", () => {
     const result = productFieldsSchema.parse(validFields);
     expect(result.descriptionJa).toBe("");
     expect(result.descriptionKo).toBe("");
+  });
+
+  it("accepts a product with only japanese prices", () => {
+    const values = { ...validFields, priceKrw: 0, listPriceKrw: 0 };
+    expect(productFieldsSchema.safeParse(values).success).toBe(true);
+  });
+
+  it("accepts a product with both markets priced", () => {
+    const values = { ...validFields, priceKrw: 35000, listPriceKrw: 42000 };
+    expect(productFieldsSchema.safeParse(values).success).toBe(true);
+  });
+
+  it("rejects a korean sale price without a list price", () => {
+    const values = { ...validFields, priceKrw: 35000, listPriceKrw: 0 };
+    expect(productFieldsSchema.safeParse(values).success).toBe(false);
+  });
+
+  it("rejects a korean list price without a sale price", () => {
+    const values = { ...validFields, priceKrw: 0, listPriceKrw: 42000 };
+    expect(productFieldsSchema.safeParse(values).success).toBe(false);
   });
 });
 
