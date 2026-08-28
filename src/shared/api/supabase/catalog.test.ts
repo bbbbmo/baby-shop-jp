@@ -10,8 +10,10 @@ describe("mapDbProductToProduct", () => {
       name_ko: "구름무늬 긴팔 롬퍼",
       description_ja: "やわらかな綿100%。",
       description_ko: "부드러운 면 100%.",
-      price: 2980,
-      list_price: 3800,
+      price_jpy: 2980,
+      list_price_jpy: 3800,
+      price_krw: 27500,
+      list_price_krw: 35000,
       season: "aw" as const,
       is_new: true,
       is_best: true,
@@ -30,7 +32,7 @@ describe("mapDbProductToProduct", () => {
       ],
     };
 
-    expect(mapDbProductToProduct(row)).toEqual({
+    expect(mapDbProductToProduct(row, "jp")).toEqual({
       id: "11111111-1111-1111-1111-111111111111",
       name: { ja: "くも柄 長袖ロンパース", ko: "구름무늬 긴팔 롬퍼" },
       brand: "hinata",
@@ -58,8 +60,10 @@ describe("mapDbProductToProduct", () => {
       name_ko: "시즌 럭키백",
       description_ja: null,
       description_ko: null,
-      price: 5000,
-      list_price: 9800,
+      price_jpy: 5000,
+      list_price_jpy: 9800,
+      price_krw: 46000,
+      list_price_krw: 89000,
       season: "all" as const,
       is_new: true,
       is_best: false,
@@ -71,7 +75,7 @@ describe("mapDbProductToProduct", () => {
       product_images: [],
     };
 
-    const result = mapDbProductToProduct(row);
+    const result = mapDbProductToProduct(row, "jp");
     expect(result.description).toEqual({ ja: "", ko: "" });
     expect(result.images).toEqual([]);
   });
@@ -84,8 +88,10 @@ describe("mapDbProductToProduct", () => {
       name_ko: "테스트",
       description_ja: null,
       description_ko: null,
-      price: 1000,
-      list_price: 1000,
+      price_jpy: 1000,
+      list_price_jpy: 1000,
+      price_krw: 9000,
+      list_price_krw: 9000,
       season: "all" as const,
       is_new: false,
       is_best: false,
@@ -96,16 +102,19 @@ describe("mapDbProductToProduct", () => {
       product_images: [],
     };
 
-    const scrambled = mapDbProductToProduct({
-      ...baseRow,
-      product_variants: [
-        { colors: { hex: "#f4e2df" }, sizes: { value: "90" } },
-        { colors: { hex: "#dfe5d9" }, sizes: { value: "50-60" } },
-        { colors: { hex: "#e9dfd2" }, sizes: { value: "80" } },
-        { colors: { hex: "#dfe5d9" }, sizes: { value: "70" } },
-        { colors: { hex: "#f4e2df" }, sizes: { value: "95" } },
-      ],
-    });
+    const scrambled = mapDbProductToProduct(
+      {
+        ...baseRow,
+        product_variants: [
+          { colors: { hex: "#f4e2df" }, sizes: { value: "90" } },
+          { colors: { hex: "#dfe5d9" }, sizes: { value: "50-60" } },
+          { colors: { hex: "#e9dfd2" }, sizes: { value: "80" } },
+          { colors: { hex: "#dfe5d9" }, sizes: { value: "70" } },
+          { colors: { hex: "#f4e2df" }, sizes: { value: "95" } },
+        ],
+      },
+      "jp",
+    );
 
     expect(scrambled.colors).toEqual(["#dfe5d9", "#e9dfd2", "#f4e2df"]);
     expect(scrambled.sizes).toEqual(["50-60", "70", "80", "90", "95"]);
@@ -119,8 +128,10 @@ describe("mapDbProductToProduct", () => {
       name_ko: "테스트",
       description_ja: null,
       description_ko: null,
-      price: 1000,
-      list_price: 1000,
+      price_jpy: 1000,
+      list_price_jpy: 1000,
+      price_krw: 9000,
+      list_price_krw: 9000,
       season: "all" as const,
       is_new: false,
       is_best: false,
@@ -135,9 +146,50 @@ describe("mapDbProductToProduct", () => {
       product_images: [],
     };
 
-    const result = mapDbProductToProduct(row);
+    const result = mapDbProductToProduct(row, "jp");
     expect(result.colors).toEqual(["#e9dfd2"]);
     expect(result.sizes).toEqual(["70"]);
+  });
+
+  const marketBaseRow = {
+    id: "77777777-7777-7777-7777-777777777777",
+    category: "boy-setup" as const,
+    name_ja: "テスト",
+    name_ko: "테스트",
+    description_ja: null,
+    description_ko: null,
+    price_jpy: 12000,
+    list_price_jpy: 15000,
+    price_krw: 35000,
+    list_price_krw: 42000,
+    season: "all" as const,
+    is_new: false,
+    is_best: false,
+    sold_out: false,
+    rating: 4.5,
+    review_count: 1,
+    brands: { name_ja: "hinata" },
+    product_variants: [{ colors: { hex: "#e9dfd2" }, sizes: { value: "70" } }],
+    product_images: [],
+  };
+
+  it("takes the japanese price for the japanese market", () => {
+    const product = mapDbProductToProduct(marketBaseRow, "jp");
+    expect(product.price).toBe(12000);
+    expect(product.listPrice).toBe(15000);
+  });
+
+  it("takes the korean price for the korean market", () => {
+    const product = mapDbProductToProduct(marketBaseRow, "kr");
+    expect(product.price).toBe(35000);
+    expect(product.listPrice).toBe(42000);
+  });
+
+  it("falls back to zero when the market has no price", () => {
+    const noKrw = { ...marketBaseRow, price_krw: null, list_price_krw: null };
+    const product = mapDbProductToProduct(noKrw, "kr");
+    expect(product.price).toBe(0);
+    expect(product.listPrice).toBe(0);
   });
 });
 

@@ -9,39 +9,42 @@ import {
 } from "./catalog.mappers";
 import type { Product } from "@/entities/product";
 import type { FriendLook } from "@/entities/look";
+import type { Market } from "@/shared/config/markets";
 
 export { mapDbProductToProduct, mapDbFriendLookToFriendLook, mapVariantRow };
 export type { ProductRow, FriendLookRow, JoinedVariantRow };
 
 const PRODUCT_SELECT = `
   id, category, name_ja, name_ko, description_ja, description_ko,
-  price, list_price, season, is_new, is_best, sold_out, rating, review_count,
+  price_jpy, list_price_jpy, price_krw, list_price_krw,
+  season, is_new, is_best, sold_out, rating, review_count,
   brands ( name_ja ),
   product_variants ( colors ( hex ), sizes ( value ) ),
   product_images ( url, sort_order )
 `;
 
-export async function listProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select(PRODUCT_SELECT)
-    .order("created_at", { ascending: true });
+export async function listProducts(market: Market): Promise<Product[]> {
+  let query = supabase.from("products").select(PRODUCT_SELECT);
+  if (market === "kr") {
+    query = query.not("price_krw", "is", null);
+  }
+  const { data, error } = await query.order("created_at", { ascending: true });
   if (error) {
     throw new Error(error.message);
   }
-  return (data as unknown as ProductRow[]).map(mapDbProductToProduct);
+  return (data as unknown as ProductRow[]).map((row) => mapDbProductToProduct(row, market));
 }
 
-export async function getProduct(id: string): Promise<Product | null> {
-  const { data, error } = await supabase
-    .from("products")
-    .select(PRODUCT_SELECT)
-    .eq("id", id)
-    .maybeSingle();
+export async function getProduct(id: string, market: Market): Promise<Product | null> {
+  let query = supabase.from("products").select(PRODUCT_SELECT).eq("id", id);
+  if (market === "kr") {
+    query = query.not("price_krw", "is", null);
+  }
+  const { data, error } = await query.maybeSingle();
   if (error) {
     throw new Error(error.message);
   }
-  return data ? mapDbProductToProduct(data as unknown as ProductRow) : null;
+  return data ? mapDbProductToProduct(data as unknown as ProductRow, market) : null;
 }
 
 export type ProductVariantRow = {

@@ -1,6 +1,7 @@
 import type { CategorySlug } from "@/entities/category";
 import type { Product } from "@/entities/product";
 import type { FriendLook } from "@/entities/look";
+import { MARKET_CONFIG, type Market } from "@/shared/config/markets";
 
 export type ProductRow = {
   id: string;
@@ -9,8 +10,10 @@ export type ProductRow = {
   name_ko: string;
   description_ja: string | null;
   description_ko: string | null;
-  price: number;
-  list_price: number;
+  price_jpy: number;
+  list_price_jpy: number;
+  price_krw: number | null;
+  list_price_krw: number | null;
   season: "ss" | "aw" | "all";
   is_new: boolean;
   is_best: boolean;
@@ -22,14 +25,17 @@ export type ProductRow = {
   product_images: { url: string; sort_order: number }[];
 };
 
-export function mapDbProductToProduct(row: ProductRow): Product {
+// 매퍼가 마켓에 맞는 가격을 골라 Product.price에 넣는다. 그래서 상품 카드·
+// 장바구니·상세는 마켓을 몰라도 되고, 가격 분기가 이 한 곳에만 남는다.
+export function mapDbProductToProduct(row: ProductRow, market: Market): Product {
+  const { priceColumn, listPriceColumn } = MARKET_CONFIG[market];
   return {
     id: row.id,
     name: { ja: row.name_ja, ko: row.name_ko },
     brand: row.brands?.name_ja ?? "",
     category: row.category,
-    price: row.price,
-    listPrice: row.list_price,
+    price: row[priceColumn] ?? 0,
+    listPrice: row[listPriceColumn] ?? 0,
     colors: uniqueColors(row.product_variants.map((v) => v.colors?.hex ?? "")),
     sizes: uniqueSizes(row.product_variants.map((v) => v.sizes?.value ?? "")),
     season: row.season,
