@@ -10,20 +10,19 @@ export type SignUpParams = {
   email: string;
   password: string;
   name: string;
-  furigana: string;
-  phone: string;
-  marketingOptIn: boolean;
+  consentTerms: boolean;
+  consentPrivacy: boolean;
+  consentMarketing: boolean;
 };
 
 export async function signUpWithEmail(
   params: SignUpParams
 ): Promise<{ error: string | null }> {
-  const { email, password, name, furigana, phone, marketingOptIn } = params;
   const { error } = await supabase.auth.signUp({
-    email,
-    password,
+    email: params.email,
+    password: params.password,
     options: {
-      data: { name, furigana, phone, marketing_opt_in: marketingOptIn },
+      data: toSignUpMetadata(params),
       // emailRedirectTo를 안 넘기면 Supabase 대시보드에 고정된 Site URL로
       // 확인 메일 링크가 가버려, 배포 도메인에서 가입해도 로컬 주소 등
       // 엉뚱한 곳으로 리다이렉트된다. signInWithOAuth와 동일하게 실제
@@ -32,6 +31,17 @@ export async function signUpWithEmail(
     },
   });
   return { error: error ? mapAuthError(error) : null };
+}
+
+// 이메일 가입은 signUp 반환 시점에 세션이 없어 RLS insert가 막힌다.
+// 이 키들을 DB 트리거(handle_new_user_consents)가 읽어 user_consents에 기록한다.
+function toSignUpMetadata(params: SignUpParams): Record<string, unknown> {
+  return {
+    name: params.name,
+    consent_terms: params.consentTerms,
+    consent_privacy: params.consentPrivacy,
+    consent_marketing: params.consentMarketing,
+  };
 }
 
 export async function signInWithEmail(

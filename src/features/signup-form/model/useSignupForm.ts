@@ -23,9 +23,9 @@ export function useSignupForm(onSuccess: () => void) {
       email: values.email,
       password: values.password,
       name: values.name,
-      furigana: values.furigana,
-      phone: values.phone,
-      marketingOptIn: values.agreeMarketing,
+      consentTerms: values.agreeTerms,
+      consentPrivacy: values.agreePrivacy,
+      consentMarketing: values.agreeMarketing,
     });
     if (error) {
       setSubmitError(error);

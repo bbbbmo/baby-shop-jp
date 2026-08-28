@@ -47,23 +47,15 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         registration={register("name")}
         error={errorText(errors.name?.message)}
       />
-      <FormField
-        label={d.signup.furiganaLabel}
-        placeholder={d.signup.furiganaPlaceholder}
-        registration={register("furigana")}
-        error={errorText(errors.furigana?.message)}
-      />
-      <FormField
-        label={d.signup.phoneLabel}
-        type="tel"
-        placeholder={d.signup.phonePlaceholder}
-        registration={register("phone")}
-        error={errorText(errors.phone?.message)}
+      <Checkbox
+        label={d.signup.agreeTermsLabel}
+        registration={register("agreeTerms")}
+        error={errorText(errors.agreeTerms?.message)}
       />
       <Checkbox
-        label={d.signup.agreeRequiredLabel}
-        registration={register("agreeRequired")}
-        error={errorText(errors.agreeRequired?.message)}
+        label={d.signup.agreePrivacyLabel}
+        registration={register("agreePrivacy")}
+        error={errorText(errors.agreePrivacy?.message)}
       />
       <LegalLinks />
       <Checkbox

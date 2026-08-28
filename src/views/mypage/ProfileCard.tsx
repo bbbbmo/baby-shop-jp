@@ -127,26 +127,26 @@ function ProfileEditForm({
   const { d } = useLocale();
   const errorText = (key: string | undefined) =>
     key
-      ? (d.signup.errors[key as keyof typeof d.signup.errors] ?? d.signup.errors.unknownError)
+      ? (d.mypage.errors[key as keyof typeof d.mypage.errors] ?? d.mypage.errors.unknownError)
       : undefined;
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <FormField
         label={d.mypage.nameLabel}
-        placeholder={d.signup.namePlaceholder}
+        placeholder={d.mypage.namePlaceholder}
         registration={register("name")}
         error={errorText(errors.name?.message)}
       />
       <FormField
         label={d.mypage.furiganaLabel}
-        placeholder={d.signup.furiganaPlaceholder}
+        placeholder={d.mypage.furiganaPlaceholder}
         registration={register("furigana")}
         error={errorText(errors.furigana?.message)}
       />
       <FormField
         label={d.mypage.phoneLabel}
         type="tel"
-        placeholder={d.signup.phonePlaceholder}
+        placeholder={d.mypage.phonePlaceholder}
         registration={register("phone")}
         error={errorText(errors.phone?.message)}
       />
