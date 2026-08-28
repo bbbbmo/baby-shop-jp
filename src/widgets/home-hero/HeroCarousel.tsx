@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "@/shared/i18n/types";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
@@ -105,12 +105,12 @@ function SlideView({ slide, locale, active }: SlideViewProps) {
           <p className="mt-4 text-sm text-muted md:text-base">
             {slide.subtitle[locale]}
           </p>
-          <Link
+          <MarketLink
             href={slide.href}
             className="mt-8 inline-flex items-center rounded-full bg-foreground px-7 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
             {slide.cta[locale]}
-          </Link>
+          </MarketLink>
         </div>
         <span className="pointer-events-none hidden select-none text-[13rem] opacity-70 md:block">
           {slide.emoji}

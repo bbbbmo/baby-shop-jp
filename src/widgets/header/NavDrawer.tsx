@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useState } from "react";
 import { menu, type MenuGroup } from "@/entities/category";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
@@ -101,13 +101,13 @@ function DrawerItem({
 }) {
   return (
     <li>
-      <Link
+      <MarketLink
         href={href}
         onClick={onNavigate}
         className="block px-3 py-2.5 hover:bg-sand"
       >
         {label}
-      </Link>
+      </MarketLink>
     </li>
   );
 }
@@ -140,13 +140,13 @@ function MenuGroupItem({
       <ul id={`menu-${entry.key}`} hidden={!expanded} className="space-y-1 pb-1 pl-6">
         {entry.children.map((child) => (
           <li key={child.slug}>
-            <Link
+            <MarketLink
               href={`/products/${child.slug}`}
               onClick={onNavigate}
               className="block px-3 py-2 text-muted hover:bg-sand hover:text-foreground"
             >
               {child.label}
-            </Link>
+            </MarketLink>
           </li>
         ))}
       </ul>

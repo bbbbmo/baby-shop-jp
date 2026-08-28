@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { MarketLink, useMarketRouter } from "@/shared/market";
 import { useCart, useCartHydrated, enrichCartLines, type CartItem, type EnrichedCartItem } from "@/entities/cart";
 import { useProducts, type Product } from "@/entities/product";
 import { useSession } from "@/entities/auth";
@@ -13,7 +12,7 @@ import { QueryGuard } from "@/shared/ui/QueryGuard";
 import { CheckoutForm, type CheckoutFormValues } from "@/features/checkout-form";
 
 export function CheckoutView() {
-  const router = useRouter();
+  const router = useMarketRouter();
   const items = useCart((s) => s.items);
   const hydrated = useCartHydrated();
   const { user, loading: sessionLoading } = useSession();
@@ -65,7 +64,7 @@ function CheckoutBody({
   prefill: Partial<CheckoutFormValues>;
 }) {
   const { d } = useLocale();
-  const router = useRouter();
+  const router = useMarketRouter();
   const lines = enrichCartLines(items, products);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
@@ -91,9 +90,9 @@ function GuestOrLoginBanner() {
     <p className="mb-6 border border-border bg-sand px-4 py-3 text-sm text-foreground">
       {d.checkout.guestLabel}
       {" · "}
-      <Link href="/signin?redirect=/checkout" className="underline underline-offset-2">
+      <MarketLink href="/signin?redirect=/checkout" className="underline underline-offset-2">
         {d.checkout.loginLabel}
-      </Link>
+      </MarketLink>
     </p>
   );
 }

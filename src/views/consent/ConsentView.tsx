@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { MarketLink, useMarketRouter } from "@/shared/market";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
 import { ConsentForm } from "@/features/consent-form";
@@ -10,7 +9,7 @@ import { LocaleToggle } from "@/features/locale-toggle";
 
 export function ConsentView() {
   const { d } = useLocale();
-  const router = useRouter();
+  const router = useMarketRouter();
   const { user, loading } = useSession();
 
   useEffect(() => {
@@ -26,13 +25,13 @@ export function ConsentView() {
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
       <div className="mx-auto max-w-md">
-        <Link
+        <MarketLink
           href="/"
           style={{ fontFamily: "var(--font-noto-jp)" }}
           className="mb-6 block text-center text-2xl font-bold tracking-tight text-foreground"
         >
           {d.brandName}
-        </Link>
+        </MarketLink>
         <div className="mb-6 w-32">
           <LocaleToggle />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
@@ -28,12 +28,12 @@ function CheckoutCompleteContent() {
       <p className="mt-6 text-sm text-muted">
         {user ? d.checkoutComplete.memberNotice : d.checkoutComplete.guestNotice}
       </p>
-      <Link
+      <MarketLink
         href="/"
         className="mt-8 inline-flex bg-foreground px-6 py-2.5 text-sm text-white hover:opacity-90"
       >
         {d.checkoutComplete.backToHome}
-      </Link>
+      </MarketLink>
     </div>
   );
 }

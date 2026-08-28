@@ -2,6 +2,7 @@
 
 import { GoogleIcon, KakaoIcon, LineIcon } from "@/shared/ui/icons";
 import { signInWithOAuth } from "@/shared/api/supabase";
+import { useMarket } from "@/shared/market";
 
 type OAuthProvider = "google" | "line" | "kakao";
 
@@ -30,8 +31,10 @@ export function SocialLoginButtons({
   errors,
   onError,
 }: SocialLoginButtonsProps) {
+  const market = useMarket();
+
   const handleClick = async (provider: OAuthProvider) => {
-    const { error } = await signInWithOAuth(provider, from);
+    const { error } = await signInWithOAuth(provider, from, market);
     if (error) onError(errors[error] ?? errors.unknownError);
   };
 

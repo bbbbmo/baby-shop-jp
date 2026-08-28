@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useCart, useCartHydrated, enrichCartLines, type CartItem, type EnrichedCartItem } from "@/entities/cart";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useProducts } from "@/entities/product";
@@ -53,12 +53,12 @@ function EmptyState() {
     <div className="py-20 text-center">
       <p className="text-4xl">🧺</p>
       <p className="mt-4 text-sm text-muted">{d.cart.empty}</p>
-      <Link
+      <MarketLink
         href="/products"
         className="mt-6 inline-flex rounded-full bg-foreground px-6 py-2.5 text-sm text-white hover:opacity-90"
       >
         {d.cart.continue}
-      </Link>
+      </MarketLink>
     </div>
   );
 }
@@ -122,12 +122,12 @@ function CartSummary({ subtotal }: { subtotal: number }) {
           {formatYen(subtotal + shipping)}
         </span>
       </div>
-      <Link
+      <MarketLink
         href="/checkout"
         className="mt-5 block w-full rounded-full bg-foreground py-3 text-center text-sm font-medium text-white hover:opacity-90"
       >
         {d.cart.checkout}
-      </Link>
+      </MarketLink>
       <p className="mt-3 text-[11px] leading-relaxed text-muted">
         {d.cart.demoNotice}
       </p>

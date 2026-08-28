@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SignupForm } from "@/features/signup-form";
@@ -17,13 +17,13 @@ export function SignupView() {
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
       <div className="mx-auto max-w-md">
-        <Link
+        <MarketLink
           href="/"
           style={{ fontFamily: "var(--font-noto-jp)" }}
           className="mb-6 block text-center text-2xl font-bold tracking-tight text-foreground"
         >
           {d.brandName}
-        </Link>
+        </MarketLink>
         <div className="mb-6 w-32">
           <LocaleToggle />
         </div>
@@ -44,12 +44,12 @@ function SuccessNotice() {
       <p className="text-4xl">✉️</p>
       <h2 className="mt-4 text-lg font-bold text-foreground">{d.signup.successTitle}</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">{d.signup.successBody}</p>
-      <Link
+      <MarketLink
         href="/"
         className="mt-6 inline-flex bg-foreground px-6 py-2.5 text-sm text-white hover:opacity-90"
       >
         {d.signup.backToHome}
-      </Link>
+      </MarketLink>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import type { Product } from "../model/types";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { discountRate, formatYen } from "@/shared/lib/format";
@@ -12,7 +12,7 @@ export function ProductCard({ product }: { product: Product }) {
   const href = `/products/${product.category}/${product.id}`;
 
   return (
-    <Link href={href} className="group block">
+    <MarketLink href={href} className="group block">
       <div className="relative aspect-square rounded-card bg-sand">
         {product.images[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -47,7 +47,7 @@ export function ProductCard({ product }: { product: Product }) {
         <PriceRow product={product} rate={rate} />
         <ColorDots colors={product.colors} />
       </div>
-    </Link>
+    </MarketLink>
   );
 }
 

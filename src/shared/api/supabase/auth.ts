@@ -54,12 +54,13 @@ export async function signInWithEmail(
 
 export async function signInWithOAuth(
   provider: "google" | "line" | "kakao",
-  from: "signup" | "signin"
+  from: "signup" | "signin",
+  market: string
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: toSupabaseProvider(provider),
     options: {
-      redirectTo: `${window.location.origin}/auth/callback?from=${from}`,
+      redirectTo: `${window.location.origin}/${market}/auth/callback?from=${from}`,
     },
   });
   return { error: error ? mapAuthError(error) : null };

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { MarketLink, useMarketRouter } from "@/shared/market";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SigninForm } from "@/features/signin-form";
 import { AuthErrorBanner } from "@/entities/auth";
@@ -9,7 +9,7 @@ import { LocaleToggle } from "@/features/locale-toggle";
 
 export function SigninView() {
   const { d } = useLocale();
-  const router = useRouter();
+  const router = useMarketRouter();
   const searchParams = useSearchParams();
   const authError = searchParams.get("authError");
   const rawRedirect = searchParams.get("redirect");
@@ -19,13 +19,13 @@ export function SigninView() {
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
       <div className="mx-auto max-w-md">
-        <Link
+        <MarketLink
           href="/"
           style={{ fontFamily: "var(--font-noto-jp)" }}
           className="mb-6 block text-center text-2xl font-bold tracking-tight text-foreground"
         >
           {d.brandName}
-        </Link>
+        </MarketLink>
         <div className="mb-6 w-32">
           <LocaleToggle />
         </div>

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 
 type Props = {
   title: string;
@@ -17,12 +17,12 @@ export function SectionHeader({ title, subtitle, moreHref, moreLabel }: Props) {
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
       {moreHref && (
-        <Link
+        <MarketLink
           href={moreHref}
           className="shrink-0 text-sm text-muted underline-offset-4 hover:text-sage hover:underline"
         >
           {moreLabel ?? "more +"}
-        </Link>
+        </MarketLink>
       )}
     </div>
   );

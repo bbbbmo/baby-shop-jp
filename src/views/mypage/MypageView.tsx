@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useMarketRouter } from "@/shared/market";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
 import { signOut } from "@/shared/api/supabase";
@@ -10,7 +10,7 @@ import { formatYen } from "@/shared/lib/format";
 import { ProfileCard } from "./ProfileCard";
 
 export function MypageView() {
-  const router = useRouter();
+  const router = useMarketRouter();
   const { user, loading } = useSession();
   const loggingOut = useRef(false);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useSigninForm } from "./model/useSigninForm";
@@ -66,9 +66,9 @@ function SignupLink() {
   return (
     <p className="text-center text-xs text-muted">
       {d.signin.noAccountLabel}{" "}
-      <Link href="/signup" className="underline underline-offset-2 text-foreground">
+      <MarketLink href="/signup" className="underline underline-offset-2 text-foreground">
         {d.signin.signupLink}
-      </Link>
+      </MarketLink>
     </p>
   );
 }

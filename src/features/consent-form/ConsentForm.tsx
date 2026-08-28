@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
@@ -80,12 +80,12 @@ function LegalLinks() {
   const { d } = useLocale();
   return (
     <div className="-mt-2 flex gap-3 pl-6 text-xs text-muted">
-      <Link href="/terms" target="_blank" className="underline underline-offset-2 hover:text-foreground">
+      <MarketLink href="/terms" target="_blank" className="underline underline-offset-2 hover:text-foreground">
         {d.legal.termsTitle}
-      </Link>
-      <Link href="/privacy" target="_blank" className="underline underline-offset-2 hover:text-foreground">
+      </MarketLink>
+      <MarketLink href="/privacy" target="_blank" className="underline underline-offset-2 hover:text-foreground">
         {d.legal.privacyTitle}
-      </Link>
+      </MarketLink>
     </div>
   );
 }

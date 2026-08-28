@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
@@ -56,13 +57,13 @@ export function Header() {
             <MenuIcon className="h-6 w-6" />
             <span className="text-sm font-medium tracking-wide">MENU</span>
           </span>
-          <Link
+          <MarketLink
             href="/"
             style={{ fontFamily: "var(--font-noto-jp)" }}
             className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-tight text-foreground md:text-3xl"
           >
             {d.brandName}
-          </Link>
+          </MarketLink>
           <div className="flex items-center gap-5">
             {isAdmin && (
               <Link
@@ -74,13 +75,13 @@ export function Header() {
               </Link>
             )}
             <CartButton />
-            <Link
+            <MarketLink
               href={user ? "/mypage" : "/signin"}
               aria-label={user ? d.mypage.title : d.signin.title}
               className="p-2 -m-2 text-foreground"
             >
               <ProfileIcon className="h-6 w-6" />
-            </Link>
+            </MarketLink>
           </div>
         </div>
       </header>

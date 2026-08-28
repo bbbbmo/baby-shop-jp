@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useMarketRouter } from "@/shared/market";
 import { useState } from "react";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SearchIcon } from "@/shared/ui/icons";
 
 export function SearchBar({ className = "" }: { className?: string }) {
   const { d } = useLocale();
-  const router = useRouter();
+  const router = useMarketRouter();
   const [query, setQuery] = useState("");
 
   const submit = (e: React.FormEvent) => {

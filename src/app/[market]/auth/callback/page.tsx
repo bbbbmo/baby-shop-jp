@@ -4,6 +4,8 @@ import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { hasSession, hasConsentRecord } from "@/shared/api/supabase";
 import { resolvePostAuthDestination } from "@/entities/auth";
+import { marketPath, useMarket } from "@/shared/market";
+import type { Market } from "@/shared/config/markets";
 
 export default function AuthCallbackPage() {
   return (
@@ -15,6 +17,7 @@ export default function AuthCallbackPage() {
 
 function AuthCallbackHandler() {
   const searchParams = useSearchParams();
+  const market = useMarket();
   const handled = useRef(false);
 
   useEffect(() => {
@@ -23,13 +26,16 @@ function AuthCallbackHandler() {
     // ref로 막아 실제 처리가 한 번만 일어나게 한다.
     if (handled.current) return;
     handled.current = true;
-    handleCallback(searchParams);
-  }, [searchParams]);
+    handleCallback(searchParams, market);
+  }, [searchParams, market]);
 
   return <div className="mx-auto max-w-480 px-6 py-20 sm:px-10" />;
 }
 
-async function handleCallback(searchParams: ReadonlyURLSearchParams): Promise<void> {
+async function handleCallback(
+  searchParams: ReadonlyURLSearchParams,
+  market: Market,
+): Promise<void> {
   const from = searchParams.get("from") === "signin" ? "signin" : "signup";
   const oauthError = searchParams.get("error");
   const hasCode = searchParams.get("code") !== null;
@@ -38,9 +44,14 @@ async function handleCallback(searchParams: ReadonlyURLSearchParams): Promise<vo
   // 두 번째 교환은 항상 pkce_code_verifier_not_found로 실패한다.
   const session = oauthError || !hasCode ? false : await hasSession();
   const consent = session ? await readConsent() : false;
-  window.location.replace(
-    resolvePostAuthDestination({ from, oauthError, hasCode, hasSession: session, hasConsent: consent }),
-  );
+  const destination = resolvePostAuthDestination({
+    from,
+    oauthError,
+    hasCode,
+    hasSession: session,
+    hasConsent: consent,
+  });
+  window.location.replace(marketPath(market, destination));
 }
 
 // 조회에 실패했다고 로그인을 막을 수는 없다. 동의 화면을 한 번 더 보여주는

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MarketLink } from "@/shared/market";
 import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { formatYen } from "@/shared/lib/format";
@@ -29,7 +29,7 @@ export function WornItem({ product, label, onNavigate }: Props) {
 
   return (
     <li className="border-t border-border">
-      <Link
+      <MarketLink
         href={`/products/${product.category}/${product.id}`}
         onClick={onNavigate}
         aria-label={`${product.brand} ${product.name[locale]} ${formatYen(product.price)} — ${label}`}
@@ -54,7 +54,7 @@ export function WornItem({ product, label, onNavigate }: Props) {
           </p>
         </div>
         <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted" />
-      </Link>
+      </MarketLink>
     </li>
   );
 }
