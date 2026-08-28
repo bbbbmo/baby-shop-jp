@@ -62,3 +62,24 @@
 - 고치려면: `error`/`!data`/`resolveColorSizeIds`의 DB 오류 케이스는
   `500 unknownError`로 분리하고, 진짜 `stock < quantity`(또는 진짜 hex/사이즈
   불일치)인 경우에만 `409 soldOut` + 상품명 반환.
+
+## 회원가입 최소 수집 + 동의 기록
+
+### 카카오 로그인 시 이메일이 없을 수 있다
+
+- 카카오는 이메일이 선택 동의 항목이라 사용자가 거부하면 이메일 없는 계정이
+  생성됨.
+- 이 사용자는 [`/orders/lookup`](../src/shared/api/supabase/orders.ts)의
+  이메일 기반 게스트 주문 연결(`link_guest_orders_to_current_user`)이 동작하지
+  않음.
+- 고치려면: 카카오 디벨로퍼스에서 이메일을 필수 동의로 올려야 하는데, 여기엔
+  비즈 앱 전환과 검수가 필요.
+
+### 동의 화면을 이탈하면 다시 묻지 않는다
+
+- 위치: [`src/app/auth/callback/page.tsx`](../src/app/auth/callback/page.tsx),
+  [`src/app/auth/consent/page.tsx`](../src/app/auth/consent/page.tsx)
+- 소셜 첫 로그인 후 `/auth/consent`에서 이탈하면 세션은 남고 동의 레코드는
+  없는 상태가 됨. 다음 접속은 `/auth/callback`을 거치지 않으므로 동의 화면이
+  다시 뜨지 않음.
+- 고치려면: 전역 가드가 필요해 현재는 허용.

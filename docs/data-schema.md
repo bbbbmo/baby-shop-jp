@@ -58,3 +58,28 @@ type Audience = "girl" | "boy" | "mom" | "accessory" | "gift";
   이뤄지며, 이 슬라이스가 위 스키마와 동일한 형태를 반환해야 합니다. (현재 `shared/api` 슬라이스는
   아직 없고, 목업 데이터를 각 entity가 직접 export합니다.)
 - 런타임 검증이 필요해지면 이 표를 기준으로 `zod` 스키마를 작성하세요 (현재는 미작성).
+
+# Supabase 테이블
+
+위 Product/FriendLook과 달리 목업이 아니라 실제 Supabase 테이블입니다.
+
+## user_consents
+
+회원 동의 기록. 행을 갱신하지 않고 계속 쌓아 철회·재동의 이력을 보존합니다.
+"현재 동의 상태"는 `consent_type`별 최신 `agreed_at` 행입니다.
+원본: [`supabase/migrations/20260828000000_user_consents.sql`](../supabase/migrations/20260828000000_user_consents.sql)
+
+| 컬럼            | 타입          | 설명                                |
+| --------------- | ------------- | ----------------------------------- |
+| `id`            | `uuid`        | PK                                  |
+| `user_id`       | `uuid`        | `auth.users(id)`, on delete cascade |
+| `consent_type`  | `text`        | `terms` / `privacy` / `marketing`   |
+| `agreed`        | `boolean`     | 동의 여부                           |
+| `terms_version` | `text`        | 약관 버전, 기본 `v1`                |
+| `agreed_at`     | `timestamptz` | 동의 시각                           |
+
+RLS는 본인 행의 select와 insert만 허용합니다. update·delete 정책은 두지 않습니다.
+
+이메일 가입은 `signUp`의 `options.data`에 실린 `consent_*` 키를 트리거
+`handle_new_user_consents`가 읽어 기록합니다. 소셜 가입은 이 키가 없어 레코드가
+생기지 않고, `/auth/callback`이 이를 감지해 `/auth/consent`로 보냅니다.
