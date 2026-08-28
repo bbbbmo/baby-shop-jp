@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAdminProducts } from "./model/useAdminProducts";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
 import { adminFetch } from "@/shared/api/adminFetch";
-import { formatYen } from "@/shared/lib/format";
+import { formatPrice } from "@/shared/lib/format";
 import type { AdminProductListItem } from "@/shared/api/supabase/admin";
 
 export function AdminProductListView() {
@@ -92,7 +92,8 @@ function ProductRow({ product }: { product: AdminProductListItem }) {
       <td className="py-2 pr-3">{product.nameJa}</td>
       <td className="py-2 pr-3">{product.brandName}</td>
       <td className="py-2 pr-3">{product.category}</td>
-      <td className="py-2 pr-3">{formatYen(product.price)}</td>
+      {/* /admin은 [market] 밖이라 MarketProvider가 없다. 엔화로 고정한다(Task 6에서 원화 열 추가 예정). */}
+      <td className="py-2 pr-3">{formatPrice(product.price, "JPY")}</td>
       <td className="py-2 pr-3">{product.totalStock}</td>
       <td className="py-2 pr-3">{product.soldOut ? "품절" : "판매중"}</td>
       <td className="py-2 pr-3 whitespace-nowrap">

@@ -4,7 +4,9 @@ import { useState } from "react";
 import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useCart } from "@/entities/cart";
-import { discountRate, formatYen } from "@/shared/lib/format";
+import { discountRate, formatPrice } from "@/shared/lib/format";
+import { marketCurrency } from "@/shared/config/markets";
+import { useMarket } from "@/shared/market";
 import { useProducts, getByCategory } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
 import { ColorPicker, SizePicker } from "@/features/product-options";
@@ -93,18 +95,19 @@ function PriceBlock({
   rate: number;
   taxLabel: string;
 }) {
+  const currency = marketCurrency(useMarket());
   return (
     <div className="mt-5 flex items-end gap-3">
       {rate > 0 && (
         <span className="text-xl font-bold text-sale">{rate}%</span>
       )}
       <span className="text-2xl font-bold text-foreground">
-        {formatYen(product.price)}
+        {formatPrice(product.price, currency)}
       </span>
       <span className="pb-0.5 text-xs text-muted">{taxLabel}</span>
       {rate > 0 && (
         <span className="pb-0.5 text-sm text-muted line-through">
-          {formatYen(product.listPrice)}
+          {formatPrice(product.listPrice, currency)}
         </span>
       )}
     </div>

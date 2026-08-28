@@ -6,7 +6,9 @@ import { useCart, useCartHydrated, enrichCartLines, type CartItem, type Enriched
 import { useProducts, type Product } from "@/entities/product";
 import { useSession } from "@/entities/auth";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { formatYen } from "@/shared/lib/format";
+import { formatPrice } from "@/shared/lib/format";
+import { marketCurrency } from "@/shared/config/markets";
+import { useMarket } from "@/shared/market";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
 import { CheckoutForm, type CheckoutFormValues } from "@/features/checkout-form";
@@ -99,6 +101,7 @@ function GuestOrLoginBanner() {
 
 function OrderSummary({ lines, subtotal }: { lines: EnrichedCartItem[]; subtotal: number }) {
   const { locale, d } = useLocale();
+  const currency = marketCurrency(useMarket());
   const free = subtotal >= FREE_SHIPPING_THRESHOLD;
   const shipping = free ? 0 : SHIPPING_FEE;
 
@@ -111,22 +114,22 @@ function OrderSummary({ lines, subtotal }: { lines: EnrichedCartItem[]; subtotal
             <span className="text-foreground">
               {line.product.name[locale]} · {line.size} × {line.quantity}
             </span>
-            <span className="text-foreground">{formatYen(line.product.price * line.quantity)}</span>
+            <span className="text-foreground">{formatPrice(line.product.price * line.quantity, currency)}</span>
           </li>
         ))}
       </ul>
       <div className="my-3 border-t border-border" />
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted">{d.cart.subtotal}</span>
-        <span className="text-foreground">{formatYen(subtotal)}</span>
+        <span className="text-foreground">{formatPrice(subtotal, currency)}</span>
       </div>
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted">{d.cart.shipping}</span>
-        <span className="text-foreground">{free ? d.cart.shippingFree : formatYen(shipping)}</span>
+        <span className="text-foreground">{free ? d.cart.shippingFree : formatPrice(shipping, currency)}</span>
       </div>
       <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
         <span className="text-sm font-medium text-foreground">{d.cart.total}</span>
-        <span className="text-lg font-bold text-foreground">{formatYen(subtotal + shipping)}</span>
+        <span className="text-lg font-bold text-foreground">{formatPrice(subtotal + shipping, currency)}</span>
       </div>
     </aside>
   );

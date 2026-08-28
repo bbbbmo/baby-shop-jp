@@ -3,7 +3,9 @@
 import { MarketLink } from "@/shared/market";
 import type { Product } from "../model/types";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { discountRate, formatYen } from "@/shared/lib/format";
+import { discountRate, formatPrice } from "@/shared/lib/format";
+import { marketCurrency } from "@/shared/config/markets";
+import { useMarket } from "@/shared/market";
 import { ProductThumb } from "./ProductThumb";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -75,15 +77,16 @@ function CardBadges({
 }
 
 function PriceRow({ product, rate }: { product: Product; rate: number }) {
+  const currency = marketCurrency(useMarket());
   return (
     <div className="flex items-center gap-2">
       {rate > 0 && <span className="text-sm font-bold text-sale">{rate}%</span>}
       <span className="text-sm font-bold text-foreground">
-        {formatYen(product.price)}
+        {formatPrice(product.price, currency)}
       </span>
       {rate > 0 && (
         <span className="text-xs text-muted line-through">
-          {formatYen(product.listPrice)}
+          {formatPrice(product.listPrice, currency)}
         </span>
       )}
     </div>

@@ -3,7 +3,9 @@
 import { MarketLink } from "@/shared/market";
 import type { Product } from "@/entities/product";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
-import { formatYen } from "@/shared/lib/format";
+import { formatPrice } from "@/shared/lib/format";
+import { marketCurrency } from "@/shared/config/markets";
+import { useMarket } from "@/shared/market";
 import { ChevronRightIcon } from "@/shared/ui/icons";
 import { ProductThumb } from "@/entities/product";
 
@@ -26,13 +28,14 @@ type Props = {
  */
 export function WornItem({ product, label, onNavigate }: Props) {
   const { locale } = useLocale();
+  const currency = marketCurrency(useMarket());
 
   return (
     <li className="border-t border-border">
       <MarketLink
         href={`/products/${product.category}/${product.id}`}
         onClick={onNavigate}
-        aria-label={`${product.brand} ${product.name[locale]} ${formatYen(product.price)} — ${label}`}
+        aria-label={`${product.brand} ${product.name[locale]} ${formatPrice(product.price, currency)} — ${label}`}
         className="flex items-center gap-3 py-3 hover:bg-sand"
       >
         <div className="h-24 w-24 shrink-0 bg-sand">
@@ -50,7 +53,7 @@ export function WornItem({ product, label, onNavigate }: Props) {
             {product.name[locale]}
           </p>
           <p className="text-sm font-bold text-foreground">
-            {formatYen(product.price)}
+            {formatPrice(product.price, currency)}
           </p>
         </div>
         <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted" />

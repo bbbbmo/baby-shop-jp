@@ -6,7 +6,7 @@ import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
 import { signOut } from "@/shared/api/supabase";
 import { useMyOrders, type Order } from "@/entities/order";
-import { formatYen } from "@/shared/lib/format";
+import { formatPrice } from "@/shared/lib/format";
 import { ProfileCard } from "./ProfileCard";
 
 export function MypageView() {
@@ -113,7 +113,8 @@ function OrderHistoryItem({ order }: { order: Order }) {
     <li className="border border-border p-4 text-sm">
       <div className="flex items-center justify-between">
         <span className="font-medium text-foreground">{order.orderNumber}</span>
-        <span className="text-foreground">{formatYen(order.totalPrice)}</span>
+        {/* 주문은 아직 마켓을 기록하지 않는다(3단계). 지금까지의 주문은 전부 엔화다. */}
+        <span className="text-foreground">{formatPrice(order.totalPrice, "JPY")}</span>
       </div>
       <p className="mt-1 text-xs text-muted">
         {new Date(order.createdAt).toLocaleDateString()}
