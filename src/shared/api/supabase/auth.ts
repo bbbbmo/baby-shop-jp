@@ -4,6 +4,7 @@ import type {
   Provider,
   User,
 } from "@supabase/supabase-js";
+import type { Market } from "@/shared/config/markets";
 import { supabase } from "./client";
 
 export type SignUpParams = {
@@ -55,7 +56,7 @@ export async function signInWithEmail(
 export async function signInWithOAuth(
   provider: "google" | "line" | "kakao",
   from: "signup" | "signin",
-  market: string
+  market: Market
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: toSupabaseProvider(provider),
