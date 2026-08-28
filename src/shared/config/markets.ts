@@ -22,3 +22,41 @@ export function isMarket(value: unknown): value is Market {
 export function marketLocale(market: Market): Locale {
   return MARKET_LOCALE[market];
 }
+
+export type Currency = "JPY" | "KRW";
+
+type MarketConfig = {
+  currency: Currency;
+  priceColumn: "price_jpy" | "price_krw";
+  listPriceColumn: "list_price_jpy" | "list_price_krw";
+  freeShippingThreshold: number;
+  shippingFee: number;
+};
+
+export const MARKET_CONFIG: Record<Market, MarketConfig> = {
+  jp: {
+    currency: "JPY",
+    priceColumn: "price_jpy",
+    listPriceColumn: "list_price_jpy",
+    freeShippingThreshold: 5000,
+    shippingFee: 550,
+  },
+  kr: {
+    currency: "KRW",
+    priceColumn: "price_krw",
+    listPriceColumn: "list_price_krw",
+    // 잠정값 — 한국 배송비 정책이 확정되면 이 두 줄만 고친다.
+    // docs/open-decisions.md A-1 참고.
+    freeShippingThreshold: 30000,
+    shippingFee: 3000,
+  },
+};
+
+export function marketCurrency(market: Market): Currency {
+  return MARKET_CONFIG[market].currency;
+}
+
+export function shippingFeeFor(market: Market, subtotal: number): number {
+  const { freeShippingThreshold, shippingFee } = MARKET_CONFIG[market];
+  return subtotal >= freeShippingThreshold ? 0 : shippingFee;
+}
