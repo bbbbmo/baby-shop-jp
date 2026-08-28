@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SignupForm } from "@/features/signup-form";
 import { AuthErrorBanner } from "@/entities/auth";
-import { MarketSwitcher } from "@/features/market-switcher";
 
 export function SignupView() {
   const { d } = useLocale();
@@ -24,9 +23,6 @@ export function SignupView() {
         >
           {d.brandName}
         </MarketLink>
-        <div className="mb-6 w-32">
-          <MarketSwitcher />
-        </div>
         <h1 className="mb-6 text-2xl font-bold text-foreground">{d.signup.title}</h1>
         {authError && (
           <AuthErrorBanner code={authError} errors={d.signup.errors as Record<string, string>} />
