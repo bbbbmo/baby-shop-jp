@@ -50,8 +50,18 @@ create trigger on_auth_user_created_consents
   after insert on auth.users
   for each row execute function handle_new_user_consents();
 
--- 기존 사용자 백필. 이미 통합 약관 동의(agreeRequired)를 받은 사용자들이다.
--- 초기 가입자 중 marketing_opt_in 키가 없는 행이 있을 수 있어 coalesce로 막는다.
+-- 기존 사용자 백필 — 이메일 가입자만 대상이다.
+--
+-- 소셜 가입자를 넣으면 안 된다. SocialLoginButtons는 지금까지 체크박스 없이
+-- 곧바로 provider로 보냈으므로 그들은 약관에 동의한 적이 없다. 여기서 true를
+-- 넣으면 받지도 않은 동의를 기록하게 되고, 더 나쁘게는 hasConsentRecord()가
+-- true를 돌려주어 이들이 /auth/consent를 영영 보지 못한다. 레코드를 남기지
+-- 않으면 다음 로그인 때 콜백이 동의 화면으로 보낸다 — 그게 의도한 동작이다.
+--
+-- 이메일 가입 판별: 구 signUpWithEmail은 marketing_opt_in을, 신 버전은
+-- consent_terms를 메타데이터에 심는다. 둘 중 하나라도 있으면 이메일 가입이다.
+-- 두 키를 모두 보는 덕분에 마이그레이션과 코드 배포 순서가 뒤바뀌어도
+-- 마케팅 수신 동의가 false로 뭉개지지 않는다.
 insert into user_consents (user_id, consent_type, agreed, agreed_at)
 select u.id, t.consent_type, t.agreed, u.created_at
 from auth.users u
@@ -59,8 +69,12 @@ cross join lateral (
   values
     ('terms'::text,     true),
     ('privacy'::text,   true),
-    ('marketing'::text, coalesce((u.raw_user_meta_data->>'marketing_opt_in')::boolean, false))
+    ('marketing'::text, coalesce(
+      (u.raw_user_meta_data->>'consent_marketing')::boolean,
+      (u.raw_user_meta_data->>'marketing_opt_in')::boolean,
+      false))
 ) as t(consent_type, agreed)
-where not exists (
-  select 1 from user_consents c where c.user_id = u.id
-);
+where (u.raw_user_meta_data ? 'marketing_opt_in' or u.raw_user_meta_data ? 'consent_terms')
+  and not exists (
+    select 1 from user_consents c where c.user_id = u.id
+  );

@@ -141,6 +141,9 @@ export const dictionaries = {
       orDivider: "または",
       googleButton: "Googleで登録",
       lineButton: "LINEで登録",
+      // 카카오 로그인 디자인 가이드가 정한 레이블은 국문 「카카오 로그인」과
+      // 영문 「Login with Kakao」뿐이다. 공식 일본어 문구가 없으므로 영문을
+      // 쓴다. 「カカオでログイン」 등으로 바꾸면 가이드 위반이다.
       kakaoButton: "Login with Kakao",
       successTitle: "確認メールを送信しました",
       successBody: "ご登録いただいたメールアドレスに確認メールをお送りしました。メール内のリンクから登録を完了してください。",
@@ -169,6 +172,9 @@ export const dictionaries = {
       orDivider: "または",
       googleButton: "Googleでログイン",
       lineButton: "LINEでログイン",
+      // 카카오 로그인 디자인 가이드가 정한 레이블은 국문 「카카오 로그인」과
+      // 영문 「Login with Kakao」뿐이다. 공식 일본어 문구가 없으므로 영문을
+      // 쓴다. 「カカオでログイン」 등으로 바꾸면 가이드 위반이다.
       kakaoButton: "Login with Kakao",
       noAccountLabel: "アカウントをお持ちでない方は",
       signupLink: "会員登録",
