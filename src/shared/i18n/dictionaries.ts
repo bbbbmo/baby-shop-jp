@@ -201,6 +201,20 @@ export const dictionaries = {
     admin: {
       title: "管理者ページ",
     },
+    consent: {
+      title: "ご利用にあたっての同意",
+      description: "サービスをご利用いただくために、以下の項目へのご同意をお願いします。",
+      agreeTermsLabel: "【必須】利用規約に同意します",
+      agreePrivacyLabel: "【必須】個人情報の収集・利用に同意します",
+      agreeMarketingLabel: "【任意】お得な情報のメール配信を希望する",
+      submit: "同意して続ける",
+      submitting: "処理中…",
+      errors: {
+        agreeTermsRequired: "利用規約への同意が必要です",
+        agreePrivacyRequired: "個人情報の収集・利用への同意が必要です",
+        unknownError: "エラーが発生しました。もう一度お試しください",
+      },
+    },
     legal: {
       termsTitle: "利用規約",
       privacyTitle: "プライバシーポリシー",
@@ -406,6 +420,20 @@ export const dictionaries = {
     },
     admin: {
       title: "관리자 페이지",
+    },
+    consent: {
+      title: "서비스 이용 동의",
+      description: "서비스를 이용하시려면 아래 항목에 동의해 주세요.",
+      agreeTermsLabel: "[필수] 이용약관에 동의합니다",
+      agreePrivacyLabel: "[필수] 개인정보 수집·이용에 동의합니다",
+      agreeMarketingLabel: "[선택] 마케팅 정보 수신에 동의합니다",
+      submit: "동의하고 계속하기",
+      submitting: "처리 중…",
+      errors: {
+        agreeTermsRequired: "이용약관 동의가 필요해요",
+        agreePrivacyRequired: "개인정보 수집·이용 동의가 필요해요",
+        unknownError: "오류가 발생했어요. 다시 시도해주세요",
+      },
     },
     legal: {
       termsTitle: "이용약관",
