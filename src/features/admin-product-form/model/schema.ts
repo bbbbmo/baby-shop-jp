@@ -39,8 +39,10 @@ const productFieldsObjectSchema = z.object({
   descriptionKo: z.string().optional().default(""),
   priceJpy: positiveInt("priceInvalid"),
   listPriceJpy: positiveInt("priceInvalid"),
-  priceKrw: z.number().int().min(0, "priceInvalid"),
-  listPriceKrw: z.number().int().min(0, "priceInvalid"),
+  // 0은 "값 없음"이라 nonNegativeInt를 쓴다. z.number()로 두면 안 된다 —
+  // HTML 숫자 입력은 register()를 거쳐 문자열로 오므로 검증이 항상 터진다.
+  priceKrw: nonNegativeInt("priceInvalid"),
+  listPriceKrw: nonNegativeInt("priceInvalid"),
   season: z.enum(["ss", "aw", "all"]),
   isNew: z.boolean(),
   isBest: z.boolean(),

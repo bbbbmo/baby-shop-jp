@@ -65,6 +65,24 @@ describe("productFieldsSchema", () => {
     const values = { ...validFields, priceKrw: 0, listPriceKrw: 42000 };
     expect(productFieldsSchema.safeParse(values).success).toBe(false);
   });
+
+  // HTML 숫자 입력은 register()를 거쳐 문자열로 온다. 실제 폼 제출을 흉내내지
+  // 않으면 z.number()로 잘못 선언해도 테스트가 통과해버린다.
+  it("accepts the string values a number input actually submits", () => {
+    const asForm = {
+      ...validFields,
+      priceJpy: "12000",
+      listPriceJpy: "15000",
+      priceKrw: "0",
+      listPriceKrw: "0",
+    };
+    expect(productFieldsSchema.safeParse(asForm).success).toBe(true);
+  });
+
+  it("still enforces the korean pair rule on string values", () => {
+    const asForm = { ...validFields, priceKrw: "35000", listPriceKrw: "0" };
+    expect(productFieldsSchema.safeParse(asForm).success).toBe(false);
+  });
 });
 
 describe("variantInputSchema", () => {
