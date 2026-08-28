@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { InstagramIcon } from "@/shared/ui/icons";
 
@@ -26,7 +27,15 @@ export function Footer() {
           <p>KR：</p>
           <p>Email : como@gmail.com</p>
         </div>
-        <p className="mt-10 text-xs text-muted">
+        {/* 마켓 선택 화면으로 돌아가는 유일한 길. MarketLink를 쓰면 "/"에
+            현재 마켓 접두사가 붙어 선택 화면 대신 홈으로 가버린다. */}
+        <Link
+          href="/"
+          className="mt-10 inline-block text-xs text-muted underline underline-offset-2 hover:text-foreground"
+        >
+          日本語 / 한국어
+        </Link>
+        <p className="mt-4 text-xs text-muted">
           © {new Date().getFullYear()} {d.brandName}. {d.footer.note}
         </p>
       </div>
