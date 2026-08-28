@@ -22,5 +22,8 @@ export function stripMarket(path: string): string {
   if (!isMarket(first)) {
     return path;
   }
-  return rest.length > 0 ? `/${rest.join("/")}` : "/";
+  // 마켓 뒤 첫 세그먼트가 비어 있으면("/kr//evil.com") 그대로 이었을 때
+  // "//evil.com" — 브라우저가 외부 사이트로 해석하는 프로토콜 상대 URL이 된다.
+  const rest_ = rest.join("/").replace(/^\/+/, "");
+  return rest_ === "" ? "/" : `/${rest_}`;
 }

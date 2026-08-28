@@ -43,4 +43,9 @@ describe("stripMarket", () => {
   it("leaves a path without a market prefix alone", () => {
     expect(stripMarket("/admin/products")).toBe("/admin/products");
   });
+
+  it("never produces a protocol-relative url", () => {
+    expect(stripMarket("/kr//evil.com")).toBe("/evil.com");
+    expect(marketPath("jp", "/kr//evil.com")).toBe("/jp/evil.com");
+  });
 });
