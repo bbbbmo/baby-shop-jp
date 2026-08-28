@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// views/mypage/model/schema.ts, features/signup-form/model/schema.ts와 동일한
-// 규칙 — 셋 중 하나만 고치지 말 것
+// views/mypage/model/schema.ts와 동일한 규칙 — 한쪽만 고치지 말 것
 const KATAKANA_PATTERN = /^[ァ-ヶー\s]+$/;
 const PHONE_PATTERN = /^[0-9\-\s]+$/;
 const POSTAL_CODE_PATTERN = /^\d{3}-?\d{4}$/;

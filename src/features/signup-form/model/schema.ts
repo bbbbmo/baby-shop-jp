@@ -1,38 +1,29 @@
 import { z } from "zod";
 
-// views/mypage/model/schema.ts와 동일한 규칙 — 한쪽만 고치지 말 것
-const KATAKANA_PATTERN = /^[ァ-ヶー\s]+$/;
-const PHONE_PATTERN = /^[0-9\-\s]+$/;
-
-function isValidPhoneDigitCount(phone: string): boolean {
-  return phone.replace(/[^0-9]/g, "").length >= 9;
-}
-
+// 후리가나·전화번호는 배송에만 쓰이므로 체크아웃에서 받는다.
+// 한국 개인정보보호법은 약관과 개인정보 수집·이용 동의를 각각 요구하므로
+// 하나로 묶지 않는다.
 export const signupSchema = z
   .object({
     email: z.string().min(1, "required").email("invalidEmail"),
     password: z.string().min(8, "passwordTooShort"),
     passwordConfirm: z.string().min(1, "required"),
     name: z.string().min(1, "required"),
-    furigana: z
-      .string()
-      .min(1, "required")
-      .regex(KATAKANA_PATTERN, "furiganaInvalid"),
-    phone: z
-      .string()
-      .min(1, "required")
-      .regex(PHONE_PATTERN, "invalidPhone")
-      .refine(isValidPhoneDigitCount, { message: "invalidPhone" }),
-    agreeRequired: z.boolean(),
+    agreeTerms: z.boolean(),
+    agreePrivacy: z.boolean(),
     agreeMarketing: z.boolean(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "passwordMismatch",
     path: ["passwordConfirm"],
   })
-  .refine((data) => data.agreeRequired, {
-    message: "agreeRequired",
-    path: ["agreeRequired"],
+  .refine((data) => data.agreeTerms, {
+    message: "agreeTermsRequired",
+    path: ["agreeTerms"],
+  })
+  .refine((data) => data.agreePrivacy, {
+    message: "agreePrivacyRequired",
+    path: ["agreePrivacy"],
   });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
@@ -42,8 +33,7 @@ export const initialSignupFormValues: SignupFormValues = {
   password: "",
   passwordConfirm: "",
   name: "",
-  furigana: "",
-  phone: "",
-  agreeRequired: false,
+  agreeTerms: false,
+  agreePrivacy: false,
   agreeMarketing: false,
 };
