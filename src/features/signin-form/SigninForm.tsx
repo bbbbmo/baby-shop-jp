@@ -53,6 +53,7 @@ export function SigninForm({ onSuccess }: SigninFormProps) {
         from="signin"
         googleLabel={d.signin.googleButton}
         lineLabel={d.signin.lineButton}
+        kakaoLabel={d.signin.kakaoButton}
         errors={d.signin.errors as Record<string, string>}
         onError={setOauthError}
       />

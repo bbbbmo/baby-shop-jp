@@ -89,6 +89,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         from="signup"
         googleLabel={d.signup.googleButton}
         lineLabel={d.signup.lineButton}
+        kakaoLabel={d.signup.kakaoButton}
         errors={d.signup.errors as Record<string, string>}
         onError={setOauthError}
       />

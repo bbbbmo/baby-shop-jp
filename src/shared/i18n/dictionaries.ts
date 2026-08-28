@@ -144,6 +144,7 @@ export const dictionaries = {
       orDivider: "または",
       googleButton: "Googleで登録",
       lineButton: "LINEで登録",
+      kakaoButton: "Login with Kakao",
       successTitle: "確認メールを送信しました",
       successBody: "ご登録いただいたメールアドレスに確認メールをお送りしました。メール内のリンクから登録を完了してください。",
       backToHome: "トップページへ戻る",
@@ -172,6 +173,7 @@ export const dictionaries = {
       orDivider: "または",
       googleButton: "Googleでログイン",
       lineButton: "LINEでログイン",
+      kakaoButton: "Login with Kakao",
       noAccountLabel: "アカウントをお持ちでない方は",
       signupLink: "会員登録",
       errors: {
@@ -348,6 +350,7 @@ export const dictionaries = {
       orDivider: "또는",
       googleButton: "Google로 가입",
       lineButton: "LINE으로 가입",
+      kakaoButton: "카카오 로그인",
       successTitle: "인증 메일을 보냈습니다",
       successBody: "입력하신 이메일 주소로 인증 메일을 보냈어요. 메일의 링크를 눌러 가입을 완료해주세요.",
       backToHome: "홈으로 돌아가기",
@@ -376,6 +379,7 @@ export const dictionaries = {
       orDivider: "또는",
       googleButton: "Google로 로그인",
       lineButton: "LINE으로 로그인",
+      kakaoButton: "카카오 로그인",
       noAccountLabel: "계정이 없으신가요?",
       signupLink: "회원가입",
       errors: {
