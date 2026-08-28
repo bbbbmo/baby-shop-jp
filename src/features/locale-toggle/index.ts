@@ -1,1 +1,0 @@
-export { LocaleToggle } from "./LocaleToggle";

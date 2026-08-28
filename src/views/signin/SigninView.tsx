@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SigninForm } from "@/features/signin-form";
 import { AuthErrorBanner } from "@/entities/auth";
-import { LocaleToggle } from "@/features/locale-toggle";
+import { MarketSwitcher } from "@/features/market-switcher";
 
 export function SigninView() {
   const { d } = useLocale();
@@ -27,7 +27,7 @@ export function SigninView() {
           {d.brandName}
         </MarketLink>
         <div className="mb-6 w-32">
-          <LocaleToggle />
+          <MarketSwitcher />
         </div>
         <h1 className="mb-6 text-2xl font-bold text-foreground">{d.signin.title}</h1>
         {authError && (

@@ -5,7 +5,7 @@ import { MarketLink, useMarketRouter } from "@/shared/market";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
 import { ConsentForm } from "@/features/consent-form";
-import { LocaleToggle } from "@/features/locale-toggle";
+import { MarketSwitcher } from "@/features/market-switcher";
 
 export function ConsentView() {
   const { d } = useLocale();
@@ -33,7 +33,7 @@ export function ConsentView() {
           {d.brandName}
         </MarketLink>
         <div className="mb-6 w-32">
-          <LocaleToggle />
+          <MarketSwitcher />
         </div>
         <h1 className="mb-6 text-2xl font-bold text-foreground">{d.consent.title}</h1>
         <ConsentForm userId={user.id} onSuccess={() => router.replace("/")} />

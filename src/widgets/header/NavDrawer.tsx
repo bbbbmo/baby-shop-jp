@@ -7,7 +7,7 @@ import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useEscapeToClose } from "@/shared/lib/useEscapeToClose";
 import { CloseIcon, ChevronDownIcon } from "@/shared/ui/icons";
 import { SearchBar } from "@/features/search";
-import { LocaleToggle } from "@/features/locale-toggle";
+import { MarketSwitcher } from "@/features/market-switcher";
 import { FontToggle } from "@/features/font-toggle";
 
 type NavDrawerProps = { open: boolean; onClose: () => void };
@@ -72,7 +72,7 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
           </ul>
         </nav>
         <div className="space-y-2 border-t border-border px-4 py-4">
-          <LocaleToggle />
+          <MarketSwitcher />
           <FontToggle />
         </div>
       </aside>
