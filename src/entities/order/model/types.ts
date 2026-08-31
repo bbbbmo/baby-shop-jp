@@ -1,9 +1,12 @@
+import type { Market } from "@/shared/config/markets";
+
 export type OrderStatus = "pending_payment";
 
 export type OrderItem = {
   id: string;
   productVariantId: string;
   productNameJa: string;
+  productNameKo: string | null;
   color: string;
   size: string;
   unitPrice: number;
@@ -14,8 +17,9 @@ export type Order = {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  market: Market;
   recipientName: string;
-  recipientFurigana: string;
+  recipientFurigana: string | null;
   phone: string;
   email: string;
   postalCode: string;

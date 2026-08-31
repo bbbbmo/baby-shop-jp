@@ -5,7 +5,8 @@ import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useOrderLookupForm } from "./model/useOrderLookupForm";
 import { FormField } from "@/shared/ui/FormField";
 import { formatPrice } from "@/shared/lib/format";
-import type { Order } from "@/entities/order";
+import { marketCurrency } from "@/shared/config/markets";
+import type { Order, OrderItem } from "@/entities/order";
 
 type ErrorDict = Dictionary["orderLookup"]["errors"];
 
@@ -36,25 +37,41 @@ export function OrderLookupForm() {
 
 function OrderResult({ order }: { order: Order }) {
   const { d } = useLocale();
+  const currency = marketCurrency(order.market);
   return (
     <div className="border border-border bg-surface p-5 text-sm">
       <p className="text-muted">{d.orderLookup.statusLabel}</p>
       <p className="mb-3 font-medium text-foreground">{d.orderLookup.statusPendingPayment}</p>
-      {/* 주문은 아직 마켓을 기록하지 않는다(3단계). 지금까지의 주문은 전부 엔화다. */}
       <ul className="divide-y divide-border">
         {order.items.map((item) => (
-          <li key={item.id} className="flex items-center justify-between py-2">
-            <span className="text-foreground">
-              {item.productNameJa} · {item.color} · {item.size} × {item.quantity}
-            </span>
-            <span className="text-foreground">{formatPrice(item.unitPrice * item.quantity, "JPY")}</span>
-          </li>
+          <OrderResultItem key={item.id} item={item} currency={currency} />
         ))}
       </ul>
       <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
         <span className="font-medium text-foreground">{d.cart.total}</span>
-        <span className="text-lg font-bold text-foreground">{formatPrice(order.totalPrice, "JPY")}</span>
+        <span className="text-lg font-bold text-foreground">
+          {formatPrice(order.totalPrice, currency)}
+        </span>
       </div>
     </div>
+  );
+}
+
+function OrderResultItem({
+  item,
+  currency,
+}: {
+  item: OrderItem;
+  currency: ReturnType<typeof marketCurrency>;
+}) {
+  const { locale } = useLocale();
+  const name = locale === "ko" ? (item.productNameKo ?? item.productNameJa) : item.productNameJa;
+  return (
+    <li className="flex items-center justify-between py-2">
+      <span className="text-foreground">
+        {name} · {item.color} · {item.size} × {item.quantity}
+      </span>
+      <span className="text-foreground">{formatPrice(item.unitPrice * item.quantity, currency)}</span>
+    </li>
   );
 }
