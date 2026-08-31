@@ -97,3 +97,20 @@ RLS는 본인 행의 select와 insert만 허용합니다. update·delete 정책�
 보냅니다. 이메일 가입자는 구 폼의 체크박스 문구가 "이용약관 및 개인정보처리방침에
 동의합니다"로 두 항목을 함께 다뤘으므로 `terms`·`privacy`를 모두 `true`로
 채웁니다.
+
+## orders / order_items — 마켓 관련 컬럼
+
+다국가 마켓 3단계(주소·주문, 브랜치 `feat/multi-market-orders`, main 미머지)에서 추가된
+컬럼입니다. 원본:
+[`supabase/migrations/20260831000000_order_market.sql`](../supabase/migrations/20260831000000_order_market.sql)
+
+| 테이블         | 컬럼                  | 타입                | 설명                                                             |
+| -------------- | --------------------- | ------------------- | ---------------------------------------------------------------- |
+| `orders`       | `market`              | `text` (`jp`/`kr`)  | 주문 당시 마켓. 내역을 어느 통화로 보여줄지 정한다. 기존 주문은 전부 `jp`로 남는다 |
+| `orders`       | `recipient_furigana`  | `text \| null`      | nullable. 후리가나는 일본에만 있는 개념이라 한국 주문에는 `null`이 들어간다        |
+| `order_items`  | `product_name_ko`     | `text \| null`      | nullable. 주문 시점의 한국어 상품명. 이 컬럼이 생기기 전 주문은 `null`이므로 표시할 때 일본어로 폴백한다 |
+
+게스트 주문 조회 RPC(`get_order_by_number_and_email`)도 위 컬럼들을 함께 돌려주도록
+[`supabase/migrations/20260831010000_order_lookup_market.sql`](../supabase/migrations/20260831010000_order_lookup_market.sql)에서
+교체됐습니다. 이 RPC를 쓰는 화면이 있다면 두 마이그레이션을 모두 적용해야 `market`이
+`undefined`로 깨지지 않습니다.

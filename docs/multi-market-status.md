@@ -3,7 +3,7 @@
 일본·한국 두 마켓을 지원하기까지의 전체 진행표입니다.
 작업을 다시 시작할 때 이 문서부터 보세요.
 
-마지막 갱신: 2026-08-28
+마지막 갱신: 2026-08-31
 
 ---
 
@@ -14,7 +14,7 @@
 | 회원가입 최소 수집 + 동의 기록 | 가입 항목 축소, 동의 기록 | ✅ 완료 · main 머지 |
 | **1단계** | 마켓 라우팅, 언어 경로 고정 | ✅ 완료 · main 머지 |
 | **2단계** | 가격 · 통화 · 배송비 | ✅ 완료 · main 머지 |
-| **3단계** | 주소 폼 · 주소 검색 · 주문 | 📋 계획 완료 · 미착수 |
+| **3단계** | 주소 폼 · 주소 검색 · 주문 | ✅ 완료 (브랜치 `feat/multi-market-orders`) |
 | 결제 | 결제대행사 연동 | ⬜ 미착수 (조사 단계) |
 
 ---
@@ -23,7 +23,7 @@
 
 - `/` — 일본어 / 한국어 선택 화면
 - `/jp` — 일본어 · 엔화
-- `/kr` — 한국어 · **아직 엔화** (2단계 완료 시 원화)
+- `/kr` — 한국어 · **원화**
 - `/admin` — 마켓 무관, 공용
 - 푸터의 `日本語 / 한국어` 링크로 선택 화면 복귀
 
@@ -96,6 +96,31 @@ where table_name = 'products' and column_name like '%price%';
 
 **이 마이그레이션은 개명을 포함해 되돌리기가 번거롭습니다.** 되돌리려면 반대로 개명해야 합니다.
 
+### 주문 마이그레이션(3단계)이 적용됐는지
+
+3단계 코드는 `orders.market` · `orders.recipient_furigana`(nullable) · `order_items.product_name_ko`를
+전제로 동작합니다. **마이그레이션은 두 개이고, 순서대로 적용해야 합니다.**
+
+1. [`supabase/migrations/20260831000000_order_market.sql`](../supabase/migrations/20260831000000_order_market.sql)
+   — `orders.market` 추가, `recipient_furigana`를 nullable로, `order_items.product_name_ko` 추가
+2. [`supabase/migrations/20260831010000_order_lookup_market.sql`](../supabase/migrations/20260831010000_order_lookup_market.sql)
+   — 게스트 주문 조회 RPC(`get_order_by_number_and_email`)가 위 두 컬럼도 함께 돌려주도록 교체
+
+**1번만 적용하고 2번을 건너뛰면 게스트 주문 조회 화면에서 `order.market`이 `undefined`가 되어
+통화 표시가 깨집니다.**
+
+Supabase 대시보드 → SQL Editor:
+
+```sql
+select column_name, is_nullable from information_schema.columns
+where table_name = 'orders' and column_name in ('market', 'recipient_furigana');
+select column_name from information_schema.columns
+where table_name = 'order_items' and column_name = 'product_name_ko';
+```
+
+`market`은 `NO`(필수, 기본값 `jp`), `recipient_furigana`는 **`YES`**(nullable)로 나와야 하고,
+`product_name_ko`가 나와야 합니다. 안 나오면 위 마이그레이션을 순서대로 실행하세요.
+
 ### 소셜 로그인 복귀 주소가 등록됐는지
 
 1단계에서 주소가 바뀌었습니다. 등록 전까지 소셜 로그인이 실패합니다.
@@ -111,26 +136,33 @@ http://localhost:3000/kr/auth/callback
 
 ---
 
-## 3단계 — 계획까지 완료
+## 3단계 — 완료 (머지 전)
 
+**브랜치:** `feat/multi-market-orders` (main에 머지 안 됨)
 **계획서:** [`docs/plans/2026-08-31-multi-market-phase3-orders.md`](./plans/2026-08-31-multi-market-phase3-orders.md)
 **설계:** [`docs/specs/2026-08-28-multi-market-orders-design.md`](./specs/2026-08-28-multi-market-orders-design.md)
 
-태스크 8개입니다.
+태스크 8개, 전부 끝났습니다.
 
-| Task | 내용 | 비고 |
-| --- | --- | --- |
-| 1 | 주문 마이그레이션 (마켓 · 후리가나 nullable · 한국어 상품명) | |
-| 2 | 도로명주소 응답 → 폼 값 순수 함수 | API 키 불필요 |
-| 3 | 마켓별 주소 검증 | |
-| 4 | 체크아웃 폼 마켓별 (후리가나 감추기) | |
-| 5 | 도로명주소 검색 | **`JUSO_API_KEY` 필요** |
-| 6 | 주문에 마켓 · 한국어 상품명 저장 | |
-| 7 | 주문 내역을 주문 당시 통화 · 언어로 | |
-| 8 | 문서 | |
+| Task | 내용 | 커밋 | 상태 |
+| --- | --- | --- | --- |
+| 1 | 주문 마이그레이션 (마켓 · 후리가나 nullable · 한국어 상품명) | `5740f95` | ✅ 완료 |
+| 2 | 도로명주소 응답 → 폼 값 순수 함수 | `49e2241` | ✅ 완료 · API 키 불필요 |
+| 3 | 마켓별 주소 검증 | `7cd97dc` | ✅ 완료 |
+| 4 | 체크아웃 폼 마켓별 (후리가나 감추기) | `8c0d99f` | ✅ 완료 |
+| 5 | 도로명주소 검색 | `9ea552f` | ✅ 코드 완료 · **실제 검색 미확인** |
+| 6 | 주문에 마켓 · 한국어 상품명 저장 | `ce25c31` | ✅ 완료 |
+| 7 | 주문 내역을 주문 당시 통화 · 언어로 | `92e36ec` | ✅ 완료 |
+| 8 | 문서 | (이 커밋) | ✅ 완료 |
 
-**Task 5만 API 키를 요구합니다.** 키가 없으면 그 태스크를 건너뛰고 나머지를 먼저 해도 됩니다.
-발급은 juso.go.kr 회원가입 후 신청하며 무료입니다.
+**Task 5(도로명주소 검색)는 코드만 완료됐고, 실제 동작은 확인하지 못했습니다.**
+`JUSO_API_KEY`가 아직 없어서 juso.go.kr을 실제로 호출해 본 적이 없습니다. 응답 필드명
+(`zipNo` · `roadAddrPart1` · `siNm` · `sggNm`)은 공개 문서를 보고 맞춘 것이라, 키가 생기면
+`/kr/checkout`에서 실제 검색으로 한 번 확인해야 합니다. 자세한 내용은
+[`docs/open-decisions.md`](./open-decisions.md)의 B-1 참고.
+
+주문에 `market`을 기록하는 마이그레이션은 **두 개**입니다. 게스트 주문 조회 RPC도 별도
+마이그레이션으로 함께 바뀌었습니다 — 위 "먼저 확인할 것" 절 참고.
 
 ## 결제 — 조사 단계
 
