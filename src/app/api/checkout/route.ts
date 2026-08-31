@@ -10,6 +10,7 @@ type CheckoutRequestBody = { items: CheckoutItem[]; shipping: unknown; market?: 
 type ResolvedItem = {
   variant_id: string;
   product_name_ja: string;
+  product_name_ko: string;
   color: string;
   size: string;
   unit_price: number;
@@ -119,7 +120,7 @@ async function resolveOneItem(
   if (error || !data || data.stock < item.quantity || !product || price === null) {
     return { error: product?.name_ja ?? item.productId };
   }
-  return { item: buildResolvedItem(item, data.id, product.name_ja, price) };
+  return { item: buildResolvedItem(item, data.id, product, price) };
 }
 
 function priceFor(
@@ -143,7 +144,7 @@ async function resolveColorSizeIds(
 function fetchVariantWithProduct(item: CheckoutItem, ids: { colorId: string; sizeId: string }) {
   return supabaseServer
     .from("product_variants")
-    .select("id, stock, products ( name_ja, price_jpy, price_krw )")
+    .select("id, stock, products ( name_ja, name_ko, price_jpy, price_krw )")
     .eq("product_id", item.productId)
     .eq("color_id", ids.colorId)
     .eq("size_id", ids.sizeId)
@@ -152,19 +153,20 @@ function fetchVariantWithProduct(item: CheckoutItem, ids: { colorId: string; siz
 
 function extractProduct(data: { products?: unknown } | null) {
   return data?.products as
-    | { name_ja: string; price_jpy: number; price_krw: number | null }
+    | { name_ja: string; name_ko: string; price_jpy: number; price_krw: number | null }
     | undefined;
 }
 
 function buildResolvedItem(
   item: CheckoutItem,
   variantId: string,
-  productNameJa: string,
+  product: { name_ja: string; name_ko: string },
   unitPrice: number,
 ): ResolvedItem {
   return {
     variant_id: variantId,
-    product_name_ja: productNameJa,
+    product_name_ja: product.name_ja,
+    product_name_ko: product.name_ko,
     color: item.color,
     size: item.size,
     unit_price: unitPrice,
@@ -200,8 +202,12 @@ function buildOrderPayload(
   return {
     order_number: orderNumber,
     user_id: userId,
+    market,
     recipient_name: shipping.recipientName,
-    recipient_furigana: shipping.recipientFurigana,
+    // 한국 마켓에는 후리가나 입력란이 없다. 그런데 로그인 사용자의 프로필
+    // 후리가나가 폼 기본값으로 채워져 그대로 딸려온다. 사용자가 보지도
+    // 입력하지도 않은 값이므로 서버에서 잘라낸다.
+    recipient_furigana: market === "jp" ? shipping.recipientFurigana : null,
     phone: shipping.phone,
     email: shipping.email,
     postal_code: shipping.postalCode,
@@ -220,6 +226,7 @@ async function insertOrderItems(orderId: string, items: ResolvedItem[]): Promise
       order_id: orderId,
       product_variant_id: item.variant_id,
       product_name_ja: item.product_name_ja,
+      product_name_ko: item.product_name_ko,
       color: item.color,
       size: item.size,
       unit_price: item.unit_price,
