@@ -5,15 +5,15 @@ import { MarketLink } from "@/shared/market";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useSession } from "@/entities/auth";
-import { isAdminEmail } from "@/shared/lib/adminAuth";
 import { MenuIcon, ProfileIcon, ShieldIcon } from "@/shared/ui/icons";
 import { CartButton } from "./CartButton";
 import { NavDrawer } from "./NavDrawer";
 
-export function Header() {
+// 관리자 여부는 서버가 판단해 내려준다. 여기서 목록을 들고 판단하면
+// 그 목록이 브라우저 번들에 박힌다.
+export function Header({ isAdmin }: { isAdmin: boolean }) {
   const { d } = useLocale();
   const { user } = useSession();
-  const isAdmin = isAdminEmail(user?.email);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 

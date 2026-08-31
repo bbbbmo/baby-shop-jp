@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 async function importWithAllowlist(value: string) {
   vi.resetModules();
-  process.env.NEXT_PUBLIC_ADMIN_EMAILS = value;
+  process.env.ADMIN_EMAILS = value;
   return import("./adminAuth");
 }
 
