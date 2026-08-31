@@ -1,7 +1,7 @@
 "use client";
 
 import { MarketLink } from "@/shared/market";
-import { useCart, useCartHydrated, enrichCartLines, type CartItem, type EnrichedCartItem } from "@/entities/cart";
+import { useCart, useCartHydrated, enrichCartLines, DroppedNotice, type CartItem, type EnrichedCartItem } from "@/entities/cart";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useProducts } from "@/entities/product";
 import { formatPrice } from "@/shared/lib/format";
@@ -46,18 +46,6 @@ function CartBody({ items, products }: { items: CartItem[]; products: Product[] 
         </div>
       )}
     </div>
-  );
-}
-
-function DroppedNotice({ count }: { count: number }) {
-  const { d } = useLocale();
-  if (count === 0) {
-    return null;
-  }
-  return (
-    <p className="mb-4 border border-border bg-sand px-4 py-3 text-sm text-foreground">
-      {d.cart.droppedNotice.replace("{count}", String(count))}
-    </p>
   );
 }
 

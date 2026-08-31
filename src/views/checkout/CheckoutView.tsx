@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { MarketLink, useMarketRouter } from "@/shared/market";
-import { useCart, useCartHydrated, enrichCartLines, type CartItem, type EnrichedCartItem } from "@/entities/cart";
+import { useCart, useCartHydrated, enrichCartLines, DroppedNotice, type CartItem, type EnrichedCartItem } from "@/entities/cart";
 import { useProducts, type Product } from "@/entities/product";
 import { useSession } from "@/entities/auth";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
@@ -66,12 +66,13 @@ function CheckoutBody({
 }) {
   const { d } = useLocale();
   const router = useMarketRouter();
-  const { lines } = enrichCartLines(items, products);
+  const { lines, droppedCount } = enrichCartLines(items, products);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
   return (
     <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
       <h1 className="mb-6 text-2xl font-bold text-foreground">{d.checkout.title}</h1>
+      <DroppedNotice count={droppedCount} />
       {!userId && <GuestOrLoginBanner />}
       <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
         <CheckoutForm
