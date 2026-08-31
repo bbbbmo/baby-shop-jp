@@ -36,6 +36,9 @@ export type CheckoutFormValues = z.infer<typeof checkoutFields>;
 export function checkoutSchema(market: Market) {
   return checkoutFields.superRefine((v, ctx) => {
     applyPostalRule(market, v.postalCode, ctx);
+    if (market === "kr") {
+      applyDetailAddressRule(v.building, ctx);
+    }
     if (market !== "jp") {
       return;
     }
@@ -50,6 +53,15 @@ function applyPostalRule(market: Market, postalCode: string, ctx: z.RefinementCt
   const pattern = market === "jp" ? JP_POSTAL_PATTERN : KR_POSTAL_PATTERN;
   if (!pattern.test(postalCode)) {
     ctx.addIssue({ code: "custom", message: "invalidPostalCode", path: ["postalCode"] });
+  }
+}
+
+// 한국은 아파트·오피스텔 비중이 커서 동·호수가 없으면 배송이 막힌다.
+// 도로명주소 팝업이 채워주지 않을 수 있는 유일한 칸이라 여기서 받아야 한다.
+// 일본은 단독주택 주소만으로 배송되는 경우가 흔해 건물명을 강제하지 않는다.
+function applyDetailAddressRule(building: string | undefined, ctx: z.RefinementCtx): void {
+  if (!building || building.trim().length === 0) {
+    ctx.addIssue({ code: "custom", message: "required", path: ["building"] });
   }
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkoutSchema, type CheckoutFormValues } from "./schema";
+import type { Market } from "@/shared/config/markets";
 
 const validValues: CheckoutFormValues = {
   recipientName: "山田太郎",
@@ -17,8 +18,9 @@ const validValues: CheckoutFormValues = {
 function issueMessage(
   values: CheckoutFormValues,
   field: keyof CheckoutFormValues,
+  market: Market = "jp",
 ): string | undefined {
-  const result = checkoutSchema("jp").safeParse(values);
+  const result = checkoutSchema(market).safeParse(values);
   if (result.success) return undefined;
   return result.error.issues.find((issue) => issue.path[0] === field)?.message;
 }
@@ -78,6 +80,7 @@ describe("checkoutSchema — 한국 마켓", () => {
     prefecture: "서울특별시",
     city: "강남구",
     addressLine: "테헤란로 152",
+    building: "101동 1503호",
   };
 
   it("accepts an address with no furigana", () => {
@@ -99,6 +102,17 @@ describe("checkoutSchema — 한국 마켓", () => {
     expect(checkoutSchema("kr").safeParse({ ...krValues, recipientName: "" }).success).toBe(false);
     expect(checkoutSchema("kr").safeParse({ ...krValues, addressLine: "" }).success).toBe(false);
   });
+
+  it("requires the detail address", () => {
+    // 아파트·오피스텔 비중이 커서 동·호수가 없으면 배송이 막힌다.
+    // 도로명주소 팝업이 채워주지 않는 유일한 칸이라 검증으로 받아야 한다.
+    expect(issueMessage({ ...krValues, building: "" }, "building", "kr")).toBe("required");
+    expect(issueMessage({ ...krValues, building: undefined }, "building", "kr")).toBe("required");
+  });
+
+  it("rejects a detail address made only of spaces", () => {
+    expect(issueMessage({ ...krValues, building: "   " }, "building", "kr")).toBe("required");
+  });
 });
 
 describe("checkoutSchema — 일본 마켓", () => {
@@ -119,5 +133,10 @@ describe("checkoutSchema — 일본 마켓", () => {
 
   it("still requires the city", () => {
     expect(checkoutSchema("jp").safeParse({ ...validValues, city: "" }).success).toBe(false);
+  });
+
+  it("leaves the building name optional", () => {
+    // 상세주소 필수는 한국만이다. 일본은 단독주택 주소만으로 배송되는 경우가 흔하다.
+    expect(checkoutSchema("jp").safeParse({ ...validValues, building: "" }).success).toBe(true);
   });
 });

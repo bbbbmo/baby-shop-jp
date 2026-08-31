@@ -54,7 +54,7 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
       <FormField label={d.checkout.prefectureLabel} readOnly={isKr} onClick={openIfKr} registration={register("prefecture")} error={errorText(errors.prefecture?.message)} />
       <FormField label={d.checkout.cityLabel} readOnly={isKr} onClick={openIfKr} registration={register("city")} error={errorText(errors.city?.message)} />
       <FormField label={d.checkout.addressLineLabel} readOnly={isKr} onClick={openIfKr} registration={register("addressLine")} error={errorText(errors.addressLine?.message)} />
-      <FormField label={d.checkout.buildingLabel} registration={register("building")} />
+      <FormField label={d.checkout.buildingLabel} registration={register("building")} error={errorText(errors.building?.message)} />
       <FormField label={d.checkout.memoLabel} registration={register("memo")} />
       {submitError && <SubmitErrorMessage submitError={submitError} errors={d.checkout.errors} />}
       <button

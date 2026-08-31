@@ -313,7 +313,7 @@ export const dictionaries = {
       prefectureLabel: "시/도",
       cityLabel: "시/군/구",
       addressLineLabel: "도로명 주소",
-      buildingLabel: "상세주소 (동·호수, 선택)",
+      buildingLabel: "상세주소 (동·호수)",
       memoLabel: "배송 메모 (선택)",
       submit: "주문하기",
       submitting: "처리 중…",
