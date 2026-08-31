@@ -5,9 +5,8 @@ import { useCart, useCartHydrated, enrichCartLines, type CartItem, type Enriched
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { useProducts } from "@/entities/product";
 import { formatPrice } from "@/shared/lib/format";
-import { marketCurrency } from "@/shared/config/markets";
+import { MARKET_CONFIG, marketCurrency, shippingFeeFor } from "@/shared/config/markets";
 import { useMarket } from "@/shared/market";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 import type { Product } from "@/entities/product";
 import { ProductThumb } from "@/entities/product";
 import { QuantityStepper } from "@/entities/cart";
@@ -107,9 +106,10 @@ function CartLine({ line }: { line: EnrichedCartItem }) {
 
 function CartSummary({ subtotal }: { subtotal: number }) {
   const { d } = useLocale();
-  const currency = marketCurrency(useMarket());
-  const free = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shipping = free ? 0 : SHIPPING_FEE;
+  const market = useMarket();
+  const currency = marketCurrency(market);
+  const shipping = shippingFeeFor(market, subtotal);
+  const free = shipping === 0;
 
   return (
     <aside className="h-fit rounded-2xl bg-surface p-5 ring-1 ring-border">
@@ -156,9 +156,11 @@ function FreeShippingBar({
   free: boolean;
 }) {
   const { d } = useLocale();
-  const currency = marketCurrency(useMarket());
-  const remain = Math.max(FREE_SHIPPING_THRESHOLD - subtotal, 0);
-  const pct = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const market = useMarket();
+  const currency = marketCurrency(market);
+  const threshold = MARKET_CONFIG[market].freeShippingThreshold;
+  const remain = Math.max(threshold - subtotal, 0);
+  const pct = Math.min((subtotal / threshold) * 100, 100);
   const message = free
     ? d.cart.freeShipMet
     : d.cart.freeShipRemain.replace("{amount}", formatPrice(remain, currency));

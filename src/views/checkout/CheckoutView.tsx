@@ -7,9 +7,8 @@ import { useProducts, type Product } from "@/entities/product";
 import { useSession } from "@/entities/auth";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { formatPrice } from "@/shared/lib/format";
-import { marketCurrency } from "@/shared/config/markets";
+import { marketCurrency, shippingFeeFor } from "@/shared/config/markets";
 import { useMarket } from "@/shared/market";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/shared/lib/constants";
 import { QueryGuard } from "@/shared/ui/QueryGuard";
 import { CheckoutForm, type CheckoutFormValues } from "@/features/checkout-form";
 
@@ -101,9 +100,10 @@ function GuestOrLoginBanner() {
 
 function OrderSummary({ lines, subtotal }: { lines: EnrichedCartItem[]; subtotal: number }) {
   const { locale, d } = useLocale();
-  const currency = marketCurrency(useMarket());
-  const free = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shipping = free ? 0 : SHIPPING_FEE;
+  const market = useMarket();
+  const currency = marketCurrency(market);
+  const shipping = shippingFeeFor(market, subtotal);
+  const free = shipping === 0;
 
   return (
     <aside className="h-fit bg-surface p-5 ring-1 ring-border">

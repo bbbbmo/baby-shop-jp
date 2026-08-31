@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, initialCheckoutFormValues, type CheckoutFormValues } from "./schema";
 import type { CartItem } from "@/entities/cart";
+import { useMarket } from "@/shared/market";
+import type { Market } from "@/shared/config/markets";
 
 type SubmitError = { code: string; productName?: string };
 type CheckoutItem = { productId: string; color: string; size: string; quantity: number };
@@ -17,6 +19,7 @@ export function useCheckoutForm(
   onSuccess: (orderNumber: string) => void,
 ) {
   const [submitError, setSubmitError] = useState<SubmitError | null>(null);
+  const market = useMarket();
   const {
     register,
     handleSubmit,
@@ -29,7 +32,7 @@ export function useCheckoutForm(
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
     try {
-      const result = await submitCheckout(items, values);
+      const result = await submitCheckout(items, values, market);
       if ("error" in result) {
         setSubmitError({ code: result.error, productName: result.productName });
         return;
@@ -46,6 +49,7 @@ export function useCheckoutForm(
 async function submitCheckout(
   items: CartItem[],
   shipping: CheckoutFormValues,
+  market: Market,
 ): Promise<CheckoutSuccessResponse | CheckoutErrorResponse> {
   const checkoutItems: CheckoutItem[] = items.map((i) => ({
     productId: i.productId,
@@ -56,7 +60,7 @@ async function submitCheckout(
   const res = await fetch("/api/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items: checkoutItems, shipping }),
+    body: JSON.stringify({ items: checkoutItems, shipping, market }),
   });
   if (!res.ok) {
     return (await res.json()) as CheckoutErrorResponse;
