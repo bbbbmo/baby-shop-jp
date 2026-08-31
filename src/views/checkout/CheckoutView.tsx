@@ -66,7 +66,7 @@ function CheckoutBody({
 }) {
   const { d } = useLocale();
   const router = useMarketRouter();
-  const lines = enrichCartLines(items, products);
+  const { lines } = enrichCartLines(items, products);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
   return (

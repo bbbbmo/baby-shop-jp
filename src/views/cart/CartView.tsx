@@ -26,12 +26,13 @@ export function CartView() {
 
 function CartBody({ items, products }: { items: CartItem[]; products: Product[] }) {
   const { d } = useLocale();
-  const lines = enrichCartLines(items, products);
+  const { lines, droppedCount } = enrichCartLines(items, products);
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
 
   return (
     <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
       <h1 className="mb-6 text-2xl font-bold text-foreground">{d.cart.title}</h1>
+      <DroppedNotice count={droppedCount} />
       {lines.length === 0 ? (
         <EmptyState />
       ) : (
@@ -45,6 +46,18 @@ function CartBody({ items, products }: { items: CartItem[]; products: Product[] 
         </div>
       )}
     </div>
+  );
+}
+
+function DroppedNotice({ count }: { count: number }) {
+  const { d } = useLocale();
+  if (count === 0) {
+    return null;
+  }
+  return (
+    <p className="mb-4 border border-border bg-sand px-4 py-3 text-sm text-foreground">
+      {d.cart.droppedNotice.replace("{count}", String(count))}
+    </p>
   );
 }
 

@@ -35,8 +35,8 @@ const item = (overrides: Partial<CartItem>): CartItem => ({
 describe("enrichCartLines", () => {
   it("attaches matching product data to each cart item", () => {
     const result = enrichCartLines([item({})], [product({ id: "p1" })]);
-    expect(result).toHaveLength(1);
-    expect(result[0].product.id).toBe("p1");
+    expect(result.lines).toHaveLength(1);
+    expect(result.lines[0].product.id).toBe("p1");
   });
 
   it("drops lines whose product no longer exists", () => {
@@ -44,6 +44,22 @@ describe("enrichCartLines", () => {
       [item({ productId: "missing" })],
       [product({ id: "p1" })],
     );
-    expect(result).toEqual([]);
+    expect(result.lines).toEqual([]);
+  });
+
+  it("reports items whose product is missing from the catalog", () => {
+    const items = [
+      item({ id: "line1", productId: "p1" }),
+      item({ id: "line2", productId: "missing", quantity: 2 }),
+    ];
+    const result = enrichCartLines(items, [product({ id: "p1" })]);
+    expect(result.lines).toHaveLength(1);
+    expect(result.lines[0].productId).toBe("p1");
+    expect(result.droppedCount).toBe(1);
+  });
+
+  it("reports nothing dropped when every product is present", () => {
+    const result = enrichCartLines([item({})], [product({ id: "p1" })]);
+    expect(result.droppedCount).toBe(0);
   });
 });

@@ -62,6 +62,7 @@ export const dictionaries = {
       freeShipMet: "送料無料の対象です 🎉",
       freeShipRemain: "あと {amount} で送料無料",
       demoNotice: "※ 決済連携は準備中です。ご注文は保存されますが、実際の決済は発生しません。",
+      droppedNotice: "この地域でお取り扱いのない商品{count}点をカートから外しました。",
     },
     checkout: {
       title: "ご注文手続き",
@@ -293,6 +294,7 @@ export const dictionaries = {
       freeShipMet: "무료배송 대상이에요 🎉",
       freeShipRemain: "{amount} 더 담으면 무료배송",
       demoNotice: "※ 결제 연동은 준비 중입니다. 주문은 저장되지만 실제 결제는 발생하지 않아요.",
+      droppedNotice: "이 지역에서 판매하지 않는 상품 {count}개를 장바구니에서 뺐어요.",
     },
     checkout: {
       title: "주문서 작성",
