@@ -17,8 +17,10 @@ Supabase 등 외부 백엔드에서 받아올 데이터의 형태입니다. 현�
 | `name`        | `Localized`                   | 상품명 (ja/ko)                        |
 | `brand`       | `string`                      | 브랜드 slug (예: `hinata`, `mori`)    |
 | `category`    | `CategorySlug`                | 카테고리 (아래 참고)                  |
-| `price`       | `number`                      | 판매가 (원)                           |
-| `listPrice`   | `number`                      | 정가. `price`와 같으면 할인 없음      |
+| `price_jpy`      | `number`         | 일본 마켓 판매가 (엔)                  |
+| `list_price_jpy` | `number`         | 일본 마켓 정가 (엔)                    |
+| `price_krw`      | `number \| null` | 한국 마켓 판매가 (원). 없으면 미노출    |
+| `list_price_krw` | `number \| null` | 한국 마켓 정가 (원)                    |
 | `colors`      | `string[]`                    | 색상 스와치 (hex)                     |
 | `sizes`       | `string[]`                    | 사이즈 목록 (예: `"50-60"`, `"70"`)   |
 | `season`      | `"ss" \| "aw" \| "all"`       | 시즌                                  |
@@ -28,6 +30,10 @@ Supabase 등 외부 백엔드에서 받아올 데이터의 형태입니다. 현�
 | `rating`      | `number`                      | 평점 (0~5)                            |
 | `reviewCount` | `number`                      | 리뷰 수                               |
 | `description` | `Localized`                   | 상품 설명 (ja/ko)                     |
+
+원화 가격이 비어 있으면 그 상품은 한국 마켓 카탈로그에서 제외됩니다.
+가격을 정한 상품부터 순서대로 한국 마켓을 열 수 있게 하려는 장치입니다.
+판매가와 정가는 함께 채우거나 함께 비웁니다.
 
 ### CategorySlug
 
