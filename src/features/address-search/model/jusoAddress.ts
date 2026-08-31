@@ -4,6 +4,8 @@ export type JusoAddress = {
   roadAddrPart1: string;
   siNm: string;
   sggNm: string;
+  // 유일하게 juso가 아니라 사용자가 팝업 안에서 직접 친 값(동·호수).
+  addrDetail: string;
 };
 
 export type AddressFields = {
@@ -11,6 +13,7 @@ export type AddressFields = {
   prefecture: string;
   city: string;
   addressLine: string;
+  building: string;
 };
 
 // roadAddrPart1은 "서울특별시 강남구 테헤란로 152"처럼 시도·시군구를 포함한다.
@@ -27,5 +30,6 @@ export function jusoToAddressFields(juso: JusoAddress): AddressFields {
     prefecture: juso.siNm,
     city: juso.sggNm,
     addressLine,
+    building: juso.addrDetail,
   };
 }

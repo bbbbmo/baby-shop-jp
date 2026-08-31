@@ -1,13 +1,15 @@
 "use client";
 
+import { useCallback } from "react";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useMarket } from "@/shared/market";
 import { useCheckoutForm } from "./model/useCheckoutForm";
 import { FormField } from "@/shared/ui/FormField";
-import { AddressSearch } from "@/features/address-search";
+import { AddressSearchButton, useJusoPopup, type AddressFields } from "@/features/address-search";
 import type { CartItem } from "@/entities/cart";
 import type { CheckoutFormValues } from "./model/schema";
+import type { UseFormSetValue } from "react-hook-form";
 
 type ErrorDict = Dictionary["checkout"]["errors"];
 
@@ -26,6 +28,12 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
     onSuccess,
   );
   const isKr = market === "kr";
+  // 한국 주소는 도로명주소 팝업으로만 채운다. 훅은 마켓과 무관하게 항상 부르고
+  // (훅 규칙), 실제로 여는 건 아래 한국 전용 버튼과 주소 칸 클릭뿐이다.
+  const { open: openAddressSearch, blocked: addressPopupBlocked } = useJusoPopup(
+    useAddressFill(setValue),
+  );
+  const openIfKr = isKr ? openAddressSearch : undefined;
   const errorText = (key: string | undefined) =>
     key ? d.checkout.errors[key as keyof ErrorDict] : undefined;
 
@@ -41,21 +49,12 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
       )}
       <FormField label={d.checkout.phoneLabel} type="tel" registration={register("phone")} error={errorText(errors.phone?.message)} />
       <FormField label={d.checkout.emailLabel} type="email" registration={register("email")} error={errorText(errors.email?.message)} />
-      {isKr && (
-        <AddressSearch
-          onSelect={(fields) => {
-            setValue("postalCode", fields.postalCode, { shouldValidate: true });
-            setValue("prefecture", fields.prefecture, { shouldValidate: true });
-            setValue("city", fields.city, { shouldValidate: true });
-            setValue("addressLine", fields.addressLine, { shouldValidate: true });
-          }}
-        />
-      )}
-      <FormField label={d.checkout.postalCodeLabel} placeholder={d.checkout.postalCodePlaceholder} readOnly={isKr} registration={register("postalCode")} error={errorText(errors.postalCode?.message)} />
-      <FormField label={d.checkout.prefectureLabel} readOnly={isKr} registration={register("prefecture")} error={errorText(errors.prefecture?.message)} />
-      <FormField label={d.checkout.cityLabel} readOnly={isKr} registration={register("city")} error={errorText(errors.city?.message)} />
-      <FormField label={d.checkout.addressLineLabel} readOnly={isKr} registration={register("addressLine")} error={errorText(errors.addressLine?.message)} />
-      <FormField label={d.checkout.buildingLabel} registration={register("building")} />
+      {isKr && <AddressSearchButton blocked={addressPopupBlocked} onOpen={openAddressSearch} />}
+      <FormField label={d.checkout.postalCodeLabel} placeholder={d.checkout.postalCodePlaceholder} readOnly={isKr} onClick={openIfKr} registration={register("postalCode")} error={errorText(errors.postalCode?.message)} />
+      <FormField label={d.checkout.prefectureLabel} readOnly={isKr} onClick={openIfKr} registration={register("prefecture")} error={errorText(errors.prefecture?.message)} />
+      <FormField label={d.checkout.cityLabel} readOnly={isKr} onClick={openIfKr} registration={register("city")} error={errorText(errors.city?.message)} />
+      <FormField label={d.checkout.addressLineLabel} readOnly={isKr} onClick={openIfKr} registration={register("addressLine")} error={errorText(errors.addressLine?.message)} />
+      <FormField label={d.checkout.buildingLabel} registration={register("building")} error={errorText(errors.building?.message)} />
       <FormField label={d.checkout.memoLabel} registration={register("memo")} />
       {submitError && <SubmitErrorMessage submitError={submitError} errors={d.checkout.errors} />}
       <button
@@ -66,6 +65,25 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
         {isSubmitting ? d.checkout.submitting : d.checkout.submit}
       </button>
     </form>
+  );
+}
+
+// 팝업이 돌려준 주소를 폼에 넣는다. useJusoPopup이 이 함수를 의존성으로 삼으므로
+// 렌더마다 새로 만들면 message 리스너가 매번 다시 붙는다.
+function useAddressFill(setValue: UseFormSetValue<CheckoutFormValues>) {
+  return useCallback(
+    (fields: AddressFields) => {
+      setValue("postalCode", fields.postalCode, { shouldValidate: true });
+      setValue("prefecture", fields.prefecture, { shouldValidate: true });
+      setValue("city", fields.city, { shouldValidate: true });
+      setValue("addressLine", fields.addressLine, { shouldValidate: true });
+      // 팝업에서 상세주소를 비워 둔 채 왔다면 주문서에 이미 적어 둔 값을 지우지 않는다.
+      // 도로명주소만 다시 고르려고 팝업을 여는 경우가 있다.
+      if (fields.building) {
+        setValue("building", fields.building, { shouldValidate: true });
+      }
+    },
+    [setValue],
   );
 }
 
