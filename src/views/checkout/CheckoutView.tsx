@@ -75,8 +75,11 @@ function CheckoutBody({
       <DroppedNotice count={droppedCount} />
       {!userId && <GuestOrLoginBanner />}
       <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
+        {/* lines를 넘겨야 한다. items(원본 장바구니)를 넘기면 이 마켓에서 취급하지
+            않는 상품까지 서버로 가고, 서버는 그 한 줄 때문에 주문 전체를 거절한다.
+            화면에는 "뺐습니다"라고 알려놓고 제출은 그대로 하는 모순이 된다. */}
         <CheckoutForm
-          items={items}
+          items={lines}
           prefill={prefill}
           onSuccess={(orderNumber) => router.replace(`/checkout/complete?order=${orderNumber}`)}
         />

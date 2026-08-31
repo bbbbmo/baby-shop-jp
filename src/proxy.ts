@@ -18,6 +18,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const segment = request.nextUrl.pathname.split("/")[1];
   if (isMarket(segment)) {
     requestHeaders.set(MARKET_HEADER, segment);
+  } else {
+    // 클라이언트가 직접 보낸 값이 그대로 통과하지 않게 지운다.
+    // 이 헤더는 proxy만 쓰는 통로다.
+    requestHeaders.delete(MARKET_HEADER);
   }
   const nextResponse = () => NextResponse.next({ request: { headers: requestHeaders } });
 
