@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { JusoAddress } from "@/features/address-search/model/jusoAddress";
+import type { JusoAddress } from "@/features/address-search";
 
 const JUSO_ENDPOINT = "https://business.juso.go.kr/addrlink/addrLinkApi.do";
 

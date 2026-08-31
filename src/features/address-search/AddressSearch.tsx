@@ -26,12 +26,26 @@ export function AddressSearch({ onSelect }: { onSelect: (fields: AddressFields) 
     }
   };
 
+  // 이 입력란은 체크아웃 <form> 안에 있다. 검색 버튼의 type="button"은 클릭만
+  // 막을 뿐, Enter로 인한 브라우저의 암묵적 제출은 막지 못한다. 그대로 두면
+  // 주소를 다시 검색하려고 Enter를 눌렀을 때 옛 주소로 주문이 나간다.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") {
+      return;
+    }
+    e.preventDefault();
+    if (keyword.trim().length > 0 && !searching) {
+      void search();
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
         <input
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder={d.checkout.addressSearchPlaceholder}
           className="h-11 flex-1 border border-border bg-surface px-3 text-sm outline-none placeholder:text-muted focus:border-sage"
         />
