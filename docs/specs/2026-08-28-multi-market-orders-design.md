@@ -192,11 +192,16 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
 
 ## 도로명주소 검색
 
-`/api/address/search`를 서버 라우트로 두고 juso.go.kr을 프록시한다. **API 키를 클라이언트에
-노출하지 않기 위해서다.** `JUSO_API_KEY` 환경변수가 필요하며 발급은 무료지만 가입이 필요하다.
+> **구현 시 변경됨 (2026-08-31).** 아래 설계는 juso **검색 API**(`addrLinkApi.do`)를
+> 프록시해 화면 안에서 목록을 보여주는 방식이었다. 실제로는 juso가 제공하는
+> **팝업 API**(`addrLinkUrl.do`)로 갔다. 이유는 두 가지다.
+> (1) 승인키가 API별로 따로 발급되는데 우리가 받은 건 팝업 API 키다.
+> (2) 한국 사용자가 아는 주소 입력은 별도 창이 뜨는 그 화면이다.
+> 지금 구조는 `/api/address/juso` 한 라우트가 GET(팝업 열기)과 POST(주소 돌려받기)를
+> 모두 맡고, 고른 주소는 `postMessage`로 주문서에 전달된다.
 
 검색 결과를 고르면 우편번호·시도·시군구·도로명주소가 자동으로 채워지고, 사용자는 상세주소만
-입력한다.
+입력한다. (이 부분은 팝업 방식에서도 그대로다.)
 
 ## 외부 설정
 
@@ -250,6 +255,6 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
 
 ## 준비가 필요한 외부 항목
 
-- juso.go.kr API 키 (`JUSO_API_KEY`)
+- juso.go.kr **팝업 API** 키 (`JUSO_API_KEY`) — 검색 API 키와 다르다
 - 한국 배송비 확정값 (없으면 잠정값으로 진행)
 - Supabase Redirect URLs에 마켓별 콜백 경로 추가
