@@ -19,6 +19,10 @@ export function isMarket(value: unknown): value is Market {
   return value === "jp" || value === "kr";
 }
 
+// proxy가 경로에서 읽은 마켓을 루트 레이아웃에 넘기는 통로.
+// 레이아웃은 자기 아래 세그먼트의 params를 볼 수 없어 헤더를 쓴다.
+export const MARKET_HEADER = "x-market";
+
 export function marketLocale(market: Market): Locale {
   return MARKET_LOCALE[market];
 }
