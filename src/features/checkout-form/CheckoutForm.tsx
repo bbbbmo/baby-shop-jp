@@ -2,6 +2,7 @@
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
+import { useMarket } from "@/shared/market";
 import { useCheckoutForm } from "./model/useCheckoutForm";
 import { FormField } from "@/shared/ui/FormField";
 import type { CartItem } from "@/entities/cart";
@@ -17,6 +18,7 @@ type CheckoutFormProps = {
 
 export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
   const { d } = useLocale();
+  const market = useMarket();
   const { register, errors, isSubmitting, submitError, onSubmit } = useCheckoutForm(
     items,
     prefill,
@@ -28,7 +30,13 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <FormField label={d.checkout.recipientNameLabel} registration={register("recipientName")} error={errorText(errors.recipientName?.message)} />
-      <FormField label={d.checkout.recipientFuriganaLabel} registration={register("recipientFurigana")} error={errorText(errors.recipientFurigana?.message)} />
+      {market === "jp" && (
+        <FormField
+          label={d.checkout.recipientFuriganaLabel}
+          registration={register("recipientFurigana")}
+          error={errorText(errors.recipientFurigana?.message)}
+        />
+      )}
       <FormField label={d.checkout.phoneLabel} type="tel" registration={register("phone")} error={errorText(errors.phone?.message)} />
       <FormField label={d.checkout.emailLabel} type="email" registration={register("email")} error={errorText(errors.email?.message)} />
       <FormField label={d.checkout.postalCodeLabel} placeholder={d.checkout.postalCodePlaceholder} registration={register("postalCode")} error={errorText(errors.postalCode?.message)} />

@@ -305,7 +305,7 @@ export const dictionaries = {
       phoneLabel: "전화번호",
       emailLabel: "이메일",
       postalCodeLabel: "우편번호",
-      postalCodePlaceholder: "123-4567",
+      postalCodePlaceholder: "06232",
       prefectureLabel: "도도부현",
       cityLabel: "시구정촌",
       addressLineLabel: "번지",
