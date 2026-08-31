@@ -17,6 +17,8 @@ const RESULT_TYPE = "4";
 
 // juso가 돌려보내는 26개 항목 중 우리가 쓰는 것만 꺼낸다.
 // 시군구(sggNm)는 세종특별자치시처럼 빈 값일 수 있어 필수로 보지 않는다.
+// addrDetail은 사용자가 팝업 안에서 친 상세주소다. 여기서 흘리면 주문서에
+// 도착했을 때 이미 사라져 있어서 같은 걸 두 번 입력해야 한다.
 export function readJusoForm(form: FormData): JusoAddress | null {
   const read = (name: string) => (form.get(name) ?? "").toString().trim();
   const juso = {
@@ -24,6 +26,7 @@ export function readJusoForm(form: FormData): JusoAddress | null {
     roadAddrPart1: read("roadAddrPart1"),
     siNm: read("siNm"),
     sggNm: read("sggNm"),
+    addrDetail: read("addrDetail"),
   };
   return juso.zipNo && juso.roadAddrPart1 ? juso : null;
 }
@@ -38,7 +41,7 @@ export function readJusoMessage(data: unknown): JusoAddress | null {
     return null;
   }
   const fields = juso as Record<string, unknown>;
-  const ok = ["zipNo", "roadAddrPart1", "siNm", "sggNm"].every(
+  const ok = ["zipNo", "roadAddrPart1", "siNm", "sggNm", "addrDetail"].every(
     (key) => typeof fields[key] === "string",
   );
   return ok ? (juso as JusoAddress) : null;

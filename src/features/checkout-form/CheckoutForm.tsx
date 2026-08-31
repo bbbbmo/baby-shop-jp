@@ -77,6 +77,11 @@ function useAddressFill(setValue: UseFormSetValue<CheckoutFormValues>) {
       setValue("prefecture", fields.prefecture, { shouldValidate: true });
       setValue("city", fields.city, { shouldValidate: true });
       setValue("addressLine", fields.addressLine, { shouldValidate: true });
+      // 팝업에서 상세주소를 비워 둔 채 왔다면 주문서에 이미 적어 둔 값을 지우지 않는다.
+      // 도로명주소만 다시 고르려고 팝업을 여는 경우가 있다.
+      if (fields.building) {
+        setValue("building", fields.building, { shouldValidate: true });
+      }
     },
     [setValue],
   );

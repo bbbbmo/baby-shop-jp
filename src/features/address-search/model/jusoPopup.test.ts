@@ -14,6 +14,7 @@ const seoul: JusoAddress = {
   roadAddrPart1: "서울특별시 강남구 테헤란로 152",
   siNm: "서울특별시",
   sggNm: "강남구",
+  addrDetail: "101동 1503호",
 };
 
 // juso가 returnUrl로 돌려보내는 폼에는 26개 항목이 들어 있다. 여기서는
@@ -25,6 +26,7 @@ const jusoForm = (fields: Partial<Record<string, string>>): FormData => {
   form.set("roadAddrPart1", "서울특별시 강남구 테헤란로 152");
   form.set("siNm", "서울특별시");
   form.set("sggNm", "강남구");
+  form.set("addrDetail", "101동 1503호");
   Object.entries(fields).forEach(([key, value]) => form.set(key, value ?? ""));
   return form;
 };
@@ -46,6 +48,15 @@ describe("readJusoForm", () => {
     expect(readJusoForm(sejong)?.sggNm).toBe("");
   });
 
+  it("keeps the detail address the user typed in the popup", () => {
+    // 팝업의 상세주소 칸은 juso가 채우는 게 아니라 사용자가 직접 친 값이다.
+    // 여기서 흘리면 주문서에 도착했을 때 이미 사라져 있다.
+    expect(readJusoForm(jusoForm({ addrDetail: "3층 302호" }))?.addrDetail).toBe("3층 302호");
+  });
+
+  it("accepts an empty detail address", () => {
+    expect(readJusoForm(jusoForm({ addrDetail: "" }))?.addrDetail).toBe("");
+  });
 
   it("returns null when the postal code is missing", () => {
     expect(readJusoForm(jusoForm({ zipNo: "" }))).toBeNull();
@@ -68,6 +79,9 @@ describe("readJusoMessage", () => {
     expect(readJusoMessage("hello")).toBeNull();
     expect(readJusoMessage(null)).toBeNull();
     expect(readJusoMessage({ type: JUSO_MESSAGE_TYPE, juso: { zipNo: "06232" } })).toBeNull();
+    expect(
+      readJusoMessage({ type: JUSO_MESSAGE_TYPE, juso: { ...seoul, addrDetail: undefined } }),
+    ).toBeNull();
   });
 });
 
