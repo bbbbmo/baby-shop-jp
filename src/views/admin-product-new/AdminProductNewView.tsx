@@ -1,7 +1,7 @@
 "use client";
 
 import { useBrands, useColors, useSizes, AdminProductForm, EMPTY_PRODUCT_FORM_VALUES } from "@/features/admin-product-form";
-import { QueryGuard } from "@/shared/ui/QueryGuard";
+import { QueryGuardBase } from "@/shared/ui/QueryGuardBase";
 
 export function AdminProductNewView() {
   const brands = useBrands();
@@ -13,7 +13,7 @@ export function AdminProductNewView() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="mb-6 text-xl font-bold text-foreground">상품 등록</h1>
-      <QueryGuard isLoading={isLoading} error={error}>
+      <QueryGuardBase errorText="불러오지 못했습니다. 다시 시도해 주세요." isLoading={isLoading} error={error}>
         <AdminProductForm
           productId={null}
           defaultValues={EMPTY_PRODUCT_FORM_VALUES}
@@ -21,7 +21,7 @@ export function AdminProductNewView() {
           colors={colors.data ?? []}
           sizes={sizes.data ?? []}
         />
-      </QueryGuard>
+      </QueryGuardBase>
     </div>
   );
 }

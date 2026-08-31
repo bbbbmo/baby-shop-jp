@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale } from "@/shared/i18n/LocaleProvider";
+import { QueryGuardBase } from "./QueryGuardBase";
 
 type QueryGuardProps = {
   isLoading: boolean;
@@ -8,17 +9,12 @@ type QueryGuardProps = {
   children: React.ReactNode;
 };
 
+// 스토어프론트용. 문구를 사전에서 가져온다.
 export function QueryGuard({ isLoading, error, children }: QueryGuardProps) {
   const { d } = useLocale();
-  if (isLoading) {
-    return <div className="mx-auto max-w-480 px-6 py-16 sm:px-10" />;
-  }
-  if (error) {
-    return (
-      <p className="mx-auto max-w-480 px-6 py-16 text-center text-sm text-muted sm:px-10">
-        {d.common.loadError}
-      </p>
-    );
-  }
-  return <>{children}</>;
+  return (
+    <QueryGuardBase isLoading={isLoading} error={error} errorText={d.common.loadError}>
+      {children}
+    </QueryGuardBase>
+  );
 }

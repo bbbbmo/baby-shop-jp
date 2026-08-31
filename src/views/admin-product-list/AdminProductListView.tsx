@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminProducts } from "./model/useAdminProducts";
-import { QueryGuard } from "@/shared/ui/QueryGuard";
+import { QueryGuardBase } from "@/shared/ui/QueryGuardBase";
 import { adminFetch } from "@/shared/api/adminFetch";
 import { formatPrice } from "@/shared/lib/format";
 import type { AdminProductListItem } from "@/shared/api/supabase/admin";
@@ -15,9 +15,9 @@ export function AdminProductListView() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <Header />
-      <QueryGuard isLoading={isLoading} error={error}>
+      <QueryGuardBase errorText="불러오지 못했습니다. 다시 시도해 주세요." isLoading={isLoading} error={error}>
         <ProductTable products={data ?? []} />
-      </QueryGuard>
+      </QueryGuardBase>
     </div>
   );
 }
