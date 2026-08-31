@@ -23,6 +23,7 @@ export function useCheckoutForm(
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema(market)),
@@ -43,7 +44,7 @@ export function useCheckoutForm(
     }
   });
 
-  return { register, errors, isSubmitting, submitError, onSubmit };
+  return { register, setValue, errors, isSubmitting, submitError, onSubmit };
 }
 
 async function submitCheckout(

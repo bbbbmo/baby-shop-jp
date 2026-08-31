@@ -5,6 +5,7 @@ import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useMarket } from "@/shared/market";
 import { useCheckoutForm } from "./model/useCheckoutForm";
 import { FormField } from "@/shared/ui/FormField";
+import { AddressSearch } from "@/features/address-search";
 import type { CartItem } from "@/entities/cart";
 import type { CheckoutFormValues } from "./model/schema";
 
@@ -19,11 +20,12 @@ type CheckoutFormProps = {
 export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
   const { d } = useLocale();
   const market = useMarket();
-  const { register, errors, isSubmitting, submitError, onSubmit } = useCheckoutForm(
+  const { register, setValue, errors, isSubmitting, submitError, onSubmit } = useCheckoutForm(
     items,
     prefill,
     onSuccess,
   );
+  const isKr = market === "kr";
   const errorText = (key: string | undefined) =>
     key ? d.checkout.errors[key as keyof ErrorDict] : undefined;
 
@@ -39,10 +41,20 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
       )}
       <FormField label={d.checkout.phoneLabel} type="tel" registration={register("phone")} error={errorText(errors.phone?.message)} />
       <FormField label={d.checkout.emailLabel} type="email" registration={register("email")} error={errorText(errors.email?.message)} />
-      <FormField label={d.checkout.postalCodeLabel} placeholder={d.checkout.postalCodePlaceholder} registration={register("postalCode")} error={errorText(errors.postalCode?.message)} />
-      <FormField label={d.checkout.prefectureLabel} registration={register("prefecture")} error={errorText(errors.prefecture?.message)} />
-      <FormField label={d.checkout.cityLabel} registration={register("city")} error={errorText(errors.city?.message)} />
-      <FormField label={d.checkout.addressLineLabel} registration={register("addressLine")} error={errorText(errors.addressLine?.message)} />
+      {isKr && (
+        <AddressSearch
+          onSelect={(fields) => {
+            setValue("postalCode", fields.postalCode, { shouldValidate: true });
+            setValue("prefecture", fields.prefecture, { shouldValidate: true });
+            setValue("city", fields.city, { shouldValidate: true });
+            setValue("addressLine", fields.addressLine, { shouldValidate: true });
+          }}
+        />
+      )}
+      <FormField label={d.checkout.postalCodeLabel} placeholder={d.checkout.postalCodePlaceholder} readOnly={isKr} registration={register("postalCode")} error={errorText(errors.postalCode?.message)} />
+      <FormField label={d.checkout.prefectureLabel} readOnly={isKr} registration={register("prefecture")} error={errorText(errors.prefecture?.message)} />
+      <FormField label={d.checkout.cityLabel} readOnly={isKr} registration={register("city")} error={errorText(errors.city?.message)} />
+      <FormField label={d.checkout.addressLineLabel} readOnly={isKr} registration={register("addressLine")} error={errorText(errors.addressLine?.message)} />
       <FormField label={d.checkout.buildingLabel} registration={register("building")} />
       <FormField label={d.checkout.memoLabel} registration={register("memo")} />
       {submitError && <SubmitErrorMessage submitError={submitError} errors={d.checkout.errors} />}
