@@ -43,7 +43,7 @@ async function processCheckout(
   userId: string | null,
   market: Market,
 ): Promise<CheckoutResult> {
-  const parsed = checkoutSchema.safeParse(body.shipping);
+  const parsed = checkoutSchema(market).safeParse(body.shipping);
   if (!parsed.success || !hasValidItems(body.items)) {
     return { status: 400, body: { error: "invalidInput" } };
   }

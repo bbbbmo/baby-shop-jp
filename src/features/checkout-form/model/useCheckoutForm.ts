@@ -25,7 +25,7 @@ export function useCheckoutForm(
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(checkoutSchema(market)),
     defaultValues: { ...initialCheckoutFormValues, ...prefill },
   });
 
