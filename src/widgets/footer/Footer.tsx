@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BUSINESS_INFO } from "@/entities/legal";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { InstagramIcon } from "@/shared/ui/icons";
+import { MarketLink } from "@/shared/market";
 
 export function Footer() {
   const { d } = useLocale();
@@ -32,6 +33,14 @@ export function Footer() {
           <p>JP : {BUSINESS_INFO.phoneJp}</p>
           <p>KR : {BUSINESS_INFO.phoneKr}</p>
           <p>Email : {BUSINESS_INFO.email}</p>
+        </div>
+        <div className="mt-8 flex gap-4 text-xs text-muted">
+          <MarketLink href="/terms" className="underline underline-offset-2 hover:text-foreground">
+            {d.legal.termsTitle}
+          </MarketLink>
+          <MarketLink href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+            {d.legal.privacyTitle}
+          </MarketLink>
         </div>
         {/* 마켓 선택 화면으로 돌아가는 유일한 길. MarketLink를 쓰면 "/"에
             현재 마켓 접두사가 붙어 선택 화면 대신 홈으로 가버린다. */}
