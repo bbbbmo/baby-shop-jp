@@ -6,7 +6,7 @@ import { useForgotPasswordForm } from "./model/useForgotPasswordForm";
 
 export function ForgotPasswordForm({ onSent }: { onSent: () => void }) {
   const { d } = useLocale();
-  const { register, errors, isSubmitting, submitError, onSubmit } = useForgotPasswordForm(onSent);
+  const { register, errors, isSubmitting, onSubmit } = useForgotPasswordForm(onSent);
   const errorText = (key: string | undefined) =>
     key
       ? (d.password.errors[key as keyof typeof d.password.errors] ?? d.password.errors.unknownError)
@@ -21,7 +21,6 @@ export function ForgotPasswordForm({ onSent }: { onSent: () => void }) {
         registration={register("email")}
         error={errorText(errors.email?.message)}
       />
-      {submitError && <p className="text-sm text-sale">{errorText(submitError)}</p>}
       <button
         type="submit"
         disabled={isSubmitting}
