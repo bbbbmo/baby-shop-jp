@@ -145,6 +145,24 @@ export async function getIdentityProviders(): Promise<string[] | null> {
   return (data.user.identities ?? []).map((identity) => identity.provider);
 }
 
+// 복구 링크는 두 형식으로 온다. 사용자가 화면에서 요청한 메일은 PKCE라
+// "?code="로 오고 supabase-js가 알아서 교환하지만, 관리자 API·대시보드가
+// 만든 링크는 "#access_token=..."(암시적 방식)으로 온다. 우리 클라이언트는
+// PKCE 설정이라 후자를 그냥 흘려버려, 멀쩡한 링크가 "만료됨"으로 보였다.
+// 해시에 토큰이 실려 있으면 직접 세션으로 세운다.
+export async function restoreSessionFromUrlHash(): Promise<boolean> {
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const access_token = params.get("access_token");
+  const refresh_token = params.get("refresh_token");
+  if (!access_token || !refresh_token) {
+    return false;
+  }
+  const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+  // 토큰이 주소창에 남아 있으면 공유·기록으로 새 나간다.
+  window.history.replaceState(null, "", window.location.pathname);
+  return !error;
+}
+
 export function subscribeToAuthChanges(
   onChange: (user: User | null, event: AuthChangeEvent) => void
 ): () => void {

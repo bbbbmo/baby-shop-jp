@@ -9,6 +9,7 @@ export {
   requestPasswordReset,
   resetPassword,
   getIdentityProviders,
+  restoreSessionFromUrlHash,
   subscribeToAuthChanges,
   type SignUpParams,
   type User,

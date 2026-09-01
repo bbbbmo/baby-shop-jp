@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { MarketLink, useMarketRouter } from "@/shared/market";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
-import { getIdentityProviders, hasSession } from "@/shared/api/supabase";
+import {
+  getIdentityProviders,
+  hasSession,
+  restoreSessionFromUrlHash,
+} from "@/shared/api/supabase";
 import {
   ResetPasswordForm,
   primarySocialProvider,
@@ -52,6 +56,9 @@ function useResetTarget(): { state: ResetState | null; providers: string[] | nul
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      // 해시 방식 링크(관리자·대시보드 발행)는 supabase-js가 처리하지 않으므로
+      // 먼저 세워준다. "?code=" 링크면 아무 일도 하지 않고 지나간다.
+      await restoreSessionFromUrlHash();
       const session = await hasSession();
       const list = session ? await getIdentityProviders() : null;
       if (cancelled) return;
