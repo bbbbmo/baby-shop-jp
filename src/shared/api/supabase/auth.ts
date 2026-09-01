@@ -135,11 +135,12 @@ export async function resetPassword(newPassword: string): Promise<{ error: strin
 
 // 가입 경로 목록 ("email" · "kakao" · "google" · "line").
 // 세션 안의 user 객체가 identities를 담는다는 보장이 없어 getUser()로 서버에
-// 물어본다. 실패하면 빈 배열 — 호출부는 이를 "비밀번호 없음"으로 취급한다.
-export async function getIdentityProviders(): Promise<string[]> {
+// 물어본다. 조회에 실패하면 null — 빈 배열로 뭉개면 "비밀번호가 없는 계정"과
+// 구분되지 않아, 이메일 가입자에게 소셜 계정이라고 잘못 안내하게 된다.
+export async function getIdentityProviders(): Promise<string[] | null> {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
-    return [];
+    return null;
   }
   return (data.user.identities ?? []).map((identity) => identity.provider);
 }

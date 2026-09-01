@@ -47,6 +47,13 @@ describe("resetPasswordSchema", () => {
     const mismatch = { password: "newpassword1", passwordConfirm: "newpassword2" };
     expect(issue(resetPasswordSchema, mismatch, "passwordConfirm")).toBe("passwordMismatch");
   });
+
+  it("reports the empty confirm box as required, not as a mismatch", () => {
+    // 빈 칸에 「비밀번호가 일치하지 않아요」가 뜨면 무엇을 하라는 건지 알 수 없다.
+    // zodResolver는 같은 path의 첫 issue만 쓰므로 min(1)이 refine보다 먼저 잡혀야 한다.
+    const empty = { password: "newpassword1", passwordConfirm: "" };
+    expect(issue(resetPasswordSchema, empty, "passwordConfirm")).toBe("required");
+  });
 });
 
 describe("changePasswordSchema", () => {
@@ -80,5 +87,13 @@ describe("changePasswordSchema", () => {
   it("still checks the new password rules", () => {
     const short = { currentPassword: "oldpassword1", password: "short1", passwordConfirm: "short1" };
     expect(issue(changePasswordSchema, short, "password")).toBe("passwordTooShort");
+  });
+
+  it("does not surface samePassword on an empty form", () => {
+    // 빈 폼은 currentPassword와 password가 둘 다 ""라 samePassword refine이 걸린다.
+    // 같은 path의 passwordTooShort가 먼저 잡혀 가려지는 데 의존하므로, 순서가
+    // 바뀌면 빈 폼에 뜬금없이 「현재 비밀번호와 같아요」가 뜬다.
+    const blank = { currentPassword: "", password: "", passwordConfirm: "" };
+    expect(issue(changePasswordSchema, blank, "password")).toBe("passwordTooShort");
   });
 });

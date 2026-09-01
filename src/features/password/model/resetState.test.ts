@@ -22,9 +22,21 @@ describe("resolveResetState", () => {
     expect(resolveResetState({ hasSession: true, providers: ["kakao"] })).toBe("socialOnly");
   });
 
-  it("is socialOnly when the provider list could not be read", () => {
-    // 조회에 실패하면 빈 배열이 온다. 비밀번호를 만들어 주는 쪽보다
-    // 막는 쪽으로 틀리는 게 안전하다.
+  it("is socialOnly for google and line accounts too", () => {
+    // includes("email")을 includes("kakao")로 바꿔도 카카오 케이스만으로는
+    // 잡히지 않는다. 구글·라인 계정이 유령 비밀번호를 얻는 걸 막는 테스트다.
+    expect(resolveResetState({ hasSession: true, providers: ["google"] })).toBe("socialOnly");
+    expect(resolveResetState({ hasSession: true, providers: ["line"] })).toBe("socialOnly");
+  });
+
+  it("is unknown when the provider lookup failed", () => {
+    // 조회 실패를 소셜 계정과 뭉개면 이메일 가입자에게 "소셜로 가입한
+    // 계정"이라고 거짓말하게 된다. 복구 링크는 일회용이라 그 사람은 막힌다.
+    expect(resolveResetState({ hasSession: true, providers: null })).toBe("unknown");
+  });
+
+  it("is socialOnly when the account genuinely has no identities", () => {
+    // 빈 배열은 조회에 성공했는데 가입 경로가 없는 것이다. null과 다르다.
     expect(resolveResetState({ hasSession: true, providers: [] })).toBe("socialOnly");
   });
 });
