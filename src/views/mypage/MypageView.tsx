@@ -8,6 +8,7 @@ import { signOut } from "@/shared/api/supabase";
 import { useMyOrders, type Order } from "@/entities/order";
 import { formatPrice } from "@/shared/lib/format";
 import { marketCurrency } from "@/shared/config/markets";
+import { ChangePasswordCard } from "@/features/password";
 import { ProfileCard } from "./ProfileCard";
 
 export function MypageView() {
@@ -76,6 +77,7 @@ function MypageContent({
       <div className="mx-auto max-w-md">
         <h1 className="mb-6 text-2xl font-bold text-foreground">{d.mypage.title}</h1>
         <ProfileCard email={email} name={name} furigana={furigana} phone={phone} />
+        <ChangePasswordCard />
         {!isLoading && <OrderHistory orders={orders} />}
         <div className="mt-8 border-t border-border pt-6">
           <button
