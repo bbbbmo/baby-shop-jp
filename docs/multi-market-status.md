@@ -26,6 +26,9 @@
 - `/kr` — 한국어 · **원화**
 - `/admin` — 마켓 무관, 공용
 - 푸터의 `日本語 / 한국어` 링크로 선택 화면 복귀
+- **비밀번호 변경**(마이페이지) · **재설정**(메일 링크) — 이메일 가입 계정만.
+  소셜 계정은 각 서비스에서 관리하며, 화면이 그렇게 안내한다.
+  설계·검증 내용은 [`docs/specs/2026-09-01-password-management-design.md`](./specs/2026-09-01-password-management-design.md)
 
 ---
 
@@ -120,6 +123,22 @@ where table_name = 'order_items' and column_name = 'product_name_ko';
 
 `market`은 `NO`(필수, 기본값 `jp`), `recipient_furigana`는 **`YES`**(nullable)로 나와야 하고,
 `product_name_ko`가 나와야 합니다. 안 나오면 위 마이그레이션을 순서대로 실행하세요.
+
+### 비밀번호 기능에 필요한 콘솔 설정이 켜졌는지
+
+세 가지가 모두 되어 있어야 한다. **하나라도 빠지면 조용히 잘못 동작한다.**
+
+| 위치 | 항목 | 빠지면 |
+| --- | --- | --- |
+| Authentication → URL Configuration → Redirect URLs | `.../jp/auth/reset-password`, `.../kr/auth/reset-password` | 메일 링크가 Site URL로 튕겨 재설정 화면에 도달하지 못한다 |
+| Authentication → Sign In / Providers → Email | **Require current password when updating** | `current_password`가 무시돼 **틀린 현재 비밀번호로도 변경이 성공한다** |
+| 같은 화면 | Minimum password length = **8** | 화면(8자)을 우회하면 6자가 들어간다 |
+
+바로 위의 「Secure password change」는 다른 항목이다 — "최근 24시간 내 로그인했으면 재인증 없이
+통과"를 정하는 것이라 여기서 필요한 게 아니다.
+
+유출 비밀번호 검사(`Prevent use of leaked passwords`)는 Pro 플랜 이상이라 지금은 못 켠다.
+`password` 같은 흔한 값이 통과한다.
 
 ### 소셜 로그인 복귀 주소가 등록됐는지
 

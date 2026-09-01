@@ -97,11 +97,12 @@ current password"). 클라이언트에서 `signInWithPassword`로 확인하는 �
 4. 메일 링크를 누르면 `/auth/reset-password`에 도착한다. supabase-js의 `detectSessionInUrl`이
    URL의 `code`를 교환해 복구 세션을 만든다 — `auth/callback`과 같은 구조다.
    **여기서 코드를 직접 교환하면 안 된다.** 일회용 `code_verifier`가 이미 지워져 실패한다
-5. 화면이 세 갈래로 갈린다
+5. 화면이 네 갈래로 갈린다
 
 | 상태 | 화면 |
 | --- | --- |
 | 세션 없음 | 「링크가 만료됐습니다」 + 「다시 요청하기」 링크 |
+| **가입 경로 조회 실패** | 「확인하지 못했어요」 + 「다시 시도」. **소셜 계정과 구분해야 한다** — 이메일 가입자에게 소셜 계정이라고 말하면 거짓이고, 복구 링크는 일회용이라 그 사람은 그대로 막힌다 |
 | `email` identity 없음 | 「카카오로 가입한 계정입니다」 + 해당 소셜 로그인 버튼 |
 | 정상 | 새 비밀번호 / 확인 → `updateUser({ password })` → `signOut({ scope: "others" })` → 마이페이지 |
 
@@ -126,13 +127,15 @@ token은 만료 전까지 살아 있다** — 끊기는 건 refresh token이다.
 ```
 src/features/password/
   index.ts
-  ChangePasswordForm.tsx          마이페이지 카드 안
+  ChangePasswordCard.tsx          마이페이지 카드 (조회중·소셜안내·접힘·펼침)
   ForgotPasswordForm.tsx          메일 요청
   ResetPasswordForm.tsx           새 비밀번호 설정
   model/schema.ts                 비밀번호 규칙 (한 곳)
   model/schema.test.ts
-  model/resetState.ts             재설정 화면 세 갈래 판단 (순수 함수)
+  model/resetState.ts             재설정 화면 네 갈래 판단 (순수 함수)
   model/resetState.test.ts
+  model/useIdentityProviders.ts   가입 경로 조회
+  model/providerLabel.ts          provider 이름을 사전 문구로
   model/useChangePasswordForm.ts
   model/useForgotPasswordForm.ts
   model/useResetPasswordForm.ts
@@ -148,11 +151,11 @@ src/app/[market]/auth/reset-password/page.tsx
 
 | 파일 | 무엇을 |
 | --- | --- |
-| `src/shared/api/supabase/auth.ts` | 함수 4개 추가 |
+| `src/shared/api/supabase/auth.ts` | 함수 5개 추가 + `mapAuthError`를 표로 |
 | `src/shared/api/supabase/index.ts` | 위 함수 공개 |
 | `src/views/mypage/MypageView.tsx` | `ProfileCard` 아래에 비밀번호 카드 배치 |
 | `src/features/signin-form/SigninForm.tsx` | 「비밀번호를 잊으셨나요?」 링크 |
-| `src/shared/i18n/dictionaries.ts` | 문구 블록 3개 (ja · ko) |
+| `src/shared/i18n/dictionaries.ts` | `password` 블록 하나 (ja · ko) |
 
 ---
 
@@ -178,16 +181,23 @@ export async function resetPassword(
 
 // 가입 경로 목록 ("email" · "kakao" · "google" · "line").
 // 세션의 user 객체가 identities를 담는다는 보장이 없어 getUser()로 조회한다.
-export async function getIdentityProviders(): Promise<string[]>;
+// 조회 실패는 null — 빈 배열로 뭉개면 "비밀번호 없는 계정"과 구분되지 않아
+// 이메일 가입자에게 소셜 계정이라고 잘못 안내하게 된다.
+export async function getIdentityProviders(): Promise<string[] | null>;
+
+// 해시 방식(#access_token=...) 복구 링크를 세션으로 세운다. 아래 "구현하며
+// 알게 된 것" 참고.
+export async function restoreSessionFromUrlHash(): Promise<boolean>;
 ```
 
 에러는 기존 `mapAuthError`를 통과시켜 문자열 코드로 돌린다. 다음 코드를 추가한다.
 
 - `same_password` → 기존과 같은 비밀번호
-- 현재 비밀번호 불일치 시 GoTrue가 내는 코드는 **구현할 때 실제 응답으로 확인한다.**
-  `invalid_credentials`로 예상되지만 추측으로 적지 않는다. 확인 전까지는 `mapAuthError`의 기본
-  경로(원래 코드를 그대로 내보냄)를 타고, UI는 `errors[code] ?? errors.unknownError`로 안전하게
-  떨어진다
+- `current_password_invalid` → 현재 비밀번호 불일치. **실제 응답으로 확인했다(2026-09-01).**
+  `invalid_credentials`로 예상했는데 아니었다. 추측대로 뒀다면 「오류가 발생했어요」가 떠서
+  사용자가 무엇이 틀렸는지 알 수 없었다
+- `current_password_required` → 서버가 요구하는데 값이 빠진 경우. 폼은 항상 함께 보내므로
+  여기까지 오지 않지만 같은 문구로 안내한다
 
 ---
 
@@ -234,13 +244,15 @@ export const changePasswordSchema = z
 떼어내야 테스트할 수 있다.
 
 ```ts
-export type ResetState = "expired" | "socialOnly" | "ready";
+export type ResetState = "expired" | "unknown" | "socialOnly" | "ready";
 
 export function resolveResetState(input: {
   hasSession: boolean;
-  providers: string[];
+  providers: string[] | null;
 }): ResetState {
   if (!input.hasSession) return "expired";
+  // 조회 실패(null)와 "가입 경로가 없음"(빈 배열)은 다르다.
+  if (input.providers === null) return "unknown";
   if (!input.providers.includes("email")) return "socialOnly";
   return "ready";
 }
@@ -253,13 +265,12 @@ export function primarySocialProvider(providers: string[]): string | null;
 
 ## 문구 (i18n)
 
-`dictionaries.ts`에 블록 셋을 추가한다 (ja · ko 양쪽).
+`dictionaries.ts`에 `password` 블록 **하나**를 추가한다 (ja · ko 양쪽). 안에 화면별 하위
+(`change` · `forgot` · `reset`)와 **공용 `errors`**를 둔다. 세 화면이 「필수」·「8자 이상」·
+「일치하지 않음」을 똑같이 쓰므로 화면별로 블록을 나누면 오류 문구가 세 벌이 된다.
 
-- `passwordChange` — 마이페이지 카드
-- `forgotPassword` — 메일 요청 화면
-- `resetPassword` — 새 비밀번호 설정 화면 (만료 · 소셜 안내 문구 포함)
-
-각 블록에 `errors` 하위 객체를 둔다. 기존 `signin` · `mypage` 블록과 같은 모양이다.
+소셜 안내 문구는 `{provider}` 자리표시자를 쓴다. 카카오·구글·라인마다 문장을 복제하면
+문구를 고칠 때 하나를 빠뜨린다.
 
 메일 본문은 Supabase 템플릿이 **프로젝트당 하나**라 마켓별로 나눌 수 없다. 일본어와 한국어를
 병기한다.
@@ -279,9 +290,18 @@ export function primarySocialProvider(providers: string[]): string | null;
 
 2. **메일 템플릿(Reset Password)** 일본어·한국어 병기로 수정
 
-3. `current_password`를 **강제**하는 프로젝트 옵션이 있는지 콘솔에서 확인한다. 코드가 항상
-   `current_password`를 넘기므로 켜지 않아도 동작하지만, 켜두면 클라이언트가 그 값을 빼고
-   호출하는 것까지 서버가 거절한다
+3. **Authentication → Sign In / Providers → Email → 「Require current password when updating」을
+   반드시 켠다.** 선택이 아니라 필수다. 꺼져 있으면 GoTrue가 `current_password`를 **조용히
+   무시해서** 틀린 현재 비밀번호로도 변경이 성공한다. 원시 HTTP로 필드를 아예 빼고 보내도 200이
+   떨어지는 것을 확인했다. 켜기 전 상태는 현재 비밀번호를 묻기만 하고 검증하지 않는 보안 연극이다.
+
+   바로 위에 있는 「Secure password change」는 **다른 항목이다.** 그건 "최근 24시간 내
+   로그인했으면 재인증 없이 통과"를 정하는 것이라 여기서 필요한 게 아니다.
+
+4. **Minimum password length를 8로 맞춘다.** 기본값 6이면 화면(8자)을 우회했을 때 6자가 들어간다.
+
+5. 유출 비밀번호 검사(`Prevent use of leaked passwords`)는 Pro 플랜 이상이다. 무료 플랜에서는
+   `password` 같은 흔한 값이 통과한다. 유료 전환 시 켠다 — HaveIBeenPwned를 직접 붙이지 말 것.
 
 ---
 
@@ -290,7 +310,8 @@ export function primarySocialProvider(providers: string[]): string | null;
 ### 단위 테스트
 
 - `schema.test.ts` — 8자 미만 거부, 확인란 불일치, 현재와 같은 비밀번호 거부, 이메일 형식
-- `resetState.test.ts` — 세 갈래 각각, `providers`가 빈 배열일 때, email과 kakao를 둘 다 가진 계정
+- `resetState.test.ts` — 네 갈래 각각, 조회 실패(`null`)와 빈 배열의 구분, 구글·라인 계정,
+  email과 kakao를 둘 다 가진 계정
 
 ### 브라우저 확인
 
@@ -310,3 +331,37 @@ export function primarySocialProvider(providers: string[]): string | null;
 - 기존 로그인·회원가입이 그대로 동작하는지
 - 마이페이지 프로필 수정이 그대로 동작하는지
 - 소셜 로그인 계정으로 마이페이지에 들어가면 비밀번호 카드가 **안 보이는지**
+
+---
+
+## 구현하며 알게 된 것
+
+설계 시점에 몰랐다가 실제로 돌려보고 드러난 것들이다. 다시 건드릴 때 같은 데서 막히지 않도록 남긴다.
+
+### 복구 링크는 두 형식으로 온다
+
+화면에서 요청한 메일은 PKCE라 `?code=`로 오고 supabase-js가 알아서 교환한다. 그런데 **관리자
+API(`admin.generateLink`)와 Supabase 대시보드가 발행하는 링크는 `#access_token=...`**(암시적 방식)
+이다. 우리 클라이언트는 `createBrowserClient`(PKCE + 쿠키)라 후자를 그냥 흘려버려, 멀쩡한 링크가
+「링크가 만료됐어요」로 보였다.
+
+`restoreSessionFromUrlHash()`가 해시에 토큰이 있으면 `setSession`으로 직접 세운다. 세운 뒤
+주소창의 토큰은 지운다 — 남겨두면 공유·기록으로 새 나간다.
+
+### 「비밀번호 찾기」는 에러에서 분기하면 안 된다
+
+Supabase는 가입되지 않은 주소에는 발송을 시도조차 하지 않아 에러가 나지 않는다. 반대로 가입된
+주소에서만 발송 실패(도메인 무효, 발송 한도 초과)가 난다. **즉 「에러가 났다」가 곧 「이 주소는
+가입돼 있다」는 신호다.**
+
+처음 구현은 에러를 화면에 띄웠고, 실제로 확인해 보니 가입된 주소만 폼에 머물고 없는 주소는
+「메일을 보냈어요」로 넘어갔다. 계정 열거를 막으려던 화면이 정확히 그걸 하고 있었다.
+지금은 결과를 보지 않고 항상 같은 화면을 보여준다.
+
+### 검증에 쓴 방법
+
+실제 메일을 기다리지 않고 `admin.generateLink({ type: "recovery" })`로 복구 링크를 직접 만들어
+브라우저로 태웠다. 링크 진입 → 새 비밀번호 설정 → 마이페이지 로그인 유지 → 같은 링크 재사용 시
+만료 → 새 비밀번호로 로그인까지 확인했다.
+
+무료 플랜의 기본 SMTP는 발송 한도가 빡빡해 실제 메일 수신으로는 확인이 어렵다.
