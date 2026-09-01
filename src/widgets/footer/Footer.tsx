@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BUSINESS_INFO } from "@/entities/legal";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { InstagramIcon } from "@/shared/ui/icons";
 
@@ -20,12 +21,17 @@ export function Footer() {
           <InstagramIcon className="h-6 w-6" />
         </a>
         <div className="mt-6 text-sm text-black">
-          <p>Company Name : como | Owner : Lee Jinwoo</p>
-          <p>Personal Info Manager :  Ikeya Moeri</p>
+          <p>
+            Company Name : {BUSINESS_INFO.companyName} | Owner : {BUSINESS_INFO.ownerName}
+          </p>
+          <p>Personal Info Manager : {BUSINESS_INFO.privacyOfficer}</p>
+          <p>Business Registration : {BUSINESS_INFO.registrationNumber}</p>
+          <p>Mail-order Sales : {BUSINESS_INFO.mailOrderNumber}</p>
+          <p>Address : {BUSINESS_INFO.address}</p>
           <p className="mt-4">customer</p>
-          <p>JP : 080-4969-7532</p>
-          <p>KR：</p>
-          <p>Email : como@gmail.com</p>
+          <p>JP : {BUSINESS_INFO.phoneJp}</p>
+          <p>KR : {BUSINESS_INFO.phoneKr}</p>
+          <p>Email : {BUSINESS_INFO.email}</p>
         </div>
         {/* 마켓 선택 화면으로 돌아가는 유일한 길. MarketLink를 쓰면 "/"에
             현재 마켓 접두사가 붙어 선택 화면 대신 홈으로 가버린다. */}
