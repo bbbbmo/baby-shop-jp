@@ -46,6 +46,7 @@ export function SigninForm({ onSuccess }: SigninFormProps) {
       >
         {isSubmitting ? d.signin.submitting : d.signin.submit}
       </button>
+      <ForgotPasswordLink />
       <SignupLink />
       <Divider label={d.signin.orDivider} />
       {oauthError && <p className="text-sm text-sale">{oauthError}</p>}
@@ -58,6 +59,20 @@ export function SigninForm({ onSuccess }: SigninFormProps) {
         onError={setOauthError}
       />
     </form>
+  );
+}
+
+function ForgotPasswordLink() {
+  const { d } = useLocale();
+  return (
+    <p className="text-center text-xs text-muted">
+      <MarketLink
+        href="/forgot-password"
+        className="underline underline-offset-2 text-foreground"
+      >
+        {d.signin.forgotPasswordLink}
+      </MarketLink>
+    </p>
   );
 }
 
