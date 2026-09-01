@@ -187,6 +187,14 @@ const AUTH_ERROR_CODES: Record<string, string> = {
   email_not_confirmed: "emailNotConfirmed",
   // 새 비밀번호가 기존과 같을 때. 폼에서 미리 거르지만 서버도 거절한다.
   same_password: "samePassword",
+  // 현재 비밀번호가 틀렸을 때. GoTrue가 내는 실제 코드를 확인해 넣었다
+  // (2026-09-01, 프로젝트 설정 "Require current password when updating" 켠 상태).
+  // invalid_credentials가 아니라 별도 코드다 — 추측했으면 「오류가 발생했어요」로
+  // 떨어져 사용자가 무엇이 틀렸는지 알 수 없었다.
+  current_password_invalid: "invalidCredentials",
+  // 폼은 항상 현재 비밀번호를 함께 보내므로 여기까지 오지 않지만, 서버가
+  // 요구하는데 빠진 상황도 같은 문구로 안내한다.
+  current_password_required: "invalidCredentials",
 };
 
 // 알려진 케이스가 아니면 원래 코드(없으면 에러 클래스 이름)를 그대로
