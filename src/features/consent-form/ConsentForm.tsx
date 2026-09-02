@@ -1,10 +1,10 @@
 "use client";
 
-import { MarketLink } from "@/shared/market";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
 import { useConsentForm } from "./model/useConsentForm";
+import { LegalConsentLinks } from "@/entities/legal";
 
 type ErrorDict = Dictionary["consent"]["errors"];
 
@@ -33,7 +33,7 @@ export function ConsentForm({ userId, onSuccess }: ConsentFormProps) {
         registration={register("agreePrivacy")}
         error={errorText(errors.agreePrivacy?.message)}
       />
-      <LegalLinks />
+      <LegalConsentLinks />
       <Checkbox
         label={d.consent.agreeMarketingLabel}
         registration={register("agreeMarketing")}
@@ -73,19 +73,5 @@ function Checkbox({
         {error && <span className="mt-1 block text-xs text-sale">{error}</span>}
       </span>
     </label>
-  );
-}
-
-function LegalLinks() {
-  const { d } = useLocale();
-  return (
-    <div className="-mt-2 flex gap-3 pl-6 text-xs text-muted">
-      <MarketLink href="/terms" target="_blank" className="underline underline-offset-2 hover:text-foreground">
-        {d.legal.termsTitle}
-      </MarketLink>
-      <MarketLink href="/privacy" target="_blank" className="underline underline-offset-2 hover:text-foreground">
-        {d.legal.privacyTitle}
-      </MarketLink>
-    </div>
   );
 }

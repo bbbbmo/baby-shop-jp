@@ -288,7 +288,10 @@ export const dictionaries = {
     legal: {
       termsTitle: "利用規約",
       privacyTitle: "プライバシーポリシー",
-      comingSoon: "準備中です。",
+      effectiveDateLabel: "施行日",
+      versionLabel: "バージョン",
+      close: "閉じる",
+      missingNotice: "未入力の事業者情報があります（開発環境のみ表示）",
     },
   },
   ko: {
@@ -572,7 +575,10 @@ export const dictionaries = {
     legal: {
       termsTitle: "이용약관",
       privacyTitle: "개인정보처리방침",
-      comingSoon: "준비 중입니다.",
+      effectiveDateLabel: "시행일",
+      versionLabel: "버전",
+      close: "닫기",
+      missingNotice: "미입력 사업자 정보가 있습니다 (개발 환경에서만 표시)",
     },
   },
 } as const;
