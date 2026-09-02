@@ -26,6 +26,10 @@
 - `/kr` — 한국어 · **원화**
 - `/admin` — 마켓 무관, 공용
 - 푸터의 `日本語 / 한국어` 링크로 선택 화면 복귀
+- **이용약관 · 개인정보처리방침** — 가입·동의 화면에서는 모달(폼 입력값을 지킨다),
+  푸터에서는 페이지. **사업자 정보가 아직 미입력이라 그대로 배포하면 안 된다** —
+  `src/entities/legal/model/businessInfo.ts`의 placeholder를 모두 채운 뒤 배포할 것.
+  설계·검증 내용은 [`docs/specs/2026-09-01-legal-documents-design.md`](./specs/2026-09-01-legal-documents-design.md)
 - **비밀번호 변경**(마이페이지) · **재설정**(메일 링크) — 이메일 가입 계정만.
   소셜 계정은 각 서비스에서 관리하며, 화면이 그렇게 안내한다.
   설계·검증 내용은 [`docs/specs/2026-09-01-password-management-design.md`](./specs/2026-09-01-password-management-design.md)
