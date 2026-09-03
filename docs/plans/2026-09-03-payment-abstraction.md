@@ -2224,7 +2224,10 @@ import { useMarket } from "@/shared/market";
 Run: `pnpm exec tsc --noEmit && pnpm lint && pnpm test`
 Expected: 오류 없음, 기존 테스트 전부 PASS
 
-- [ ] **Step 8: 실제로 결제를 한 바퀴 돌려본다**
+- [ ] **Step 8: 실제로 결제를 한 바퀴 돌려본다** — *마이그레이션 적용 후에만 가능*
+
+이 단계는 `supabase/migrations/`의 두 파일이 실제 DB에 적용되어 있어야 한다.
+적용 전에는 `payments` 테이블이 없어 결제 시작이 502로 끝난다.
 
 Run: `pnpm dev`
 
@@ -2236,10 +2239,10 @@ Run: `pnpm dev`
 6. 「결제 취소」 → `/kr/checkout?payError=userCancelled`
 7. 3번의 완료 URL을 브라우저에서 새로고침해도 오류가 나지 않는지 확인
 
-- [ ] **Step 8: 커밋**
+- [ ] **Step 9: 커밋**
 
 ```bash
-git add src/features/payment-method src/views/checkout/CheckoutView.tsx
+git add src/features/payment-method src/views/checkout/CheckoutView.tsx src/features/checkout-form
 git commit -m "$(cat <<'MSG'
 feat(payment): 체크아웃에서 결제수단을 고르고 결제를 시작한다
 
