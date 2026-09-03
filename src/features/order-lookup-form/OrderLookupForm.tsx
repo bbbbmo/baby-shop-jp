@@ -41,7 +41,7 @@ function OrderResult({ order }: { order: Order }) {
   return (
     <div className="border border-border bg-surface p-5 text-sm">
       <p className="text-muted">{d.orderLookup.statusLabel}</p>
-      <p className="mb-3 font-medium text-foreground">{d.orderLookup.statusPendingPayment}</p>
+      <p className="mb-3 font-medium text-foreground">{statusLabel(order.status, d)}</p>
       <ul className="divide-y divide-border">
         {order.items.map((item) => (
           <OrderResultItem key={item.id} item={item} currency={currency} />
@@ -55,6 +55,13 @@ function OrderResult({ order }: { order: Order }) {
       </div>
     </div>
   );
+}
+
+// 주문 상태가 셋이 되었다. 지금까지는 항상 「결제 대기」로 적고 있었다.
+function statusLabel(status: Order["status"], d: Dictionary): string {
+  if (status === "paid") return d.orderLookup.statusPaid;
+  if (status === "cancelled") return d.orderLookup.statusCancelled;
+  return d.orderLookup.statusPendingPayment;
 }
 
 function OrderResultItem({
