@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { getProvider } from "@/shared/api/payments/registry";
 import {
+  isPaymentOutcomeCode,
   toPaymentErrorCode,
   toPaymentErrorRaw,
   type PaymentOutcomeCode,
@@ -102,20 +103,13 @@ async function applyResult(
   return fail(target.origin, target.market, outcome);
 }
 
-// RPC가 돌려주는 문자열을 화면이 아는 코드로 좁힌다. 여기서 좁혀 두면
-// 사전에 문구가 빠졌을 때 타입 검사가 잡는다.
+// RPC가 돌려주는 문자열을 화면이 아는 코드로 좁힌다. 목록을 여기 베껴 두면
+// types.ts와 어긋나므로 그쪽 판별 함수를 쓴다.
 function toOutcomeCode(value: string | null): "ok" | PaymentOutcomeCode {
-  const known = [
-    "ok",
-    "notFound",
-    "notPaid",
-    "notPending",
-    "alreadyPaid",
-    "amountMismatch",
-  ] as const;
-  return known.includes(value as (typeof known)[number])
-    ? (value as "ok" | PaymentOutcomeCode)
-    : "unknown";
+  if (value === "ok") {
+    return "ok";
+  }
+  return isPaymentOutcomeCode(value) ? value : "unknown";
 }
 
 async function runConfirmRpc(

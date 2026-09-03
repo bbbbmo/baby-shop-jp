@@ -1,19 +1,34 @@
 import type { Currency, Market } from "@/shared/config/markets";
 
 // 각 PG의 에러코드를 provider가 이 여섯 개로 옮긴다.
-// 화면과 라우트는 이 목록 밖을 모른다.
-export type PaymentErrorCode =
-  | "userCancelled"
-  | "expired"
-  | "amountMismatch"
-  | "alreadyPaid"
-  | "providerDown"
-  | "unknown";
+// 배열로 두는 이유는 런타임에도 목록이 필요하기 때문이다 — 라우트가 RPC 반환값을
+// 좁힐 때, 그리고 테스트가 사전에 문구가 다 있는지 볼 때 이 배열을 쓴다.
+// 목록을 여러 곳에 베껴 두면 반드시 어긋난다.
+export const PAYMENT_ERROR_CODES = [
+  "userCancelled",
+  "expired",
+  "amountMismatch",
+  "alreadyPaid",
+  "providerDown",
+  "unknown",
+] as const;
 
-// 화면까지 도달하는 코드는 provider 에러보다 넓다. 승인 RPC가 돌려주는 결과도
-// 같은 자리(?payError=)로 흘러가므로 한 union으로 묶어, 사전에 문구가 빠지면
-// 타입 검사에서 걸리게 한다.
-export type PaymentOutcomeCode = PaymentErrorCode | "notFound" | "notPaid";
+export type PaymentErrorCode = (typeof PAYMENT_ERROR_CODES)[number];
+
+// 화면까지 도달하는 코드는 provider 에러보다 넓다. 승인·취소 RPC가 돌려주는
+// 결과도 같은 자리(?payError=)로 흘러간다.
+export const PAYMENT_OUTCOME_CODES = [
+  ...PAYMENT_ERROR_CODES,
+  "notFound",
+  "notPaid",
+  "notPending",
+] as const;
+
+export type PaymentOutcomeCode = (typeof PAYMENT_OUTCOME_CODES)[number];
+
+export function isPaymentOutcomeCode(value: unknown): value is PaymentOutcomeCode {
+  return PAYMENT_OUTCOME_CODES.includes(value as PaymentOutcomeCode);
+}
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "cancelling" | "cancelled";
 
