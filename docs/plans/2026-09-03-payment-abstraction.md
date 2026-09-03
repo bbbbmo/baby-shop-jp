@@ -1833,6 +1833,7 @@ MSG
 ```ts
     payment: {
       methodTitle: "お支払い方法",
+      noMethods: "現在ご利用いただけるお支払い方法がありません。",
       errors: {
         userCancelled: "決済がキャンセルされました。もう一度お試しください。",
         expired: "決済の有効期限が切れました。もう一度お試しください。",
@@ -1855,6 +1856,7 @@ MSG
 ```ts
     payment: {
       methodTitle: "결제수단",
+      noMethods: "지금 이용할 수 있는 결제수단이 없습니다.",
       errors: {
         userCancelled: "결제가 취소되었습니다. 다시 시도해 주세요.",
         expired: "결제 유효시간이 지났습니다. 다시 시도해 주세요.",
@@ -1991,6 +1993,9 @@ export function useStartPayment() {
 
   const start = async (orderNumber: string, email: string, methodId: string): Promise<void> => {
     setPayError(null);
+    // 지난 실패가 남긴 ?payError=를 지운다. 두지 않으면 이번 시도가 잘 돼도
+    // 화면에는 옛 오류가 그대로 떠 있어 「또 실패했다」로 읽힌다.
+    clearPayErrorParam();
     try {
       const result = await requestStart(orderNumber, email, methodId);
       if ("error" in result) {
@@ -2019,6 +2024,14 @@ async function requestStart(
   return (await res.json()) as StartResponse;
 }
 
+function clearPayErrorParam(): void {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("payError")) {
+    url.searchParams.delete("payError");
+    window.history.replaceState(null, "", url.toString());
+  }
+}
+
 // 결제창을 여는 방법은 PG마다 다르다. 지금은 리다이렉트 하나뿐이고,
 // SDK 방식은 실제 PG를 붙이는 태스크에서 이 분기에 더한다.
 function performNextAction(action: NextAction): void {
@@ -2026,6 +2039,9 @@ function performNextAction(action: NextAction): void {
     window.location.assign(action.url);
     return;
   }
+  // 손님에게는 「알 수 없는 오류」로 보이지만 이건 우리 쪽 구현 누락이다.
+  // 로그에 남겨 두지 않으면 PG를 붙인 뒤 이 상태를 눈치채지 못한다.
+  console.error(`payment: unsupported nextAction "${action.kind}"`);
   throw new Error(`unsupported nextAction: ${action.kind}`);
 }
 ```
@@ -2219,12 +2235,52 @@ import { useMarket } from "@/shared/market";
         />
 ```
 
-- [ ] **Step 7: 타입 검사·린트·테스트를 돌린다**
+- [ ] **Step 7: 결제수단이 없으면 주문을 받지 않는다**
+
+결제수단이 0개인 상태(계약 전 운영 빌드)에서도 폼은 그대로 제출된다. 그러면 주문만
+만들어지고 결제가 실패해, 손님은 「결제대기」 주문과 알 수 없는 오류만 얻는다.
+낼 방법이 없으면 받지 않는 편이 정직하다.
+
+`src/features/checkout-form/CheckoutForm.tsx`의 props와 버튼:
+
+```tsx
+type CheckoutFormProps = {
+  items: CartItem[];
+  prefill: Partial<CheckoutFormValues>;
+  disabled?: boolean;
+  onSuccess: (orderNumber: string, email: string) => void;
+};
+
+export function CheckoutForm({ items, prefill, disabled, onSuccess }: CheckoutFormProps) {
+```
+
+```tsx
+        disabled={isSubmitting || disabled}
+```
+
+`src/views/checkout/CheckoutView.tsx`에서 안내를 띄우고 폼을 잠근다:
+
+```tsx
+        {methods.length === 0 && (
+          <p className="mb-4 border border-border bg-sand px-4 py-3 text-sm text-foreground">
+            {d.payment.noMethods}
+          </p>
+        )}
+        <PaymentMethodPicker value={methodId} onChange={setMethodId} />
+        <CheckoutForm
+          items={lines}
+          prefill={prefill}
+          disabled={methods.length === 0}
+          onSuccess={(orderNumber, email) => start(orderNumber, email, methodId)}
+        />
+```
+
+- [ ] **Step 8: 타입 검사·린트·테스트를 돌린다**
 
 Run: `pnpm exec tsc --noEmit && pnpm lint && pnpm test`
 Expected: 오류 없음, 기존 테스트 전부 PASS
 
-- [ ] **Step 8: 실제로 결제를 한 바퀴 돌려본다** — *마이그레이션 적용 후에만 가능*
+- [ ] **Step 9: 실제로 결제를 한 바퀴 돌려본다** — *마이그레이션 적용 후에만 가능*
 
 이 단계는 `supabase/migrations/`의 두 파일이 실제 DB에 적용되어 있어야 한다.
 적용 전에는 `payments` 테이블이 없어 결제 시작이 502로 끝난다.
@@ -2239,7 +2295,7 @@ Run: `pnpm dev`
 6. 「결제 취소」 → `/kr/checkout?payError=userCancelled`
 7. 3번의 완료 URL을 브라우저에서 새로고침해도 오류가 나지 않는지 확인
 
-- [ ] **Step 9: 커밋**
+- [ ] **Step 10: 커밋**
 
 ```bash
 git add src/features/payment-method src/views/checkout/CheckoutView.tsx src/features/checkout-form
