@@ -21,10 +21,15 @@ describe("buildMockPayUrl", () => {
     expect(buildMockPayUrl(intent)).toContain("/kr/checkout/mock-pay?");
   });
 
-  it("복귀 URL과 금액을 쿼리로 넘긴다", () => {
+  // ref를 빠뜨려도 다른 단언이 전부 통과한다 — 복귀 라우트가 결제 행을 찾는
+  // 값이므로 여기서 잡지 않으면 실제 결제 때나 드러난다. 다섯 개를 모두 본다.
+  it("결제 건 식별자와 복귀 URL을 쿼리로 넘긴다", () => {
     const url = new URL(buildMockPayUrl(intent), "http://localhost:3000");
+    expect(url.searchParams.get("ref")).toBe(intent.paymentId);
+    expect(url.searchParams.get("orderNumber")).toBe(intent.orderNumber);
     expect(url.searchParams.get("amount")).toBe("33000");
     expect(url.searchParams.get("returnUrl")).toBe(intent.returnUrl);
+    expect(url.searchParams.get("cancelUrl")).toBe(intent.cancelUrl);
   });
 });
 
