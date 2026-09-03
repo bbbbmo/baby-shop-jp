@@ -16,7 +16,7 @@ type ErrorDict = Dictionary["checkout"]["errors"];
 type CheckoutFormProps = {
   items: CartItem[];
   prefill: Partial<CheckoutFormValues>;
-  onSuccess: (orderNumber: string) => void;
+  onSuccess: (orderNumber: string, email: string) => void;
 };
 
 export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {

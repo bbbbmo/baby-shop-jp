@@ -16,7 +16,7 @@ type CheckoutSuccessResponse = { orderNumber: string };
 export function useCheckoutForm(
   items: CartItem[],
   prefill: Partial<CheckoutFormValues>,
-  onSuccess: (orderNumber: string) => void,
+  onSuccess: (orderNumber: string, email: string) => void,
 ) {
   const [submitError, setSubmitError] = useState<SubmitError | null>(null);
   const market = useMarket();
@@ -38,7 +38,7 @@ export function useCheckoutForm(
         setSubmitError({ code: result.error, productName: result.productName });
         return;
       }
-      onSuccess(result.orderNumber);
+      onSuccess(result.orderNumber, values.email);
     } catch {
       setSubmitError({ code: "unknownError" });
     }
