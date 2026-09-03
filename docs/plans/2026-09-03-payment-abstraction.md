@@ -83,7 +83,7 @@ export type PaymentOutcomeCode =
   | "notPaid"
   | "notPending";
 
-export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled";
+export type PaymentStatus = "pending" | "paid" | "failed" | "cancelling" | "cancelled";
 
 export class PaymentError extends Error {
   readonly code: PaymentErrorCode;
@@ -778,8 +778,10 @@ create table if not exists payments (
   order_id uuid not null references orders(id) on delete cascade,
   provider text not null,
   method text not null,
+  -- cancelling은 「PG에 환불을 요청하는 중」이다. 이 상태를 먼저 선점해야
+  -- 관리자가 취소를 두 번 눌렀을 때 PG에 환불이 두 번 가지 않는다.
   status text not null default 'pending'
-    check (status in ('pending', 'paid', 'failed', 'cancelled')),
+    check (status in ('pending', 'paid', 'failed', 'cancelling', 'cancelled')),
   amount integer not null,
   currency text not null check (currency in ('KRW', 'JPY')),
   provider_ref text,
@@ -929,7 +931,8 @@ begin
 end;
 $$;
 
--- 결제 취소 확정. 반환값: 'ok' | 'notFound' | 'notPaid'
+-- 취소 확정. 라우트가 먼저 status를 cancelling으로 선점한 뒤에 부른다.
+-- 반환값: 'ok' | 'notFound' | 'notPaid'
 create or replace function cancel_payment(
   p_payment_id uuid,
   p_raw jsonb
@@ -950,7 +953,9 @@ begin
     return 'notFound';
   end if;
 
-  if v_status <> 'paid' then
+  -- 라우트가 선점해 둔 행만 마무리한다. paid를 곧바로 cancelled로 바꾸지
+  -- 않는 이유는, 그러면 PG 환불 전에 이미 취소로 적히기 때문이다.
+  if v_status <> 'cancelling' then
     return 'notPaid';
   end if;
 
@@ -1465,8 +1470,31 @@ MSG
 
 **Files:**
 - Create: `src/app/api/payments/cancel/route.ts`
+- Modify: `src/shared/api/supabase/requireAdmin.ts` (누가 취소했는지 남기려면 신원이 필요하다)
 
-- [ ] **Step 1: 라우트를 구현한다**
+- [ ] **Step 1: 관리자 신원을 돌려주게 한다**
+
+돈이 나가는 동작이다. 누가 눌렀는지 남지 않으면 나중에 물어볼 곳이 없다.
+`requireAdmin`은 이미 `data.claims.email`을 손에 쥐고 있으므로 돌려주기만 하면 된다.
+
+```ts
+export type AdminAuthResult = { ok: true; email: string } | { ok: false; status: 401 | 403 };
+
+export async function requireAdmin(): Promise<AdminAuthResult> {
+  const supabase = await createServerAuthClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data) {
+    return { ok: false, status: 401 };
+  }
+  const email = data.claims.email;
+  return isAdminEmail(email) ? { ok: true, email: String(email) } : { ok: false, status: 403 };
+}
+```
+
+기존 호출부(`src/app/api/admin/**`)는 `auth.ok`만 보므로 고칠 것이 없다. 그래도
+`grep -rn "requireAdmin" src`로 전부 확인하고, 타입 검사가 깨끗한지 본다.
+
+- [ ] **Step 2: 라우트를 구현한다**
 
 `src/app/api/payments/cancel/route.ts`:
 
@@ -1476,7 +1504,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/shared/api/supabase/requireAdmin";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { getProvider } from "@/shared/api/payments/registry";
-import { toPaymentErrorCode } from "@/shared/api/payments/types";
+import { toPaymentErrorCode, toPaymentErrorRaw } from "@/shared/api/payments/types";
 
 // 취소는 관리자만 부른다. 손님 셀프 취소 화면은 범위 밖이다 —
 // 취소 가능 기간·배송 단계 같은 운영 정책이 아직 없다.
@@ -1497,86 +1525,147 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
-  const parsed = bodySchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: "invalidInput" }, { status: 400 });
+  try {
+    const parsed = bodySchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "invalidInput" }, { status: 400 });
+    }
+    return await cancelPaid(parsed.data.orderNumber, {
+      reason: parsed.data.reason ?? "adminCancel",
+      by: auth.email,
+    });
+  } catch {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
   }
-  return await cancelPaid(parsed.data.orderNumber, parsed.data.reason ?? "adminCancel");
 }
 
-async function cancelPaid(orderNumber: string, reason: string): Promise<NextResponse> {
-  const payment = await fetchPaidPayment(orderNumber);
+type Audit = { reason: string; by: string };
+
+async function cancelPaid(orderNumber: string, audit: Audit): Promise<NextResponse> {
+  const found = await fetchPaidPayment(orderNumber);
+  if ("failed" in found) {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  }
+  const payment = found.payment;
   if (!payment || !payment.provider_txn_id) {
     return NextResponse.json({ error: "paidPaymentNotFound" }, { status: 404 });
   }
-  const failure = await callProviderCancel(payment, reason);
-  if (failure) {
-    return NextResponse.json({ error: failure }, { status: 502 });
-  }
-  return await finishCancel(payment.id);
+  return await claimAndRefund(payment, payment.provider_txn_id, audit);
 }
 
-async function callProviderCancel(payment: PaidPayment, reason: string): Promise<string | null> {
+// PG를 부르기 전에 행을 선점한다. 이 순서가 아니면 관리자가 취소를 두 번
+// 눌렀을 때 두 요청이 나란히 PG에 환불을 보낸다 — DB 잠금은 그 뒤 RPC에서야
+// 걸린다. 선점 실패는 다른 요청이 이미 처리 중이라는 뜻이다.
+async function claimAndRefund(
+  payment: PaidPayment,
+  providerTxnId: string,
+  audit: Audit,
+): Promise<NextResponse> {
+  const claimed = await claimForCancel(payment.id);
+  if (!claimed) {
+    return NextResponse.json({ error: "notPaid" }, { status: 409 });
+  }
+  const result = await callProviderCancel(payment, providerTxnId, audit.reason);
+  if ("code" in result) {
+    await releaseClaim(payment.id, { ...audit, refund: result });
+    return NextResponse.json({ error: result.code }, { status: 502 });
+  }
+  return await finishCancel(payment.id, { ...audit, refund: result });
+}
+
+async function claimForCancel(paymentId: string): Promise<boolean> {
+  const { data } = await supabaseServer
+    .from("payments")
+    .update({ status: "cancelling" })
+    .eq("id", paymentId)
+    .eq("status", "paid")
+    .select("id");
+  return (data?.length ?? 0) > 0;
+}
+
+// PG 환불이 실패하면 선점을 되돌린다. 되돌리지 않으면 행이 cancelling에
+// 영원히 갇힌다. 시도한 흔적은 raw에 남긴다.
+async function releaseClaim(paymentId: string, audit: unknown): Promise<void> {
+  await supabaseServer
+    .from("payments")
+    .update({ status: "paid", failure_code: "cancelFailed", raw: audit })
+    .eq("id", paymentId)
+    .eq("status", "cancelling");
+}
+
+async function callProviderCancel(
+  payment: PaidPayment,
+  providerTxnId: string,
+  reason: string,
+): Promise<{ raw: unknown } | { code: string; raw: unknown }> {
   const provider = getProvider(payment.provider);
   if (!provider) {
-    return "unknown";
+    return { code: "unknown", raw: null };
   }
   try {
-    await provider.cancel({
-      providerTxnId: payment.provider_txn_id!,
-      amount: payment.amount,
-      reason,
-    });
-    return null;
+    return await provider.cancel({ providerTxnId, amount: payment.amount, reason });
   } catch (error) {
-    return toPaymentErrorCode(error);
+    return { code: toPaymentErrorCode(error), raw: toPaymentErrorRaw(error) ?? null };
   }
 }
 
-async function finishCancel(paymentId: string): Promise<NextResponse> {
+async function finishCancel(paymentId: string, audit: unknown): Promise<NextResponse> {
   const { data, error } = await supabaseServer.rpc("cancel_payment", {
     p_payment_id: paymentId,
-    p_raw: {},
+    p_raw: audit,
   });
   const outcome = error ? "unknown" : ((data as string | null) ?? "unknown");
-  return outcome === "ok"
-    ? NextResponse.json({ ok: true })
-    : NextResponse.json({ error: outcome }, { status: 500 });
+  if (outcome === "ok") {
+    return NextResponse.json({ ok: true });
+  }
+  // 여기까지 왔으면 PG 환불은 이미 성공했다. 500으로 알리면 관리자가 다시
+  // 누르고, 그러면 환불이 두 번 갈 수 있다. 재시도를 부르지 않는 코드를 준다.
+  return NextResponse.json({ error: outcome, refunded: true }, { status: 409 });
 }
 
-async function fetchPaidPayment(orderNumber: string): Promise<PaidPayment | null> {
-  const { data: order } = await supabaseServer
+// DB 오류와 「결제된 건 없음」을 구분한다. 관리자가 404를 보면 「이 주문은
+// 결제된 적이 없다」는 사실로 읽고 환불이 필요 없다고 판단할 수 있다.
+async function fetchPaidPayment(
+  orderNumber: string,
+): Promise<{ payment: PaidPayment | null } | { failed: true }> {
+  const { data: order, error: orderError } = await supabaseServer
     .from("orders")
     .select("id")
     .eq("order_number", orderNumber)
     .maybeSingle();
-  if (!order) {
-    return null;
+  if (orderError) {
+    return { failed: true };
   }
-  const { data } = await supabaseServer
+  if (!order) {
+    return { payment: null };
+  }
+  const { data, error } = await supabaseServer
     .from("payments")
     .select("id, provider, amount, provider_txn_id")
     .eq("order_id", order.id)
     .eq("status", "paid")
     .maybeSingle();
-  return (data as PaidPayment | null) ?? null;
+  return error ? { failed: true } : { payment: (data as PaidPayment | null) ?? null };
 }
 ```
 
-- [ ] **Step 2: 타입 검사와 린트를 돌린다**
+- [ ] **Step 3: 타입 검사와 린트를 돌린다**
 
-Run: `pnpm exec tsc --noEmit && pnpm lint`
-Expected: 오류 없음
+Run: `pnpm exec tsc --noEmit`
+Run: `pnpm exec eslint "src/app/api/payments" src/shared/api`
+Expected: 오류 없음 (`pnpm lint` 전체는 FontModeProvider 기존 오류가 있으므로 경로를 좁혀 본다)
 
-- [ ] **Step 3: 커밋**
+- [ ] **Step 4: 커밋**
 
 ```bash
-git add src/app/api/payments/cancel/route.ts
+git add src/app/api/payments/cancel/route.ts src/shared/api/supabase/requireAdmin.ts
 git commit -m "$(cat <<'MSG'
 feat(payment): 관리자 결제 취소 라우트를 만든다
 
 - 취소 가능 기간·배송 단계 정책이 없어 손님 셀프 취소는 아직 열지 않는다
-- PG 취소가 먼저 성공해야 DB를 취소로 바꾼다. 순서를 뒤집으면 장부와 실제가 어긋난다
+- PG를 부르기 전에 행을 선점한다. 그러지 않으면 관리자가 두 번 눌렀을 때 환불이 두 번 나간다
+- PG 취소가 성공해야 DB를 취소로 바꾼다. 순서를 뒤집으면 장부와 실제가 어긋난다
+- 누가 왜 취소했는지와 PG 응답을 남긴다. 돈이 나가는 동작이라 나중에 확인할 근거가 필요하다
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 MSG
