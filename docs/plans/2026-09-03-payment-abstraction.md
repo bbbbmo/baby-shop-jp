@@ -77,7 +77,11 @@ export type PaymentErrorCode =
 // 화면까지 도달하는 코드는 provider 에러보다 넓다. 승인 RPC가 돌려주는 결과도
 // 같은 자리(?payError=)로 흘러가므로 한 union으로 묶어, 사전에 문구가 빠지면
 // 타입 검사에서 걸리게 한다.
-export type PaymentOutcomeCode = PaymentErrorCode | "notFound" | "notPaid";
+export type PaymentOutcomeCode =
+  | PaymentErrorCode
+  | "notFound"
+  | "notPaid"
+  | "notPending";
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled";
 
@@ -497,10 +501,15 @@ describe("buildMockPayUrl", () => {
     expect(buildMockPayUrl(intent)).toContain("/kr/checkout/mock-pay?");
   });
 
-  it("복귀 URL과 금액을 쿼리로 넘긴다", () => {
+  // ref를 빠뜨려도 다른 단언이 전부 통과한다 — 복귀 라우트가 결제 행을 찾는
+  // 값이므로 여기서 잡지 않으면 실제 결제 때나 드러난다. 다섯 개를 모두 본다.
+  it("결제 건 식별자와 복귀 URL을 쿼리로 넘긴다", () => {
     const url = new URL(buildMockPayUrl(intent), "http://localhost:3000");
+    expect(url.searchParams.get("ref")).toBe(intent.paymentId);
+    expect(url.searchParams.get("orderNumber")).toBe(intent.orderNumber);
     expect(url.searchParams.get("amount")).toBe("33000");
     expect(url.searchParams.get("returnUrl")).toBe(intent.returnUrl);
+    expect(url.searchParams.get("cancelUrl")).toBe(intent.cancelUrl);
   });
 });
 
@@ -585,6 +594,7 @@ Expected: FAIL — `Failed to resolve import "./mock"`
 import "server-only";
 import {
   PaymentError,
+  type PaymentErrorCode,
   type CancelInput,
   type CancelResult,
   type ConfirmInput,
@@ -605,6 +615,12 @@ export function buildMockPayUrl(intent: PaymentIntent): string {
   return `/${intent.market}/checkout/mock-pay?${params.toString()}`;
 }
 
+// 실제 provider에서는 각 PG의 에러코드를 우리 여섯 개로 옮기는 표가 놓이는 자리다.
+const MOCK_ERRORS: Record<string, PaymentErrorCode> = {
+  cancelled: "userCancelled",
+  failed: "providerDown",
+};
+
 // 가짜 결제창이 복귀 URL에 붙여 보내는 mockResult를 읽는다.
 // 실제 provider에서는 pg_token·paymentKey 같은 PG 고유 필드를 읽는 자리다.
 export function readMockOutcome(
@@ -612,19 +628,16 @@ export function readMockOutcome(
   paymentId: string,
   expectedAmount: number,
 ): ConfirmResult {
-  if (query.mockResult === "cancelled") {
-    throw new PaymentError("userCancelled");
-  }
-  if (query.mockResult === "failed") {
-    throw new PaymentError("providerDown");
-  }
+  // 승인이 아닌 것은 전부 던진다 — 모르는 값도 통과시키지 않는다.
   if (query.mockResult !== "approved") {
-    throw new PaymentError("unknown");
+    throw new PaymentError(MOCK_ERRORS[query.mockResult] ?? "unknown");
   }
   const paidAmount = query.mockAmount ? Number(query.mockAmount) : expectedAmount;
   return { providerTxnId: `mock-txn-${paymentId}`, paidAmount, raw: query };
 }
 
+// 이 값을 라우트에서 직접 import하지 말 것. 반드시 registry.getProvider를 거친다 —
+// 직접 import하면 운영에서 mock을 빼는 가드를 통째로 건너뛴다.
 export const mockProvider: PaymentProvider = {
   id: "mock",
   markets: ["kr", "jp"],
@@ -691,8 +704,27 @@ describe("registry", () => {
   it("모르는 id는 null이다", () => {
     expect(getProvider("nope")).toBeNull();
   });
+
+  // 이 가드가 하는 일 자체를 고정한다. 위 두 테스트는 "개발에서 mock이 있다"만
+  // 증명하고, 정작 중요한 "운영에서 없다"는 덮지 못한다.
+  // NODE_ENV를 모듈 최상단에서 읽으므로 모듈을 다시 불러와야 한다.
+  it("운영에서는 아무 provider도 등록하지 않는다", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.resetModules();
+    const { getProvider: getInProduction } = await import("./registry");
+    expect(getInProduction("mock")).toBeNull();
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
 });
 ```
+
+`vi`를 import에 더한다: `import { describe, expect, it, vi } from "vitest";`
+
+> **주의:** Next는 빌드할 때 `process.env.NODE_ENV`를 명령어 기준으로 문자열 리터럴로 바꿔 넣는다
+> (`next build` → `"production"`, `next dev` → `"development"`). 셸의 `NODE_ENV` 값과 무관하다.
+> 그래서 운영 번들에서는 mock 등록 분기가 죽은 코드로 제거된다 — 런타임에 되살릴 방법이 없다.
+> 이 테스트는 vitest에서 모듈을 다시 불러오는 것이라 그 최적화와는 별개로 로직만 검증한다.
 
 - [ ] **Step 6: 테스트를 돌려 통과를 확인한다**
 
@@ -827,7 +859,7 @@ MSG
 
 ```sql
 -- 결제 승인 확정. payments와 orders를 한 트랜잭션으로 고친다.
--- 반환값: 'ok' | 'notFound' | 'alreadyPaid' | 'amountMismatch'
+-- 반환값: 'ok' | 'notFound' | 'alreadyPaid' | 'notPending' | 'amountMismatch'
 create or replace function confirm_payment(
   p_payment_id uuid,
   p_txn_id text,
@@ -854,6 +886,12 @@ begin
   -- 복귀 URL은 새로고침·뒤로가기로 여러 번 열린다.
   if v_status = 'paid' then
     return 'alreadyPaid';
+  end if;
+
+  -- pending이 아닌 것을 승인하지 않는다. 이 검사가 없으면 이미 취소된 결제에
+  -- 승인이 한 번 더 들어왔을 때 주문이 조용히 결제완료로 되살아난다.
+  if v_status <> 'pending' then
+    return 'notPending';
   end if;
 
   select total_price into v_total from public.orders where id = v_order_id;
@@ -923,6 +961,11 @@ $$;
 -- 손님이나 로그인 사용자가 직접 부를 수 있으면 안 된다.
 revoke execute on function confirm_payment(uuid, text, integer, jsonb) from public, anon, authenticated;
 revoke execute on function cancel_payment(uuid, jsonb) from public, anon, authenticated;
+
+-- service_role에는 명시적으로 준다. public에서 revoke하면 상속으로 얻던 권한이
+-- 함께 사라지는데, 그러면 모든 결제 승인이 실패한다. 기본 권한 설정에 기대지 않는다.
+grant execute on function confirm_payment(uuid, text, integer, jsonb) to service_role;
+grant execute on function cancel_payment(uuid, jsonb) to service_role;
 ```
 
 - [ ] **Step 2: 마이그레이션을 적용한다**
@@ -1249,7 +1292,14 @@ async function applyResult(
 // RPC가 돌려주는 문자열을 화면이 아는 코드로 좁힌다. 여기서 좁혀 두면
 // 사전에 문구가 빠졌을 때 타입 검사가 잡는다.
 function toOutcomeCode(value: string | null): "ok" | PaymentOutcomeCode {
-  const known = ["ok", "notFound", "notPaid", "alreadyPaid", "amountMismatch"] as const;
+  const known = [
+    "ok",
+    "notFound",
+    "notPaid",
+    "notPending",
+    "alreadyPaid",
+    "amountMismatch",
+  ] as const;
   return known.includes(value as (typeof known)[number])
     ? (value as "ok" | PaymentOutcomeCode)
     : "unknown";
@@ -1630,6 +1680,8 @@ MSG
         providerDown: "決済サービスに接続できませんでした。しばらくしてからお試しください。",
         notFound: "決済情報が見つかりませんでした。",
         notPaid: "お支払いが完了していない注文です。",
+        notPending: "すでに処理された決済です。",
+
         unknown: "決済に失敗しました。もう一度お試しください。",
       },
     },
@@ -1650,6 +1702,7 @@ MSG
         providerDown: "결제 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
         notFound: "결제 정보를 찾지 못했습니다.",
         notPaid: "결제가 완료되지 않은 주문입니다.",
+        notPending: "이미 처리된 결제입니다.",
         unknown: "결제에 실패했습니다. 다시 시도해 주세요.",
       },
     },
