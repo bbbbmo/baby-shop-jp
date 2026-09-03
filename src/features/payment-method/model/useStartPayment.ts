@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import type { NextAction } from "@/shared/api/payments/types";
+import type { NextAction, PaymentOutcomeCode } from "@/shared/api/payments/types";
 
 type StartResponse = { paymentId: string; nextAction: NextAction } | { error: string };
+
+// 라우트가 돌려주는 오류 이름을 화면이 아는 코드로 옮긴다. 서버의 오류 이름을
+// 그대로 사전 키로 쓰면 둘 중 하나만 바뀌어도 조용히 「알 수 없는 오류」가 된다.
+const START_ERRORS: Record<string, PaymentOutcomeCode> = {
+  alreadyPaid: "alreadyPaid",
+  providerDown: "providerDown",
+  orderNotFound: "notFound",
+};
 
 export function useStartPayment() {
   const [payError, setPayError] = useState<string | null>(null);
@@ -16,7 +24,7 @@ export function useStartPayment() {
     try {
       const result = await requestStart(orderNumber, email, methodId);
       if ("error" in result) {
-        setPayError(result.error);
+        setPayError(START_ERRORS[result.error] ?? "unknown");
         return;
       }
       performNextAction(result.nextAction);

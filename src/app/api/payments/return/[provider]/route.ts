@@ -84,10 +84,33 @@ async function settle(
   }
   const confirmed = await confirmWithProvider(payment, provider, query);
   if ("code" in confirmed) {
+    // alreadyPaid는 실패가 아니다. PG가 이미 돈을 받았다는 뜻이므로 결제 행을
+    // 실패로 닫으면 안 된다 — 닫으면 승인 RPC가 notPending을 돌려주고,
+    // 돈은 빠졌는데 주문은 미결제로 남는다.
+    if (confirmed.code === "alreadyPaid") {
+      return await settleAlreadyPaid(payment.id, { origin, market, orderNumber });
+    }
     await markFailed(payment.id, confirmed.code, confirmed.raw);
     return fail(origin, market, confirmed.code);
   }
   return await applyResult(payment, provider, confirmed, { origin, market, orderNumber });
+}
+
+// 새로고침으로 두 요청이 겹치면 다른 쪽이 이미 확정했을 수 있다.
+// 행을 다시 읽어 판단하고, 아직이면 pending 그대로 둔다 — 실패로 닫지 않아야
+// 나중에 대사로 되살릴 수 있다.
+async function settleAlreadyPaid(
+  paymentId: string,
+  target: { origin: string; market: Market; orderNumber: string },
+): Promise<NextResponse> {
+  const { data } = await supabaseServer
+    .from("payments")
+    .select("status")
+    .eq("id", paymentId)
+    .maybeSingle();
+  return data?.status === "paid"
+    ? done(target.origin, target.market, target.orderNumber)
+    : fail(target.origin, target.market, "alreadyPaid");
 }
 
 async function confirmWithProvider(
