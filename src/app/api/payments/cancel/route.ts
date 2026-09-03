@@ -25,17 +25,21 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
   try {
-    const parsed = bodySchema.safeParse(await request.json());
-    if (!parsed.success) {
-      return NextResponse.json({ error: "invalidInput" }, { status: 400 });
-    }
-    return await cancelPaid(parsed.data.orderNumber, {
-      reason: parsed.data.reason ?? "adminCancel",
-      by: auth.email,
-    });
+    return await handleCancel(request, auth.email);
   } catch {
     return NextResponse.json({ error: "unknownError" }, { status: 500 });
   }
+}
+
+async function handleCancel(request: Request, by: string): Promise<NextResponse> {
+  const parsed = bodySchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: "invalidInput" }, { status: 400 });
+  }
+  return await cancelPaid(parsed.data.orderNumber, {
+    reason: parsed.data.reason ?? "adminCancel",
+    by,
+  });
 }
 
 type Audit = { reason: string; by: string };
@@ -127,21 +131,31 @@ async function finishCancel(paymentId: string, audit: unknown): Promise<NextResp
 async function fetchPaidPayment(
   orderNumber: string,
 ): Promise<{ payment: PaidPayment | null } | { failed: true }> {
-  const { data: order, error: orderError } = await supabaseServer
+  const found = await fetchOrderId(orderNumber);
+  if ("failed" in found) {
+    return found;
+  }
+  return found.id ? await fetchPaidRow(found.id) : { payment: null };
+}
+
+async function fetchOrderId(
+  orderNumber: string,
+): Promise<{ id: string | null } | { failed: true }> {
+  const { data, error } = await supabaseServer
     .from("orders")
     .select("id")
     .eq("order_number", orderNumber)
     .maybeSingle();
-  if (orderError) {
-    return { failed: true };
-  }
-  if (!order) {
-    return { payment: null };
-  }
+  return error ? { failed: true } : { id: data?.id ?? null };
+}
+
+async function fetchPaidRow(
+  orderId: string,
+): Promise<{ payment: PaidPayment | null } | { failed: true }> {
   const { data, error } = await supabaseServer
     .from("payments")
     .select("id, provider, amount, provider_txn_id")
-    .eq("order_id", order.id)
+    .eq("order_id", orderId)
     .eq("status", "paid")
     .maybeSingle();
   return error ? { failed: true } : { payment: (data as PaidPayment | null) ?? null };
