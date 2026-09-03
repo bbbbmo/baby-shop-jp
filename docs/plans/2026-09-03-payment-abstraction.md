@@ -341,7 +341,7 @@ Expected: PASS (12 tests — 카탈로그 6개 + 타입 5개... 실제 개수는
 
 이어서 `pnpm exec tsc --noEmit`과 `pnpm exec eslint src/shared/api/payments`도 돌려 깨끗한지 본다.
 
-- [ ] **Step 8: 커밋**
+- [ ] **Step 9: 커밋**
 
 ```bash
 git add src/shared/api/payments vitest.config.ts package.json pnpm-lock.yaml
@@ -1010,8 +1010,13 @@ import type { NextAction, PaymentIntent, PaymentProvider } from "@/shared/api/pa
 import { siteOrigin } from "@/shared/lib/siteOrigin";
 import { marketCurrency, isMarket, type Market } from "@/shared/config/markets";
 
+// 이메일까지 받는 이유는 이 저장소가 이미 「주문번호 + 이메일」을 비회원
+// 인가 규칙으로 쓰고 있기 때문이다 (get_order_by_number_and_email RPC).
+// 주문 조회보다 결제 시작이 더 느슨하면 앞뒤가 맞지 않는다. 주문번호만으로
+// 남의 주문 상태와 금액을 알아낼 수 있고 결제 행을 계속 쌓을 수도 있다.
 const bodySchema = z.object({
   orderNumber: z.string().min(1),
+  email: z.string().min(1),
   methodId: z.string().min(1),
 });
 
@@ -1032,18 +1037,24 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!parsed.success || !method) {
       return NextResponse.json({ error: "invalidInput" }, { status: 400 });
     }
-    return await startPayment(parsed.data.orderNumber, method, siteOrigin(request));
+    return await startPayment(parsed.data, method, siteOrigin(request));
   } catch {
     return NextResponse.json({ error: "unknownError" }, { status: 500 });
   }
 }
 
 async function startPayment(
-  orderNumber: string,
+  input: { orderNumber: string; email: string },
   method: PaymentMethodOption,
   origin: string,
 ): Promise<NextResponse> {
-  const order = await fetchOrder(orderNumber);
+  const found = await fetchOrder(input.orderNumber);
+  if ("failed" in found) {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  }
+  // 주문이 없을 때와 이메일이 다를 때를 같은 응답으로 돌려준다.
+  // 나누면 그 차이 자체가 주문 존재 여부를 알려 준다.
+  const order = matchOrder(found.order, input.email);
   if (!order || !isMarket(order.market)) {
     return NextResponse.json({ error: "orderNotFound" }, { status: 404 });
   }
@@ -1051,6 +1062,11 @@ async function startPayment(
     return NextResponse.json({ error: "alreadyPaid" }, { status: 409 });
   }
   return await createAndInitiate(order, order.market, method, origin);
+}
+
+function matchOrder(order: OrderRow | null, email: string): OrderRow | null {
+  const same = order && order.email.toLowerCase() === email.trim().toLowerCase();
+  return same ? order : null;
 }
 
 async function createAndInitiate(
@@ -1116,13 +1132,20 @@ function buildIntent(
   };
 }
 
-async function fetchOrder(orderNumber: string): Promise<OrderRow | null> {
-  const { data } = await supabaseServer
+// DB 오류와 「주문 없음」을 구분한다. 뭉뚱그리면 DB가 잠깐 죽었을 때
+// 손님에게 "주문이 없습니다"라고 말하게 되고, 재시도할 생각을 못 한다.
+async function fetchOrder(
+  orderNumber: string,
+): Promise<{ order: OrderRow | null } | { failed: true }> {
+  const { data, error } = await supabaseServer
     .from("orders")
     .select("id, order_number, market, status, total_price, recipient_name, email")
     .eq("order_number", orderNumber)
     .maybeSingle();
-  return (data as OrderRow | null) ?? null;
+  if (error) {
+    return { failed: true };
+  }
+  return { order: (data as OrderRow | null) ?? null };
 }
 
 async function insertPayment(
@@ -1785,6 +1808,8 @@ MSG
 - Create: `src/features/payment-method/PaymentErrorBanner.tsx`
 - Create: `src/features/payment-method/model/useStartPayment.ts`
 - Modify: `src/views/checkout/CheckoutView.tsx:82-85`
+- Modify: `src/features/checkout-form/model/useCheckoutForm.ts` (onSuccess가 이메일도 넘기게)
+- Modify: `src/features/checkout-form/CheckoutForm.tsx` (props 타입)
 
 - [ ] **Step 1: 결제 시작 훅을 만든다**
 
@@ -1801,10 +1826,10 @@ type StartResponse = { paymentId: string; nextAction: NextAction } | { error: st
 export function useStartPayment() {
   const [payError, setPayError] = useState<string | null>(null);
 
-  const start = async (orderNumber: string, methodId: string): Promise<void> => {
+  const start = async (orderNumber: string, email: string, methodId: string): Promise<void> => {
     setPayError(null);
     try {
-      const result = await requestStart(orderNumber, methodId);
+      const result = await requestStart(orderNumber, email, methodId);
       if ("error" in result) {
         setPayError(result.error);
         return;
@@ -1818,11 +1843,15 @@ export function useStartPayment() {
   return { start, payError };
 }
 
-async function requestStart(orderNumber: string, methodId: string): Promise<StartResponse> {
+async function requestStart(
+  orderNumber: string,
+  email: string,
+  methodId: string,
+): Promise<StartResponse> {
   const res = await fetch("/api/payments/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderNumber, methodId }),
+    body: JSON.stringify({ orderNumber, email, methodId }),
   });
   return (await res.json()) as StartResponse;
 }
@@ -1949,7 +1978,34 @@ export { PaymentErrorBanner } from "./PaymentErrorBanner";
 export { useStartPayment } from "./model/useStartPayment";
 ```
 
-- [ ] **Step 5: 체크아웃 화면에 연결한다**
+- [ ] **Step 5: 주문 폼이 이메일을 함께 넘기게 한다**
+
+결제 시작 라우트가 주문번호와 이메일을 함께 받는다(Task 6). 폼은 방금 그 이메일을
+제출했으므로 값을 이미 갖고 있다 — 다시 조회하지 않고 그대로 넘긴다.
+
+`src/features/checkout-form/model/useCheckoutForm.ts`에서 `onSuccess` 시그니처를 넓힌다:
+
+```ts
+export function useCheckoutForm(
+  items: CartItem[],
+  prefill: Partial<CheckoutFormValues>,
+  onSuccess: (orderNumber: string, email: string) => void,
+) {
+```
+
+그리고 같은 파일의 성공 호출을 바꾼다:
+
+```ts
+      onSuccess(result.orderNumber, values.email);
+```
+
+`src/features/checkout-form/CheckoutForm.tsx`의 props 타입도 같이 넓힌다:
+
+```tsx
+  onSuccess: (orderNumber: string, email: string) => void;
+```
+
+- [ ] **Step 6: 체크아웃 화면에 연결한다**
 
 `src/views/checkout/CheckoutView.tsx` 위쪽 import에 더한다:
 
@@ -1996,16 +2052,16 @@ import { useMarket } from "@/shared/market";
         <CheckoutForm
           items={lines}
           prefill={prefill}
-          onSuccess={(orderNumber) => start(orderNumber, methodId)}
+          onSuccess={(orderNumber, email) => start(orderNumber, email, methodId)}
         />
 ```
 
-- [ ] **Step 6: 타입 검사·린트·테스트를 돌린다**
+- [ ] **Step 7: 타입 검사·린트·테스트를 돌린다**
 
 Run: `pnpm exec tsc --noEmit && pnpm lint && pnpm test`
 Expected: 오류 없음, 기존 테스트 전부 PASS
 
-- [ ] **Step 7: 실제로 결제를 한 바퀴 돌려본다**
+- [ ] **Step 8: 실제로 결제를 한 바퀴 돌려본다**
 
 Run: `pnpm dev`
 
@@ -2151,6 +2207,21 @@ PG사가 정해지면 `src/shared/api/payments/providers/`에 파일 하나를 �
 넣습니다. 넣지 않으면 요청 URL의 오리진을 씁니다 — 로컬 개발은 그대로 동작합니다.
 URL이 아닌 값을 넣으면 결제 시작 시점에 바로 예외가 납니다. 조용히 잘못된 주소로 가는 것보다
 낫다고 보았습니다.
+```
+
+`docs/open-decisions.md`의 B-4 아래에 한 항목을 더한다:
+
+```
+### B-5. 비회원 결제 인가 규칙 · **정해짐**
+
+결제 시작(`POST /api/payments/start`)은 **주문번호와 이메일이 모두 맞아야** 진행됩니다.
+주문 조회(`get_order_by_number_and_email`)가 이미 같은 규칙을 쓰고 있어 그것을 맞춘 것입니다.
+
+주문번호만으로 열어 두면 주문번호를 아는 사람이 남의 주문 상태와 금액을 알아낼 수 있고,
+결제 시도 행을 계속 쌓을 수도 있습니다. 주문번호는 비밀이 아닙니다 — 확인 메일, 화면,
+문의 캡처에 그대로 남습니다.
+
+로그인 회원도 같은 규칙을 지납니다. 회원 전용 경로를 따로 두지 않았습니다.
 ```
 
 - [ ] **Step 2: 알려진 한계를 더한다**
