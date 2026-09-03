@@ -7,8 +7,13 @@ import type { NextAction, PaymentIntent, PaymentProvider } from "@/shared/api/pa
 import { siteOrigin } from "@/shared/lib/siteOrigin";
 import { marketCurrency, isMarket, type Market } from "@/shared/config/markets";
 
+// 이메일까지 받는 이유는 이 저장소가 이미 「주문번호 + 이메일」을 비회원
+// 인가 규칙으로 쓰고 있기 때문이다 (get_order_by_number_and_email RPC).
+// 주문 조회보다 결제 시작이 더 느슨하면 앞뒤가 맞지 않는다. 주문번호만으로
+// 남의 주문 상태와 금액을 알아낼 수 있고 결제 행을 계속 쌓을 수도 있다.
 const bodySchema = z.object({
   orderNumber: z.string().min(1),
+  email: z.string().min(1),
   methodId: z.string().min(1),
 });
 
@@ -29,18 +34,24 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!parsed.success || !method) {
       return NextResponse.json({ error: "invalidInput" }, { status: 400 });
     }
-    return await startPayment(parsed.data.orderNumber, method, siteOrigin(request));
+    return await startPayment(parsed.data, method, siteOrigin(request));
   } catch {
     return NextResponse.json({ error: "unknownError" }, { status: 500 });
   }
 }
 
 async function startPayment(
-  orderNumber: string,
+  input: { orderNumber: string; email: string },
   method: PaymentMethodOption,
   origin: string,
 ): Promise<NextResponse> {
-  const order = await fetchOrder(orderNumber);
+  const found = await fetchOrder(input.orderNumber);
+  if ("failed" in found) {
+    return NextResponse.json({ error: "unknownError" }, { status: 500 });
+  }
+  // 주문이 없을 때와 이메일이 다를 때를 같은 응답으로 돌려준다.
+  // 나누면 그 차이 자체가 주문 존재 여부를 알려 준다.
+  const order = matchOrder(found.order, input.email);
   if (!order || !isMarket(order.market)) {
     return NextResponse.json({ error: "orderNotFound" }, { status: 404 });
   }
@@ -48,6 +59,11 @@ async function startPayment(
     return NextResponse.json({ error: "alreadyPaid" }, { status: 409 });
   }
   return await createAndInitiate(order, order.market, method, origin);
+}
+
+function matchOrder(order: OrderRow | null, email: string): OrderRow | null {
+  const same = order && order.email.toLowerCase() === email.trim().toLowerCase();
+  return same ? order : null;
 }
 
 async function createAndInitiate(
@@ -113,13 +129,20 @@ function buildIntent(
   };
 }
 
-async function fetchOrder(orderNumber: string): Promise<OrderRow | null> {
-  const { data } = await supabaseServer
+// DB 오류와 「주문 없음」을 구분한다. 뭉뚱그리면 DB가 잠깐 죽었을 때
+// 손님에게 "주문이 없습니다"라고 말하게 되고, 재시도할 생각을 못 한다.
+async function fetchOrder(
+  orderNumber: string,
+): Promise<{ order: OrderRow | null } | { failed: true }> {
+  const { data, error } = await supabaseServer
     .from("orders")
     .select("id, order_number, market, status, total_price, recipient_name, email")
     .eq("order_number", orderNumber)
     .maybeSingle();
-  return (data as OrderRow | null) ?? null;
+  if (error) {
+    return { failed: true };
+  }
+  return { order: (data as OrderRow | null) ?? null };
 }
 
 async function insertPayment(
