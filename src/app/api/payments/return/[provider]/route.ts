@@ -97,7 +97,7 @@ async function applyResult(
     return done(target.origin, target.market, target.orderNumber);
   }
   if (outcome === "amountMismatch") {
-    await refundQuietly(provider, confirmed.providerTxnId, confirmed.paidAmount);
+    await refundAndRecord(provider, payment.id, confirmed);
   }
   return fail(target.origin, target.market, outcome);
 }
@@ -132,16 +132,33 @@ async function runConfirmRpc(
 }
 
 // 금액이 다르면 받은 돈을 돌려주려 시도한다. 이 호출이 실패해도 손님을
-// 붙잡아 둘 수는 없다 — payments 행에 failed로 남아 관리자가 확인한다.
-async function refundQuietly(
+// 붙잡아 둘 수는 없다 — 그래서 시도 결과를 반드시 남긴다. 돈은 이미 빠져나갔고,
+// 나중에 이 행을 들여다볼 사람에게 「환불을 시도했는가, 왜 실패했는가」가 전부다.
+async function refundAndRecord(
   provider: PaymentProvider,
-  providerTxnId: string,
-  amount: number,
+  paymentId: string,
+  confirmed: { providerTxnId: string; paidAmount: number; raw: unknown },
 ): Promise<void> {
+  const attempt = await tryCancel(provider, confirmed);
+  await supabaseServer
+    .from("payments")
+    .update({ raw: { confirm: confirmed.raw ?? null, refundAttempt: attempt } })
+    .eq("id", paymentId);
+}
+
+async function tryCancel(
+  provider: PaymentProvider,
+  confirmed: { providerTxnId: string; paidAmount: number },
+): Promise<Record<string, unknown>> {
   try {
-    await provider.cancel({ providerTxnId, amount, reason: "amountMismatch" });
-  } catch {
-    // 남길 곳은 payments.failure_code 하나뿐이다
+    const result = await provider.cancel({
+      providerTxnId: confirmed.providerTxnId,
+      amount: confirmed.paidAmount,
+      reason: "amountMismatch",
+    });
+    return { ok: true, raw: result.raw ?? null };
+  } catch (error) {
+    return { ok: false, code: toPaymentErrorCode(error), raw: toPaymentErrorRaw(error) ?? null };
   }
 }
 
@@ -182,6 +199,9 @@ async function fetchPayment(ref: string | null): Promise<PaymentRow | null> {
   return (data as unknown as PaymentRow | null) ?? null;
 }
 
+// pending인 행만 실패로 닫는다. 조건이 없으면 관리자가 환불해 cancelled가 된
+// 건에 오래된 복귀 URL이 재생됐을 때 failed로 덮여 cancelled_at이 의미를 잃는다.
+// DB 쪽 confirm_payment에는 같은 가드(notPending)가 이미 있다.
 async function markFailed(
   paymentId: string,
   code: PaymentOutcomeCode,
@@ -190,5 +210,6 @@ async function markFailed(
   await supabaseServer
     .from("payments")
     .update({ status: "failed", failure_code: code, raw: raw ?? null })
-    .eq("id", paymentId);
+    .eq("id", paymentId)
+    .eq("status", "pending");
 }

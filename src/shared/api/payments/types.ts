@@ -93,6 +93,15 @@ export type CancelInput = {
 
 export type CancelResult = { raw: unknown };
 
+// provider 구현자에게 거는 계약.
+//
+// confirm은 **반드시 PG 서버에 직접 확인**해야 한다. 복귀 URL의 쿼리는 손님의
+// 브라우저를 거쳐 오므로 그 자체로는 아무것도 증명하지 않는다. 서명 검증이든
+// 승인 API 호출이든, PG가 인정하는 방법으로 확인한 뒤에만 정상 반환할 것.
+// 이 규칙을 어겨도 타입 검사는 통과한다 — 그래서 여기에 적어 둔다.
+// (mock은 쿼리를 그대로 믿는다. 그래서 운영 레지스트리에서 빠진다.)
+//
+// confirm이 정상 반환하면 그 순간 주문이 결제완료가 된다.
 export type PaymentProvider = {
   id: string;
   markets: readonly Market[];
