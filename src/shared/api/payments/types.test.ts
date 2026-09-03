@@ -21,9 +21,9 @@ describe("toPaymentErrorCode", () => {
 describe("toPaymentErrorRaw", () => {
   it("PaymentError에 담긴 PG 원본을 꺼낸다", () => {
     const raw = { code: "PAY-1", message: "declined" };
-    expect(toPaymentErrorRaw(new PaymentError("providerDown", raw))).toEqual(
-      raw,
-    );
+    expect(
+      toPaymentErrorRaw(new PaymentError("providerDown", { raw })),
+    ).toEqual(raw);
   });
 
   it("원본이 없으면 undefined다", () => {

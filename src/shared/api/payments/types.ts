@@ -23,11 +23,17 @@ export class PaymentError extends Error {
   // 코드 한 단어로 줄여 버리지 않는다.
   readonly raw?: unknown;
 
-  constructor(code: PaymentErrorCode, raw?: unknown, message?: string) {
-    super(message ?? code);
+  // 두 번째 인자를 옵션 객체로 받는다. (code, raw?, message?)로 두면
+  // 메시지로 쓰려던 문자열이 조용히 raw 자리에 들어가고, .message는 코드
+  // 한 단어로 남는다 — 컴파일도 통과해서 알아채기 어렵다.
+  constructor(
+    code: PaymentErrorCode,
+    options?: { raw?: unknown; message?: string },
+  ) {
+    super(options?.message ?? code);
     this.name = "PaymentError";
     this.code = code;
-    this.raw = raw;
+    this.raw = options?.raw;
   }
 }
 
