@@ -33,6 +33,15 @@ export function paymentMethodsFor(
   );
 }
 
-export function findPaymentMethod(id: string): PaymentMethodOption | null {
-  return PAYMENT_METHODS.find((m) => m.id === id) ?? null;
+// 서버(결제 시작 라우트)도 이 함수로 결제수단을 찾는다. 여기서 mock을 걸러
+// 내지 않으면 운영에서 methodId "mock"으로 결제를 통과시킬 수 있다 — 무료 주문.
+export function findPaymentMethod(
+  id: string,
+  includeMock: boolean = process.env.NODE_ENV !== "production",
+): PaymentMethodOption | null {
+  const found = PAYMENT_METHODS.find((m) => m.id === id) ?? null;
+  if (!found || (!includeMock && found.id === "mock")) {
+    return null;
+  }
+  return found;
 }
