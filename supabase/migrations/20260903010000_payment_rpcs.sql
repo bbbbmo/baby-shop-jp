@@ -1,5 +1,5 @@
 -- 결제 승인 확정. payments와 orders를 한 트랜잭션으로 고친다.
--- 반환값: 'ok' | 'notFound' | 'alreadyPaid' | 'amountMismatch'
+-- 반환값: 'ok' | 'notFound' | 'alreadyPaid' | 'notPending' | 'amountMismatch'
 create or replace function confirm_payment(
   p_payment_id uuid,
   p_txn_id text,
@@ -26,6 +26,12 @@ begin
   -- 복귀 URL은 새로고침·뒤로가기로 여러 번 열린다.
   if v_status = 'paid' then
     return 'alreadyPaid';
+  end if;
+
+  -- pending이 아닌 것을 승인하지 않는다. 이 검사가 없으면 이미 취소된 결제에
+  -- 승인이 한 번 더 들어왔을 때 주문이 조용히 결제완료로 되살아난다.
+  if v_status <> 'pending' then
+    return 'notPending';
   end if;
 
   select total_price into v_total from public.orders where id = v_order_id;
@@ -95,3 +101,8 @@ $$;
 -- 손님이나 로그인 사용자가 직접 부를 수 있으면 안 된다.
 revoke execute on function confirm_payment(uuid, text, integer, jsonb) from public, anon, authenticated;
 revoke execute on function cancel_payment(uuid, jsonb) from public, anon, authenticated;
+
+-- service_role에는 명시적으로 준다. public에서 revoke하면 상속으로 얻던 권한이
+-- 함께 사라지는데, 그러면 모든 결제 승인이 실패한다. 기본 권한 설정에 기대지 않는다.
+grant execute on function confirm_payment(uuid, text, integer, jsonb) to service_role;
+grant execute on function cancel_payment(uuid, jsonb) to service_role;
