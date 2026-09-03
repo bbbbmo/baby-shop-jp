@@ -1,7 +1,7 @@
 import { createServerAuthClient } from "./serverAuthClient";
 import { isAdminEmail } from "@/shared/lib/adminAuth";
 
-export type AdminAuthResult = { ok: true } | { ok: false; status: 401 | 403 };
+export type AdminAuthResult = { ok: true; email: string } | { ok: false; status: 401 | 403 };
 
 export async function requireAdmin(): Promise<AdminAuthResult> {
   const supabase = await createServerAuthClient();
@@ -9,5 +9,6 @@ export async function requireAdmin(): Promise<AdminAuthResult> {
   if (error || !data) {
     return { ok: false, status: 401 };
   }
-  return isAdminEmail(data.claims.email) ? { ok: true } : { ok: false, status: 403 };
+  const email = data.claims.email;
+  return isAdminEmail(email) ? { ok: true, email: String(email) } : { ok: false, status: 403 };
 }

@@ -15,7 +15,7 @@ export type PaymentErrorCode =
 // 타입 검사에서 걸리게 한다.
 export type PaymentOutcomeCode = PaymentErrorCode | "notFound" | "notPaid";
 
-export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled";
+export type PaymentStatus = "pending" | "paid" | "failed" | "cancelling" | "cancelled";
 
 export class PaymentError extends Error {
   readonly code: PaymentErrorCode;

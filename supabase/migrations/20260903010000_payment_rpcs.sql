@@ -60,7 +60,8 @@ begin
 end;
 $$;
 
--- 결제 취소 확정. 반환값: 'ok' | 'notFound' | 'notPaid'
+-- 취소 확정. 라우트가 먼저 status를 cancelling으로 선점한 뒤에 부른다.
+-- 반환값: 'ok' | 'notFound' | 'notPaid'
 create or replace function cancel_payment(
   p_payment_id uuid,
   p_raw jsonb
@@ -81,7 +82,9 @@ begin
     return 'notFound';
   end if;
 
-  if v_status <> 'paid' then
+  -- 라우트가 선점해 둔 행만 마무리한다. paid를 곧바로 cancelled로 바꾸지
+  -- 않는 이유는, 그러면 PG 환불 전에 이미 취소로 적히기 때문이다.
+  if v_status <> 'cancelling' then
     return 'notPaid';
   end if;
 

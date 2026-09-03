@@ -6,8 +6,10 @@ create table if not exists payments (
   order_id uuid not null references orders(id) on delete cascade,
   provider text not null,
   method text not null,
+  -- cancelling은 「PG에 환불을 요청하는 중」이다. 이 상태를 먼저 선점해야
+  -- 관리자가 취소를 두 번 눌렀을 때 PG에 환불이 두 번 가지 않는다.
   status text not null default 'pending'
-    check (status in ('pending', 'paid', 'failed', 'cancelled')),
+    check (status in ('pending', 'paid', 'failed', 'cancelling', 'cancelled')),
   amount integer not null,
   currency text not null check (currency in ('KRW', 'JPY')),
   provider_ref text,
