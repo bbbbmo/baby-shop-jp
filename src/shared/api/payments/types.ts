@@ -101,6 +101,10 @@ export type CancelResult = { raw: unknown };
 // 이 규칙을 어겨도 타입 검사는 통과한다 — 그래서 여기에 적어 둔다.
 // (mock은 쿼리를 그대로 믿는다. 그래서 운영 레지스트리에서 빠진다.)
 //
+// confirm과 cancel은 **여러 번 불려도 안전**해야 한다. 손님이 새로고침하면
+// 두 요청이 DB 잠금 전에 나란히 confirm에 들어올 수 있고, 취소는 재시도된다.
+// 승인을 다시 「잡는」 대신 PG에 상태를 물어보는 식으로 구현할 것.
+//
 // confirm이 정상 반환하면 그 순간 주문이 결제완료가 된다.
 export type PaymentProvider = {
   id: string;
