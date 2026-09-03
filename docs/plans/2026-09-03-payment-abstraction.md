@@ -44,7 +44,9 @@
 | `src/features/order-lookup-form/OrderLookupForm.tsx` | 상태를 라벨로 매핑 (지금은 항상 「결제 대기」) |
 | `src/views/checkout/CheckoutView.tsx` | 결제수단 선택 + 주문 생성 후 결제 시작 |
 
-**서버 전용 파일 규약:** 이 저장소는 `server-only` 패키지 대신 주석 규약을 쓴다(`serverClient.ts` 참고). `registry.ts`와 `providers/*.ts` 맨 위에 같은 형식의 주석을 단다. 나중에 실제로 유출이 생기면 그때 `server-only`를 도입한다.
+**서버 전용 파일 규약:** `registry.ts`와 `providers/*.ts` 맨 위에 `import "server-only";`를 단다. 주석 규약보다 빌드 오류가 확실하고, 비밀키를 쥔 모듈이 브라우저 번들로 새는 사고는 되돌릴 수 없다. 이 패키지는 `react-server` 조건이 아닌 곳에서 import하면 일부러 예외를 던지므로, vitest에는 빈 모듈로 바꿔 끼우는 별칭을 넣는다 (Task 1).
+
+**슬라이스 `index.ts`를 두지 않는다:** 이 저장소는 슬라이스마다 public API 배럴을 두지만 `payments`에는 두지 않는다. 배럴 하나에 클라이언트 안전한 `catalog`와 서버 전용 `registry`를 함께 담으면 파일을 갈라 놓은 의미가 사라진다. 호출부는 `@/shared/api/payments/catalog`처럼 파일을 직접 가리킨다.
 
 ---
 
@@ -72,18 +74,33 @@ export type PaymentErrorCode =
   | "providerDown"
   | "unknown";
 
+// 화면까지 도달하는 코드는 provider 에러보다 넓다. 승인 RPC가 돌려주는 결과도
+// 같은 자리(?payError=)로 흘러가므로 한 union으로 묶어, 사전에 문구가 빠지면
+// 타입 검사에서 걸리게 한다.
+export type PaymentOutcomeCode = PaymentErrorCode | "notFound" | "notPaid";
+
+export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled";
+
 export class PaymentError extends Error {
   readonly code: PaymentErrorCode;
+  // PG 원본 응답. 실패한 결제야말로 나중에 사람이 들여다볼 행이라
+  // 코드 한 단어로 줄여 버리지 않는다.
+  readonly raw?: unknown;
 
-  constructor(code: PaymentErrorCode, message?: string) {
+  constructor(code: PaymentErrorCode, raw?: unknown, message?: string) {
     super(message ?? code);
     this.name = "PaymentError";
     this.code = code;
+    this.raw = raw;
   }
 }
 
 export function toPaymentErrorCode(error: unknown): PaymentErrorCode {
   return error instanceof PaymentError ? error.code : "unknown";
+}
+
+export function toPaymentErrorRaw(error: unknown): unknown {
+  return error instanceof PaymentError ? error.raw : undefined;
 }
 
 export type PaymentIntent = {
@@ -111,6 +128,9 @@ export type InitiateResult = { providerRef: string; nextAction: NextAction };
 // query는 복귀 URL의 쿼리 전체다. pg_token·paymentId·paymentKey 중
 // 무엇을 읽을지는 provider가 정한다 — 라우트는 이름을 몰라야 한다.
 export type ConfirmInput = {
+  // 우리 payments.id. 재시도마다 달라지므로 PG 쪽 주문 식별자로 쓰기 좋다
+  // (주문번호는 재시도해도 같아서 대부분의 PG가 거절한다).
+  paymentId: string;
   providerRef: string;
   orderNumber: string;
   amount: number;
@@ -154,23 +174,34 @@ describe("paymentMethodsFor", () => {
     expect(ids).toContain("mock");
   });
 
+  // 목록이 비는지가 아니라 mock이 빠지는지를 본다. 전자는 항목이 하나뿐인
+  // 지금만 참이고, 결제수단이 늘면 이유 없이 깨진다.
   it("운영에서는 mock을 감춘다", () => {
-    expect(paymentMethodsFor("kr", false)).toEqual([]);
+    expect(paymentMethodsFor("kr", false).map((m) => m.id)).not.toContain("mock");
   });
 
-  it("해당 마켓을 지원하지 않는 수단은 뺀다", () => {
-    const all = paymentMethodsFor("kr", true);
-    expect(all.every((m) => m.markets.includes("kr"))).toBe(true);
+  it("돌려준 수단은 모두 그 마켓을 지원한다", () => {
+    // 항목이 하나뿐이고 두 마켓을 다 지원해서, 지금은 이 단언이 필터를 실제로
+    // 검증하지 못한다. 마켓이 갈리는 수단이 생기면 그때부터 의미가 생긴다.
+    for (const market of ["kr", "jp"] as const) {
+      const methods = paymentMethodsFor(market, true);
+      expect(methods.every((m) => m.markets.includes(market))).toBe(true);
+    }
   });
 });
 
 describe("findPaymentMethod", () => {
   it("id로 찾는다", () => {
-    expect(findPaymentMethod("mock")?.provider).toBe("mock");
+    expect(findPaymentMethod("mock", true)?.provider).toBe("mock");
   });
 
   it("없는 id는 null이다", () => {
-    expect(findPaymentMethod("nope")).toBeNull();
+    expect(findPaymentMethod("nope", true)).toBeNull();
+  });
+
+  // 서버가 부르는 경로다. 여기가 뚫리면 운영에서 무료 주문이 가능해진다.
+  it("운영에서는 mock을 찾지 못한다", () => {
+    expect(findPaymentMethod("mock", false)).toBeNull();
   });
 });
 ```
@@ -220,25 +251,99 @@ export function paymentMethodsFor(
   );
 }
 
-export function findPaymentMethod(id: string): PaymentMethodOption | null {
-  return PAYMENT_METHODS.find((m) => m.id === id) ?? null;
+// 서버(결제 시작 라우트)도 이 함수로 결제수단을 찾는다. 여기서 mock을 걸러
+// 내지 않으면 운영에서 methodId "mock"으로 결제를 통과시킬 수 있다 — 무료 주문.
+export function findPaymentMethod(
+  id: string,
+  includeMock: boolean = process.env.NODE_ENV !== "production",
+): PaymentMethodOption | null {
+  const found = PAYMENT_METHODS.find((m) => m.id === id) ?? null;
+  if (!found || (!includeMock && found.id === "mock")) {
+    return null;
+  }
+  return found;
 }
 ```
 
-- [ ] **Step 5: 테스트를 돌려 통과를 확인한다**
+- [ ] **Step 5: 타입 파일의 런타임 코드에도 테스트를 붙인다**
 
-Run: `pnpm vitest run src/shared/api/payments/catalog.test.ts`
-Expected: PASS (5 tests)
+`toPaymentErrorCode`는 뒤의 모든 provider 실패가 지나가는 깔때기다. Error가 아닌 값을 던지는
+경우(`throw "timeout"`)가 실제로 있으므로 그것까지 고정한다.
 
-- [ ] **Step 6: 커밋**
+`src/shared/api/payments/types.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { PaymentError, toPaymentErrorCode, toPaymentErrorRaw } from "./types";
+
+describe("toPaymentErrorCode", () => {
+  it("PaymentError는 자기 코드를 돌려준다", () => {
+    expect(toPaymentErrorCode(new PaymentError("userCancelled"))).toBe("userCancelled");
+  });
+
+  it("보통 Error는 unknown이다", () => {
+    expect(toPaymentErrorCode(new Error("boom"))).toBe("unknown");
+  });
+
+  it("Error가 아닌 값을 던져도 unknown이다", () => {
+    expect(toPaymentErrorCode("timeout")).toBe("unknown");
+    expect(toPaymentErrorCode(undefined)).toBe("unknown");
+  });
+});
+
+describe("toPaymentErrorRaw", () => {
+  it("PaymentError에 담긴 PG 원본을 꺼낸다", () => {
+    const raw = { code: "PAY-1", message: "declined" };
+    expect(toPaymentErrorRaw(new PaymentError("providerDown", raw))).toEqual(raw);
+  });
+
+  it("원본이 없으면 undefined다", () => {
+    expect(toPaymentErrorRaw(new Error("boom"))).toBeUndefined();
+  });
+});
+```
+
+- [ ] **Step 6: `server-only`를 넣고 vitest가 그것을 통과하게 한다**
+
+설계 문서가 `registry.ts`와 `providers/*`에 `import "server-only"`를 달라고 한다. 주석 규약보다
+빌드 오류가 확실하다 — 비밀키를 쥔 모듈이 브라우저 번들로 새는 사고는 되돌릴 수 없다.
+
+Run: `pnpm add server-only`
+
+그런데 이 패키지는 `react-server` 조건이 아닌 곳에서 import하면 **일부러 throw한다**. vitest는
+Node로 돌므로 provider와 레지스트리를 부르는 테스트가 전부 죽는다. 빈 모듈로 바꿔 끼운다.
+
+`vitest.config.ts`의 `resolve.alias`를 이렇게 고친다:
+
+```ts
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      // server-only는 react-server 조건에서만 빈 모듈이고, 그냥 Node에서
+      // import하면 일부러 예외를 던진다. 테스트는 서버 코드를 직접 부르므로
+      // 여기서 빈 모듈로 바꿔 끼운다.
+      "server-only": path.resolve(__dirname, "./node_modules/server-only/empty.js"),
+    },
+  },
+```
+
+- [ ] **Step 7: 테스트를 돌려 통과를 확인한다**
+
+Run: `pnpm vitest run src/shared/api/payments`
+Expected: PASS (12 tests — 카탈로그 6개 + 타입 5개... 실제 개수는 실행 결과를 따른다)
+
+이어서 `pnpm exec tsc --noEmit`과 `pnpm exec eslint src/shared/api/payments`도 돌려 깨끗한지 본다.
+
+- [ ] **Step 8: 커밋**
 
 ```bash
-git add src/shared/api/payments/types.ts src/shared/api/payments/catalog.ts src/shared/api/payments/catalog.test.ts
+git add src/shared/api/payments vitest.config.ts package.json pnpm-lock.yaml
 git commit -m "$(cat <<'MSG'
 feat(payment): 결제 인터페이스와 결제수단 카탈로그를 둔다
 
 - PG 고유 개념이 화면으로 새지 않으려면 경계 타입을 먼저 고정해야 한다
 - 결제수단 목록과 비밀키를 쓰는 코드를 파일 단위로 갈라, 카탈로그가 브라우저에 내려가도 안전하게 한다
+- 서버가 쓰는 조회 함수에서도 가짜 결제사를 걸러야 운영에서 무료 주문이 나지 않는다
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 MSG
@@ -420,6 +525,17 @@ describe("mockProvider", () => {
     expect(result.nextAction.kind).toBe("redirect");
   });
 
+  it("confirm은 우리 결제 건 id로 거래번호를 만든다", async () => {
+    const result = await mockProvider.confirm({
+      paymentId: "pay-1",
+      providerRef: "mock-ref-pay-1",
+      orderNumber: intent.orderNumber,
+      amount: 33000,
+      query: { mockResult: "approved" },
+    });
+    expect(result.providerTxnId).toBe("mock-txn-pay-1");
+  });
+
   it("cancel은 언제나 성공한다", async () => {
     const result = await mockProvider.cancel({
       providerTxnId: "mock-txn-pay-1",
@@ -441,9 +557,10 @@ Expected: FAIL — `Failed to resolve import "./mock"`
 `src/shared/api/payments/providers/mock.ts`:
 
 ```ts
-// 가짜 결제사 — Route Handler 전용. "use client" 코드에서 절대 import 금지.
+// 가짜 결제사 — Route Handler 전용. server-only가 클라이언트 번들 유입을 막는다.
 // 실제 PG가 계약되기 전까지 결제 전 구간을 동작시키고, 계약 후에도
 // e2e 회귀 테스트용으로 남는다.
+import "server-only";
 import {
   PaymentError,
   type CancelInput,
@@ -497,11 +614,8 @@ export const mockProvider: PaymentProvider = {
     };
   },
 
-  // 복귀 라우트는 providerRef에 payments.provider_ref(= "mock-ref-<id>")를 넣는다.
-  // 거래번호는 결제 건 id로 만들고 싶으므로 접두사를 걷어낸다.
   async confirm(input: ConfirmInput): Promise<ConfirmResult> {
-    const ref = input.providerRef.replace(/^mock-ref-/, "");
-    return readMockOutcome(input.query, ref, input.amount);
+    return readMockOutcome(input.query, input.paymentId, input.amount);
   },
 
   async cancel(input: CancelInput): Promise<CancelResult> {
@@ -516,26 +630,54 @@ export const mockProvider: PaymentProvider = {
 
 ```ts
 // provider 구현을 모아 두는 곳 — Route Handler 전용.
-// "use client" 코드에서 절대 import 금지 (비밀키를 쓰는 모듈로 이어진다).
 // PG가 추가되면 이 파일에 한 줄만 늘어난다.
+import "server-only";
 import { mockProvider } from "./providers/mock";
 import type { PaymentProvider } from "./types";
 
-const PROVIDERS: Record<string, PaymentProvider> = {
-  [mockProvider.id]: mockProvider,
-};
+// 가짜 결제사는 개발·테스트에만 등록한다. 운영에 남아 있으면 결제창을 거치지
+// 않고 승인을 통과시킬 수 있다 — catalog의 필터와 이중으로 막는다.
+const PROVIDERS: Record<string, PaymentProvider> =
+  process.env.NODE_ENV === "production" ? {} : { [mockProvider.id]: mockProvider };
 
 export function getProvider(id: string): PaymentProvider | null {
   return PROVIDERS[id] ?? null;
 }
 ```
 
-- [ ] **Step 5: 테스트를 돌려 통과를 확인한다**
+- [ ] **Step 5: 카탈로그와 레지스트리가 어긋나지 않는지 고정한다**
+
+`PaymentMethodOption.provider`와 `PaymentProvider.id`는 둘 다 그냥 문자열이라 오타가 나도
+타입 검사에 안 걸리고 결제 순간에 502로 드러난다. 테스트 하나로 막는다.
+
+`src/shared/api/payments/registry.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { PAYMENT_METHODS } from "./catalog";
+import { getProvider } from "./registry";
+
+describe("registry", () => {
+  it("카탈로그가 가리키는 provider가 모두 등록되어 있다", () => {
+    for (const method of PAYMENT_METHODS) {
+      expect(getProvider(method.provider), method.id).not.toBeNull();
+    }
+  });
+
+  it("모르는 id는 null이다", () => {
+    expect(getProvider("nope")).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 6: 테스트를 돌려 통과를 확인한다**
 
 Run: `pnpm vitest run src/shared/api/payments`
-Expected: PASS (14 tests — 카탈로그 5개 + mock 9개)
+Expected: 전부 PASS (카탈로그 · 타입 · mock · 레지스트리)
 
-- [ ] **Step 6: 커밋**
+이어서 `pnpm exec tsc --noEmit`도 깨끗한지 본다.
+
+- [ ] **Step 7: 커밋**
 
 ```bash
 git add src/shared/api/payments
@@ -850,13 +992,16 @@ async function createAndInitiate(
   method: PaymentMethodOption,
   origin: string,
 ): Promise<NextResponse> {
+  // provider가 이 마켓을 취급하는지도 본다. 카탈로그와 provider 양쪽이
+  // 마켓을 들고 있으므로 어긋나면 결제창까지 갔다가 실패한다.
   const provider = getProvider(method.provider);
-  const paymentId = provider ? await insertPayment(order, market, method) : null;
-  if (!provider || !paymentId) {
+  const usable = provider?.markets.includes(market) ? provider : null;
+  const paymentId = usable ? await insertPayment(order, market, method) : null;
+  if (!usable || !paymentId) {
     return NextResponse.json({ error: "providerDown" }, { status: 502 });
   }
   const intent = buildIntent(order, market, method, paymentId, origin);
-  const nextAction = await runInitiate(provider, paymentId, intent);
+  const nextAction = await runInitiate(usable, paymentId, intent);
   return nextAction
     ? NextResponse.json({ paymentId, nextAction })
     : NextResponse.json({ error: "providerDown" }, { status: 502 });
@@ -976,7 +1121,12 @@ MSG
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { getProvider } from "@/shared/api/payments/registry";
-import { toPaymentErrorCode, type PaymentProvider } from "@/shared/api/payments/types";
+import {
+  toPaymentErrorCode,
+  toPaymentErrorRaw,
+  type PaymentOutcomeCode,
+  type PaymentProvider,
+} from "@/shared/api/payments/types";
 import { siteOrigin } from "@/shared/lib/siteOrigin";
 import { DEFAULT_MARKET, isMarket, type Market } from "@/shared/config/markets";
 
@@ -1023,7 +1173,7 @@ async function settle(
   }
   const confirmed = await confirmWithProvider(payment, provider, query);
   if ("code" in confirmed) {
-    await markFailed(payment.id, confirmed.code);
+    await markFailed(payment.id, confirmed.code, confirmed.raw);
     return fail(origin, market, confirmed.code);
   }
   return await applyResult(payment, provider, confirmed, { origin, market, orderNumber });
@@ -1033,16 +1183,22 @@ async function confirmWithProvider(
   payment: PaymentRow,
   provider: PaymentProvider,
   query: Record<string, string>,
-): Promise<{ providerTxnId: string; paidAmount: number; raw: unknown } | { code: string }> {
+): Promise<
+  { providerTxnId: string; paidAmount: number; raw: unknown }
+  | { code: PaymentOutcomeCode; raw: unknown }
+> {
   try {
     return await provider.confirm({
+      paymentId: payment.id,
       providerRef: payment.provider_ref ?? payment.id,
       orderNumber: payment.orders?.order_number ?? "",
       amount: payment.amount,
       query,
     });
   } catch (error) {
-    return { code: toPaymentErrorCode(error) };
+    // PG가 준 원본을 코드 한 단어로 줄이지 않는다. 실패한 행이야말로
+    // 나중에 사람이 들여다볼 자리다.
+    return { code: toPaymentErrorCode(error), raw: toPaymentErrorRaw(error) };
   }
 }
 
@@ -1062,17 +1218,26 @@ async function applyResult(
   return fail(target.origin, target.market, outcome);
 }
 
+// RPC가 돌려주는 문자열을 화면이 아는 코드로 좁힌다. 여기서 좁혀 두면
+// 사전에 문구가 빠졌을 때 타입 검사가 잡는다.
+function toOutcomeCode(value: string | null): "ok" | PaymentOutcomeCode {
+  const known = ["ok", "notFound", "notPaid", "alreadyPaid", "amountMismatch"] as const;
+  return known.includes(value as (typeof known)[number])
+    ? (value as "ok" | PaymentOutcomeCode)
+    : "unknown";
+}
+
 async function runConfirmRpc(
   paymentId: string,
   confirmed: { providerTxnId: string; paidAmount: number; raw: unknown },
-): Promise<string> {
+): Promise<"ok" | PaymentOutcomeCode> {
   const { data, error } = await supabaseServer.rpc("confirm_payment", {
     p_payment_id: paymentId,
     p_txn_id: confirmed.providerTxnId,
     p_paid_amount: confirmed.paidAmount,
     p_raw: confirmed.raw ?? {},
   });
-  return error ? "unknown" : ((data as string | null) ?? "unknown");
+  return error ? "unknown" : toOutcomeCode(data as string | null);
 }
 
 // 금액이 다르면 받은 돈을 돌려주려 시도한다. 이 호출이 실패해도 손님을
@@ -1105,7 +1270,7 @@ function done(origin: string, market: Market, orderNumber: string): NextResponse
   );
 }
 
-function fail(origin: string, market: Market, code: string): NextResponse {
+function fail(origin: string, market: Market, code: PaymentOutcomeCode): NextResponse {
   return NextResponse.redirect(
     `${origin}/${market}/checkout?payError=${encodeURIComponent(code)}`,
     303,
@@ -1124,13 +1289,19 @@ async function fetchPayment(ref: string | null): Promise<PaymentRow | null> {
   return (data as unknown as PaymentRow | null) ?? null;
 }
 
-async function markFailed(paymentId: string, code: string): Promise<void> {
+async function markFailed(
+  paymentId: string,
+  code: PaymentOutcomeCode,
+  raw: unknown,
+): Promise<void> {
   await supabaseServer
     .from("payments")
-    .update({ status: "failed", failure_code: code })
+    .update({ status: "failed", failure_code: code, raw: raw ?? null })
     .eq("id", paymentId);
 }
 ```
+
+`applyResult`의 반환 타입에서 `outcome`은 `"ok" | PaymentOutcomeCode`다. `"ok"`와 `"alreadyPaid"`를 먼저 걸러내므로 `fail()`에 넘어가는 값은 `PaymentOutcomeCode`로 좁혀진다. TypeScript가 이를 좁히지 못하면 `fail(target.origin, target.market, outcome as PaymentOutcomeCode)` 대신 `if (outcome === "ok")`와 `if (outcome === "alreadyPaid")`를 따로 분기해 좁힌다 — 캐스팅보다 분기가 낫다.
 
 `ref`가 uuid가 아니면 Postgres가 `22P02` 오류를 낸다. `fetchPayment`가 `error`를 무시하고 `data`만 보므로 `null`이 되어 `fail(...)`로 흘러간다 — 의도한 동작이다.
 
@@ -1428,6 +1599,7 @@ MSG
         alreadyPaid: "この注文はすでにお支払い済みです。",
         providerDown: "決済サービスに接続できませんでした。しばらくしてからお試しください。",
         notFound: "決済情報が見つかりませんでした。",
+        notPaid: "お支払いが完了していない注文です。",
         unknown: "決済に失敗しました。もう一度お試しください。",
       },
     },
@@ -1447,6 +1619,7 @@ MSG
         alreadyPaid: "이미 결제가 완료된 주문입니다.",
         providerDown: "결제 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
         notFound: "결제 정보를 찾지 못했습니다.",
+        notPaid: "결제가 완료되지 않은 주문입니다.",
         unknown: "결제에 실패했습니다. 다시 시도해 주세요.",
       },
     },
@@ -1921,6 +2094,23 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 MSG
 )"
 ```
+
+---
+
+## 이 설계가 감당하지 못하는 것
+
+**결제가 나중에 확정되는 수단은 이 구조로 안 된다.** 한국 가상계좌·무통장입금, 일본 편의점 결제와
+Pay-easy가 여기 해당한다. 손님이 복귀 URL로 돌아온 시점에는 아직 돈이 들어오지 않았고, 며칠 뒤
+webhook으로 입금이 통보된다. 그러려면
+
+- `PaymentProvider`에 네 번째 메서드(webhook 서명 검증 + 페이로드 해석)가 필요하고 — `types.ts`가 깨진다
+- `POST /api/payments/webhook/[provider]` 라우트가 하나 더 필요하며
+- `payments.status`에 「입금 대기」가 하나 더 붙는다
+
+즉 **첫 PG를 카드 위주로 시작하는 한** 아래 「계약 후 남는 일」이 맞지만, 편의점 결제를 붙이는
+순간 그 약속은 깨진다. `docs/payment-plan-explainer.md`가 일본 편의점 결제를 비중 있게 다루므로
+일본 마켓을 열 때 이 항목이 먼저 온다. 지금 인터페이스에 자리만 미리 파 두지는 않는다 —
+구현체가 하나도 없는 상태에서 인터페이스를 넓히지 말라는 CLAUDE.md 지침을 따른다.
 
 ---
 
