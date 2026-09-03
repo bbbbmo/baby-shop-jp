@@ -124,9 +124,20 @@ function buildIntent(
     itemName: order.order_number,
     buyerName: order.recipient_name,
     buyerEmail: order.email,
-    returnUrl: `${origin}/api/payments/return/${method.provider}?ref=${paymentId}`,
+    returnUrl: buildReturnUrl(origin, method.provider, paymentId, market),
     cancelUrl: `${origin}/${market}/checkout`,
   };
+}
+
+// 마켓을 함께 심는다. 결제 행을 못 찾는 실패에서도 손님을 원래 언어의
+// 화면으로 돌려보내야 한다 — 그러지 않으면 한국 손님이 일본어 화면에 떨어진다.
+function buildReturnUrl(
+  origin: string,
+  provider: string,
+  paymentId: string,
+  market: Market,
+): string {
+  return `${origin}/api/payments/return/${provider}?ref=${paymentId}&m=${market}`;
 }
 
 // DB 오류와 「주문 없음」을 구분한다. 뭉뚱그리면 DB가 잠깐 죽었을 때

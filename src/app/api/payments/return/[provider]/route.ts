@@ -30,18 +30,43 @@ export async function GET(
   const origin = siteOrigin(request);
   try {
     const { provider: providerId } = await params;
-    const url = new URL(request.url);
-    const payment = await fetchPayment(url.searchParams.get("ref"));
-    const provider = getProvider(providerId);
-    // 결제 행이 어느 PG로 시작됐는지와 URL의 provider가 같아야 한다.
-    // 대조하지 않으면 A사로 결제를 시작해 놓고 B사 복귀 URL로 승인시킬 수 있다.
-    // 가짜 결제사가 등록된 개발 환경에서는 그게 곧 무료 주문이 된다.
-    if (!payment || !provider || payment.provider !== providerId) {
-      return fail(origin, DEFAULT_MARKET, "unknown");
-    }
-    return await settle(payment, provider, toQuery(url), origin);
+    return await resolveReturn(request, providerId, origin);
   } catch {
-    return fail(origin, DEFAULT_MARKET, "unknown");
+    return fail(origin, fallbackMarket(marketHintOf(request)), "unknown");
+  }
+}
+
+async function resolveReturn(
+  request: Request,
+  providerId: string,
+  origin: string,
+): Promise<NextResponse> {
+  const url = new URL(request.url);
+  const payment = await fetchPayment(url.searchParams.get("ref"));
+  const provider = getProvider(providerId);
+  // 결제 행을 못 찾아도 손님은 원래 보던 언어의 화면으로 돌아가야 한다.
+  // 시작할 때 심어 둔 m= 을 쓴다. 값은 isMarket으로 걸러 믿는다.
+  const hinted = fallbackMarket(url.searchParams.get("m"));
+  // 결제 행이 어느 PG로 시작됐는지와 URL의 provider가 같아야 한다.
+  // 대조하지 않으면 A사로 결제를 시작해 놓고 B사 복귀 URL로 승인시킬 수 있다.
+  // 가짜 결제사가 등록된 개발 환경에서는 그게 곧 무료 주문이 된다.
+  if (!payment || !provider || payment.provider !== providerId) {
+    return fail(origin, hinted, "unknown");
+  }
+  return await settle(payment, provider, toQuery(url), { origin, hinted });
+}
+
+function fallbackMarket(value: string | null): Market {
+  return isMarket(value) ? value : DEFAULT_MARKET;
+}
+
+// catch 안에서는 위에서 만든 값을 쓸 수 없다. 주소를 다시 읽되,
+// 그것마저 실패하면 기본 마켓으로 간다.
+function marketHintOf(request: Request): string | null {
+  try {
+    return new URL(request.url).searchParams.get("m");
+  } catch {
+    return null;
   }
 }
 
@@ -49,9 +74,10 @@ async function settle(
   payment: PaymentRow,
   provider: PaymentProvider,
   query: Record<string, string>,
-  origin: string,
+  place: { origin: string; hinted: Market },
 ): Promise<NextResponse> {
-  const market = marketOf(payment);
+  const { origin } = place;
+  const market = marketOf(payment, place.hinted);
   const orderNumber = payment.orders?.order_number ?? "";
   if (payment.status === "paid") {
     return done(origin, market, orderNumber);
@@ -160,9 +186,10 @@ function toQuery(url: URL): Record<string, string> {
   return Object.fromEntries(url.searchParams.entries());
 }
 
-function marketOf(payment: PaymentRow): Market {
+// 주문에 적힌 마켓이 진실이다. 그것을 못 읽을 때만 복귀 URL의 힌트를 쓴다.
+function marketOf(payment: PaymentRow, hinted: Market): Market {
   const market = payment.orders?.market;
-  return isMarket(market) ? market : DEFAULT_MARKET;
+  return isMarket(market) ? market : hinted;
 }
 
 function done(origin: string, market: Market, orderNumber: string): NextResponse {
