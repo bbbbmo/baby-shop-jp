@@ -87,11 +87,14 @@ export class PaymentError extends Error {
   // 코드 한 단어로 줄여 버리지 않는다.
   readonly raw?: unknown;
 
-  constructor(code: PaymentErrorCode, raw?: unknown, message?: string) {
-    super(message ?? code);
+  // 두 번째 인자를 옵션 객체로 받는다. (code, raw?, message?)로 두면
+  // 메시지로 쓰려던 문자열이 조용히 raw 자리에 들어가고, .message는 코드
+  // 한 단어로 남는다 — 컴파일도 통과해서 알아채기 어렵다.
+  constructor(code: PaymentErrorCode, options?: { raw?: unknown; message?: string }) {
+    super(options?.message ?? code);
     this.name = "PaymentError";
     this.code = code;
-    this.raw = raw;
+    this.raw = options?.raw;
   }
 }
 
@@ -294,7 +297,7 @@ describe("toPaymentErrorCode", () => {
 describe("toPaymentErrorRaw", () => {
   it("PaymentError에 담긴 PG 원본을 꺼낸다", () => {
     const raw = { code: "PAY-1", message: "declined" };
-    expect(toPaymentErrorRaw(new PaymentError("providerDown", raw))).toEqual(raw);
+    expect(toPaymentErrorRaw(new PaymentError("providerDown", { raw }))).toEqual(raw);
   });
 
   it("원본이 없으면 undefined다", () => {
@@ -381,6 +384,12 @@ describe("resolveSiteOrigin", () => {
     );
   });
 
+  it("환경변수에 경로가 붙어 있어도 오리진만 남긴다", () => {
+    expect(resolveSiteOrigin("https://como.example/shop", "http://localhost:3000/api/x")).toBe(
+      "https://como.example",
+    );
+  });
+
   it("환경변수가 없으면 요청 URL의 오리진을 쓴다", () => {
     expect(resolveSiteOrigin(undefined, "http://localhost:3000/api/payments/start")).toBe(
       "http://localhost:3000",
@@ -389,6 +398,12 @@ describe("resolveSiteOrigin", () => {
 
   it("환경변수가 빈 문자열이면 요청 URL을 쓴다", () => {
     expect(resolveSiteOrigin("", "http://localhost:3000/api/x")).toBe("http://localhost:3000");
+  });
+
+  // 오타를 조용히 넘기면 결제 복귀가 엉뚱한 곳으로 간다. 그때 디버깅하는 것보다
+  // 서버가 뜰 때 죽는 편이 낫다.
+  it("환경변수가 URL이 아니면 던진다", () => {
+    expect(() => resolveSiteOrigin("como.example", "http://localhost:3000/api/x")).toThrow();
   });
 });
 ```
@@ -404,24 +419,31 @@ Expected: FAIL — `Failed to resolve import "./siteOrigin"`
 
 ```ts
 // 결제사에 넘기는 복귀 URL은 절대 URL이어야 한다. 프록시 뒤에 서면 요청 URL의
-// 호스트가 내부 주소일 수 있으므로 NEXT_PUBLIC_SITE_URL을 우선한다.
+// 호스트가 내부 주소일 수 있으므로 SITE_URL을 우선한다.
 // 배포처가 정해지면 그 값을 .env에 넣는다.
+//
+// NEXT_PUBLIC_ 접두사를 쓰지 않는다. 이 값을 읽는 곳은 서버뿐이고, 접두사를
+// 붙이면 쓰지도 않는 값이 클라이언트 번들에 실린다.
+//
+// URL로 파싱해서 오리진만 남긴다. 끝 슬래시·경로가 함께 정리되고, 오타처럼
+// URL이 아닌 값은 여기서 바로 던진다 — 조용히 넘어가면 결제 복귀가 엉뚱한
+// 곳으로 가고, 그건 실제 결제 때나 드러난다.
 export function resolveSiteOrigin(configured: string | undefined, requestUrl: string): string {
-  if (configured) {
-    return configured.replace(/\/+$/, "");
+  if (!configured) {
+    return new URL(requestUrl).origin;
   }
-  return new URL(requestUrl).origin;
+  return new URL(configured).origin;
 }
 
 export function siteOrigin(request: Request): string {
-  return resolveSiteOrigin(process.env.NEXT_PUBLIC_SITE_URL, request.url);
+  return resolveSiteOrigin(process.env.SITE_URL, request.url);
 }
 ```
 
 - [ ] **Step 4: 테스트를 돌려 통과를 확인한다**
 
 Run: `pnpm vitest run src/shared/lib/siteOrigin.test.ts`
-Expected: PASS (4 tests)
+Expected: PASS (6 tests)
 
 - [ ] **Step 5: 커밋**
 
@@ -587,7 +609,7 @@ export function buildMockPayUrl(intent: PaymentIntent): string {
 // 실제 provider에서는 pg_token·paymentKey 같은 PG 고유 필드를 읽는 자리다.
 export function readMockOutcome(
   query: Record<string, string>,
-  providerRef: string,
+  paymentId: string,
   expectedAmount: number,
 ): ConfirmResult {
   if (query.mockResult === "cancelled") {
@@ -600,7 +622,7 @@ export function readMockOutcome(
     throw new PaymentError("unknown");
   }
   const paidAmount = query.mockAmount ? Number(query.mockAmount) : expectedAmount;
-  return { providerTxnId: `mock-txn-${providerRef}`, paidAmount, raw: query };
+  return { providerTxnId: `mock-txn-${paymentId}`, paidAmount, raw: query };
 }
 
 export const mockProvider: PaymentProvider = {
@@ -635,8 +657,10 @@ import "server-only";
 import { mockProvider } from "./providers/mock";
 import type { PaymentProvider } from "./types";
 
-// 가짜 결제사는 개발·테스트에만 등록한다. 운영에 남아 있으면 결제창을 거치지
-// 않고 승인을 통과시킬 수 있다 — catalog의 필터와 이중으로 막는다.
+// 가짜 결제사는 개발·테스트에만 등록한다. 이 가드는 복귀·취소 라우트를 막고,
+// catalog의 필터는 시작 라우트를 막는다 — 서로 다른 경로다. 둘이 실제로
+// 겹쳐서 막히는 것은 Task 7이 payment.provider와 URL의 provider를 대조한
+// 뒤부터다.
 const PROVIDERS: Record<string, PaymentProvider> =
   process.env.NODE_ENV === "production" ? {} : { [mockProvider.id]: mockProvider };
 
@@ -1132,6 +1156,7 @@ import { DEFAULT_MARKET, isMarket, type Market } from "@/shared/config/markets";
 
 type PaymentRow = {
   id: string;
+  provider: string;
   status: string;
   amount: number;
   provider_ref: string | null;
@@ -1151,7 +1176,10 @@ export async function GET(
     const url = new URL(request.url);
     const payment = await fetchPayment(url.searchParams.get("ref"));
     const provider = getProvider(providerId);
-    if (!payment || !provider) {
+    // 결제 행이 어느 PG로 시작됐는지와 URL의 provider가 같아야 한다.
+    // 대조하지 않으면 A사로 결제를 시작해 놓고 B사 복귀 URL로 승인시킬 수 있다.
+    // 가짜 결제사가 등록된 개발 환경에서는 그게 곧 무료 주문이 된다.
+    if (!payment || !provider || payment.provider !== providerId) {
       return fail(origin, DEFAULT_MARKET, "unknown");
     }
     return await settle(payment, provider, toQuery(url), origin);
@@ -1283,7 +1311,9 @@ async function fetchPayment(ref: string | null): Promise<PaymentRow | null> {
   }
   const { data } = await supabaseServer
     .from("payments")
-    .select("id, status, amount, provider_ref, provider_txn_id, orders ( order_number, market )")
+    .select(
+      "id, provider, status, amount, provider_ref, provider_txn_id, orders ( order_number, market )",
+    )
     .eq("id", ref)
     .maybeSingle();
   return (data as unknown as PaymentRow | null) ?? null;
@@ -1880,9 +1910,21 @@ import { PaymentErrorBanner, PaymentMethodPicker, useStartPayment } from "@/feat
 `CheckoutBody` 안, `const { lines, droppedCount } = ...` 아래에 상태를 더한다:
 
 ```tsx
-  const [methodId, setMethodId] = useState("mock");
+  // 기본값을 "mock"으로 박으면 운영 빌드에서 목록이 비었을 때도 그 값이 남아
+  // 시작 라우트가 400을 낸다. 목록의 첫 항목에서 끌어온다.
+  const methods = paymentMethodsFor(market);
+  const [methodId, setMethodId] = useState(methods[0]?.id ?? "");
   const { start, payError } = useStartPayment();
 ```
+
+`market`은 `CheckoutBody` 안에서 `useMarket()`으로 얻는다. 이미 `OrderSummary`가 쓰고 있으므로 훅은 있다. 아래 import를 더한다:
+
+```tsx
+import { paymentMethodsFor } from "@/shared/api/payments/catalog";
+import { useMarket } from "@/shared/market";
+```
+
+(`useMarket`은 파일 위쪽에 이미 import되어 있으므로 중복해서 넣지 않는다.)
 
 `CheckoutBody` 안의 `const router = useMarketRouter();` 줄을 지운다 (결제로 넘어가므로 여기서 직접 이동하지 않는다). 바깥 `CheckoutView`의 같은 줄은 빈 장바구니 리다이렉트에 계속 쓰이므로 그대로 둔다 — `useMarketRouter` import도 남는다.
 
@@ -2052,8 +2094,10 @@ PG사가 정해지면 `src/shared/api/payments/providers/`에 파일 하나를 �
 
 ### B-4. 배포처 · **미정**
 
-`NEXT_PUBLIC_SITE_URL` 환경변수가 결제 복귀 URL의 오리진을 정합니다. 배포처가 정해지면 그 값을
-`.env`에 넣습니다. 넣지 않으면 요청 URL의 오리진을 씁니다 — 로컬 개발은 그대로 동작합니다.
+`SITE_URL` 환경변수가 결제 복귀 URL의 오리진을 정합니다. 배포처가 정해지면 그 값을 `.env`에
+넣습니다. 넣지 않으면 요청 URL의 오리진을 씁니다 — 로컬 개발은 그대로 동작합니다.
+URL이 아닌 값을 넣으면 결제 시작 시점에 바로 예외가 납니다. 조용히 잘못된 주소로 가는 것보다
+낫다고 보았습니다.
 ```
 
 - [ ] **Step 2: 알려진 한계를 더한다**
@@ -2097,6 +2141,30 @@ MSG
 
 ---
 
+## 가짜 결제사를 무엇으로 막는가
+
+세 겹이고, 각각 다른 경로를 막는다.
+
+| 겹 | 막는 경로 | 어디 |
+| --- | --- | --- |
+| `findPaymentMethod`의 mock 필터 | 결제 **시작** | Task 1 |
+| 레지스트리가 운영에서 mock을 등록하지 않음 | 결제 **복귀·취소** | Task 3 |
+| `payment.provider`와 URL provider 대조 | 결제 **복귀** | Task 7 |
+
+세 번째가 있어야 앞의 둘이 실제로 겹친다. 그것이 없으면 실제 PG로 시작한 결제를 mock 복귀
+URL로 승인시킬 수 있고, 이는 PG가 둘만 되어도 생기는 문제다 — mock과 무관한 PG 혼동 버그다.
+
+**판단 하나를 기록해 둔다.** mock 노출 여부를 `NODE_ENV !== "production"`으로 정한다. 이건
+fail-open이다 — `pnpm dev`로 띄운 스테이징 서버에는 가짜 결제사가 살아 있다. 명시적 opt-in
+(`PAYMENTS_ALLOW_MOCK=1`)이 더 안전하지만, 그 대가로 로컬·CI·e2e 전부에 환경변수가 하나 늘어난다.
+**세 번째 겹(provider 대조)이 있으면 mock으로 승인시키려면 그 결제 행 자체가 mock으로 시작됐어야
+하고, 그건 시작 라우트가 이미 막는다.** 그래서 지금은 `NODE_ENV`로 둔다.
+
+실제로 돈을 받는 스테이징 환경을 `pnpm dev`로 띄우게 되면 그때 명시적 플래그로 바꾼다.
+`docs/open-decisions.md` B-4(배포처)와 함께 결정한다.
+
+---
+
 ## 이 설계가 감당하지 못하는 것
 
 **결제가 나중에 확정되는 수단은 이 구조로 안 된다.** 한국 가상계좌·무통장입금, 일본 편의점 결제와
@@ -2121,7 +2189,7 @@ PG사가 정해지면 별도 태스크로 진행한다. 이 계획의 목표는 
 1. `src/shared/api/payments/providers/<pg>.ts` — `initiate / confirm / cancel` 세 메서드 구현
 2. `registry.ts`에 한 줄, `catalog.ts`에 결제수단 항목 추가 (`kakaopay`, `naverpay`, `card`)
 3. `useStartPayment`의 `performNextAction`에 `sdk` 분기 추가
-4. `.env`에 PG 키와 `NEXT_PUBLIC_SITE_URL`
+4. `.env`에 PG 키와 `SITE_URL`
 5. 테스트 키로 승인·취소를 손으로 한 번씩 확인
 
 `types.ts`, 라우트 세 개, `payments` 테이블, RPC, e2e는 손대지 않는다.
