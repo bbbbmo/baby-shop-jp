@@ -65,23 +65,34 @@
 import type { Currency, Market } from "@/shared/config/markets";
 
 // 각 PG의 에러코드를 provider가 이 여섯 개로 옮긴다.
-// 화면과 라우트는 이 목록 밖을 모른다.
-export type PaymentErrorCode =
-  | "userCancelled"
-  | "expired"
-  | "amountMismatch"
-  | "alreadyPaid"
-  | "providerDown"
-  | "unknown";
+// 배열로 두는 이유는 런타임에도 목록이 필요하기 때문이다 — 라우트가 RPC 반환값을
+// 좁힐 때, 그리고 테스트가 사전에 문구가 다 있는지 볼 때 이 배열을 쓴다.
+// 목록을 여러 곳에 베껴 두면 반드시 어긋난다.
+export const PAYMENT_ERROR_CODES = [
+  "userCancelled",
+  "expired",
+  "amountMismatch",
+  "alreadyPaid",
+  "providerDown",
+  "unknown",
+] as const;
 
-// 화면까지 도달하는 코드는 provider 에러보다 넓다. 승인 RPC가 돌려주는 결과도
-// 같은 자리(?payError=)로 흘러가므로 한 union으로 묶어, 사전에 문구가 빠지면
-// 타입 검사에서 걸리게 한다.
-export type PaymentOutcomeCode =
-  | PaymentErrorCode
-  | "notFound"
-  | "notPaid"
-  | "notPending";
+export type PaymentErrorCode = (typeof PAYMENT_ERROR_CODES)[number];
+
+// 화면까지 도달하는 코드는 provider 에러보다 넓다. 승인·취소 RPC가 돌려주는
+// 결과도 같은 자리(?payError=)로 흘러간다.
+export const PAYMENT_OUTCOME_CODES = [
+  ...PAYMENT_ERROR_CODES,
+  "notFound",
+  "notPaid",
+  "notPending",
+] as const;
+
+export type PaymentOutcomeCode = (typeof PAYMENT_OUTCOME_CODES)[number];
+
+export function isPaymentOutcomeCode(value: unknown): value is PaymentOutcomeCode {
+  return PAYMENT_OUTCOME_CODES.includes(value as PaymentOutcomeCode);
+}
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "cancelling" | "cancelled";
 
@@ -1226,6 +1237,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/shared/api/supabase/serverClient";
 import { getProvider } from "@/shared/api/payments/registry";
 import {
+  isPaymentOutcomeCode,
   toPaymentErrorCode,
   toPaymentErrorRaw,
   type PaymentOutcomeCode,
@@ -1326,20 +1338,13 @@ async function applyResult(
   return fail(target.origin, target.market, outcome);
 }
 
-// RPC가 돌려주는 문자열을 화면이 아는 코드로 좁힌다. 여기서 좁혀 두면
-// 사전에 문구가 빠졌을 때 타입 검사가 잡는다.
+// RPC가 돌려주는 문자열을 화면이 아는 코드로 좁힌다. 목록을 여기 베껴 두면
+// types.ts와 어긋나므로 그쪽 판별 함수를 쓴다.
 function toOutcomeCode(value: string | null): "ok" | PaymentOutcomeCode {
-  const known = [
-    "ok",
-    "notFound",
-    "notPaid",
-    "notPending",
-    "alreadyPaid",
-    "amountMismatch",
-  ] as const;
-  return known.includes(value as (typeof known)[number])
-    ? (value as "ok" | PaymentOutcomeCode)
-    : "unknown";
+  if (value === "ok") {
+    return "ok";
+  }
+  return isPaymentOutcomeCode(value) ? value : "unknown";
 }
 
 async function runConfirmRpc(
@@ -1911,15 +1916,40 @@ function statusLabel(status: Order["status"], d: Dictionary): string {
 import type { Dictionary } from "@/shared/i18n/dictionaries";
 ```
 
-- [ ] **Step 5: 타입 검사와 테스트를 돌린다**
+- [ ] **Step 5: 문구가 빠지지 않았는지 테스트로 고정한다**
+
+`?payError=` 자리에 오는 코드는 전부 두 언어에 문구가 있어야 한다. 사전은 평범한 객체
+리터럴이라 타입만으로는 강제되지 않는다 — 테스트로 대신 막는다.
+
+`src/shared/i18n/paymentMessages.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { dictionaries } from "./dictionaries";
+import { PAYMENT_OUTCOME_CODES } from "@/shared/api/payments/types";
+
+// 화면에 닿는 코드에 문구가 없으면 손님이 빈 자리를 본다.
+// 한국 마켓 기능이라도 일본어를 빠뜨리면 그 화면이 깨진다.
+describe("결제 실패 문구", () => {
+  for (const locale of ["ja", "ko"] as const) {
+    it(`${locale}: 모든 결과 코드에 문구가 있다`, () => {
+      for (const code of PAYMENT_OUTCOME_CODES) {
+        expect(dictionaries[locale].payment.errors[code], code).toBeTruthy();
+      }
+    });
+  }
+});
+```
+
+- [ ] **Step 6: 타입 검사와 테스트를 돌린다**
 
 Run: `pnpm exec tsc --noEmit && pnpm test`
 Expected: 오류 없음, 기존 테스트 전부 PASS
 
-- [ ] **Step 6: 커밋**
+- [ ] **Step 7: 커밋**
 
 ```bash
-git add src/shared/i18n/dictionaries.ts src/features/order-lookup-form/OrderLookupForm.tsx
+git add src/shared/i18n src/features/order-lookup-form/OrderLookupForm.tsx
 git commit -m "$(cat <<'MSG'
 docs(payment): 결제 문구를 두 언어로 넣고 주문 상태를 반영한다
 
