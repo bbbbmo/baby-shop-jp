@@ -1526,17 +1526,21 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "unauthorized" }, { status: auth.status });
   }
   try {
-    const parsed = bodySchema.safeParse(await request.json());
-    if (!parsed.success) {
-      return NextResponse.json({ error: "invalidInput" }, { status: 400 });
-    }
-    return await cancelPaid(parsed.data.orderNumber, {
-      reason: parsed.data.reason ?? "adminCancel",
-      by: auth.email,
-    });
+    return await handleCancel(request, auth.email);
   } catch {
     return NextResponse.json({ error: "unknownError" }, { status: 500 });
   }
+}
+
+async function handleCancel(request: Request, by: string): Promise<NextResponse> {
+  const parsed = bodySchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: "invalidInput" }, { status: 400 });
+  }
+  return await cancelPaid(parsed.data.orderNumber, {
+    reason: parsed.data.reason ?? "adminCancel",
+    by,
+  });
 }
 
 type Audit = { reason: string; by: string };
@@ -1628,21 +1632,31 @@ async function finishCancel(paymentId: string, audit: unknown): Promise<NextResp
 async function fetchPaidPayment(
   orderNumber: string,
 ): Promise<{ payment: PaidPayment | null } | { failed: true }> {
-  const { data: order, error: orderError } = await supabaseServer
+  const found = await fetchOrderId(orderNumber);
+  if ("failed" in found) {
+    return found;
+  }
+  return found.id ? await fetchPaidRow(found.id) : { payment: null };
+}
+
+async function fetchOrderId(
+  orderNumber: string,
+): Promise<{ id: string | null } | { failed: true }> {
+  const { data, error } = await supabaseServer
     .from("orders")
     .select("id")
     .eq("order_number", orderNumber)
     .maybeSingle();
-  if (orderError) {
-    return { failed: true };
-  }
-  if (!order) {
-    return { payment: null };
-  }
+  return error ? { failed: true } : { id: data?.id ?? null };
+}
+
+async function fetchPaidRow(
+  orderId: string,
+): Promise<{ payment: PaidPayment | null } | { failed: true }> {
   const { data, error } = await supabaseServer
     .from("payments")
     .select("id, provider, amount, provider_txn_id")
-    .eq("order_id", order.id)
+    .eq("order_id", orderId)
     .eq("status", "paid")
     .maybeSingle();
   return error ? { failed: true } : { payment: (data as PaidPayment | null) ?? null };
@@ -2355,6 +2369,19 @@ URL이 아닌 값을 넣으면 결제 시작 시점에 바로 예외가 납니�
 
 정리 작업(만료 처리)은 **주문 만료 정책이 정해진 뒤** 합니다. 며칠 뒤 지울지, 지울지 아니면
 상태만 바꿀지가 사업 결정입니다.
+
+## 취소 도중 죽으면 결제 행이 cancelling에 갇힌다
+
+관리자 취소는 PG를 부르기 전에 결제 행을 `cancelling`으로 선점합니다. 환불이 두 번 나가는 것을
+막기 위해서입니다. 그런데 선점 직후 또는 PG 호출 도중에 프로세스가 죽으면(배포·크래시) 그 행을
+되돌릴 코드가 실행되지 않아 `cancelling`으로 남습니다.
+
+**이 상태에서 환불이 실제로 됐는지 우리 DB만으로는 알 수 없습니다.** PG 관리 화면과 대조해야
+합니다. 다시 취소를 시도해도 409로 막히므로 중복 환불은 나지 않지만, 사람이 손으로 SQL을 써서
+`paid`(재시도 가능) 또는 `cancelled`(이미 환불됨)로 옮겨야 합니다.
+
+`cancelling`은 정상 흐름에서 오래 머무는 상태가 아니므로, 이 상태로 몇 분 이상 남은 행을 찾는
+쿼리 하나가 있으면 발견은 쉽습니다. 자동 복구는 정산 대사와 함께 만드는 것이 맞습니다.
 
 ## 결제 정산 대사가 없다
 
