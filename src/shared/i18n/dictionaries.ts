@@ -96,6 +96,7 @@ export const dictionaries = {
     },
     payment: {
       methodTitle: "お支払い方法",
+      noMethods: "現在ご利用いただけるお支払い方法がありません。",
       errors: {
         userCancelled: "決済がキャンセルされました。もう一度お試しください。",
         expired: "決済の有効期限が切れました。もう一度お試しください。",
@@ -405,6 +406,7 @@ export const dictionaries = {
     },
     payment: {
       methodTitle: "결제수단",
+      noMethods: "지금 이용할 수 있는 결제수단이 없습니다.",
       errors: {
         userCancelled: "결제가 취소되었습니다. 다시 시도해 주세요.",
         expired: "결제 유효시간이 지났습니다. 다시 시도해 주세요.",

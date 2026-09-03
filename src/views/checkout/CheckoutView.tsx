@@ -89,10 +89,16 @@ function CheckoutBody({
             않는 상품까지 서버로 가고, 서버는 그 한 줄 때문에 주문 전체를 거절한다.
             화면에는 "뺐습니다"라고 알려놓고 제출은 그대로 하는 모순이 된다. */}
         <div>
+          {methods.length === 0 && (
+            <p className="mb-4 border border-border bg-sand px-4 py-3 text-sm text-foreground">
+              {d.payment.noMethods}
+            </p>
+          )}
           <PaymentMethodPicker value={methodId} onChange={setMethodId} />
           <CheckoutForm
             items={lines}
             prefill={prefill}
+            disabled={methods.length === 0}
             onSuccess={(orderNumber, email) => start(orderNumber, email, methodId)}
           />
         </div>

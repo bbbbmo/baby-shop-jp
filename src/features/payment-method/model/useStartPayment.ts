@@ -10,6 +10,9 @@ export function useStartPayment() {
 
   const start = async (orderNumber: string, email: string, methodId: string): Promise<void> => {
     setPayError(null);
+    // 지난 실패가 남긴 ?payError=를 지운다. 두지 않으면 이번 시도가 잘 돼도
+    // 화면에는 옛 오류가 그대로 떠 있어 「또 실패했다」로 읽힌다.
+    clearPayErrorParam();
     try {
       const result = await requestStart(orderNumber, email, methodId);
       if ("error" in result) {
@@ -38,6 +41,14 @@ async function requestStart(
   return (await res.json()) as StartResponse;
 }
 
+function clearPayErrorParam(): void {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("payError")) {
+    url.searchParams.delete("payError");
+    window.history.replaceState(null, "", url.toString());
+  }
+}
+
 // 결제창을 여는 방법은 PG마다 다르다. 지금은 리다이렉트 하나뿐이고,
 // SDK 방식은 실제 PG를 붙이는 태스크에서 이 분기에 더한다.
 function performNextAction(action: NextAction): void {
@@ -45,5 +56,8 @@ function performNextAction(action: NextAction): void {
     window.location.assign(action.url);
     return;
   }
+  // 손님에게는 「알 수 없는 오류」로 보이지만 이건 우리 쪽 구현 누락이다.
+  // 로그에 남겨 두지 않으면 PG를 붙인 뒤 이 상태를 눈치채지 못한다.
+  console.error(`payment: unsupported nextAction "${action.kind}"`);
   throw new Error(`unsupported nextAction: ${action.kind}`);
 }
