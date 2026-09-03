@@ -158,6 +158,15 @@ export type CancelInput = {
 
 export type CancelResult = { raw: unknown };
 
+// provider 구현자에게 거는 계약.
+//
+// confirm은 **반드시 PG 서버에 직접 확인**해야 한다. 복귀 URL의 쿼리는 손님의
+// 브라우저를 거쳐 오므로 그 자체로는 아무것도 증명하지 않는다. 서명 검증이든
+// 승인 API 호출이든, PG가 인정하는 방법으로 확인한 뒤에만 정상 반환할 것.
+// 이 규칙을 어겨도 타입 검사는 통과한다 — 그래서 여기에 적어 둔다.
+// (mock은 쿼리를 그대로 믿는다. 그래서 운영 레지스트리에서 빠진다.)
+//
+// confirm이 정상 반환하면 그 순간 주문이 결제완료가 된다.
 export type PaymentProvider = {
   id: string;
   markets: readonly Market[];
@@ -1307,7 +1316,7 @@ async function applyResult(
     return done(target.origin, target.market, target.orderNumber);
   }
   if (outcome === "amountMismatch") {
-    await refundQuietly(provider, confirmed.providerTxnId, confirmed.paidAmount);
+    await refundAndRecord(provider, payment.id, confirmed);
   }
   return fail(target.origin, target.market, outcome);
 }
@@ -1342,16 +1351,33 @@ async function runConfirmRpc(
 }
 
 // 금액이 다르면 받은 돈을 돌려주려 시도한다. 이 호출이 실패해도 손님을
-// 붙잡아 둘 수는 없다 — payments 행에 failed로 남아 관리자가 확인한다.
-async function refundQuietly(
+// 붙잡아 둘 수는 없다 — 그래서 시도 결과를 반드시 남긴다. 돈은 이미 빠져나갔고,
+// 나중에 이 행을 들여다볼 사람에게 「환불을 시도했는가, 왜 실패했는가」가 전부다.
+async function refundAndRecord(
   provider: PaymentProvider,
-  providerTxnId: string,
-  amount: number,
+  paymentId: string,
+  confirmed: { providerTxnId: string; paidAmount: number; raw: unknown },
 ): Promise<void> {
+  const attempt = await tryCancel(provider, confirmed);
+  await supabaseServer
+    .from("payments")
+    .update({ raw: { confirm: confirmed.raw ?? null, refundAttempt: attempt } })
+    .eq("id", paymentId);
+}
+
+async function tryCancel(
+  provider: PaymentProvider,
+  confirmed: { providerTxnId: string; paidAmount: number },
+): Promise<Record<string, unknown>> {
   try {
-    await provider.cancel({ providerTxnId, amount, reason: "amountMismatch" });
-  } catch {
-    // 남길 곳은 payments.failure_code 하나뿐이다
+    const result = await provider.cancel({
+      providerTxnId: confirmed.providerTxnId,
+      amount: confirmed.paidAmount,
+      reason: "amountMismatch",
+    });
+    return { ok: true, raw: result.raw ?? null };
+  } catch (error) {
+    return { ok: false, code: toPaymentErrorCode(error), raw: toPaymentErrorRaw(error) ?? null };
   }
 }
 
@@ -1392,6 +1418,9 @@ async function fetchPayment(ref: string | null): Promise<PaymentRow | null> {
   return (data as unknown as PaymentRow | null) ?? null;
 }
 
+// pending인 행만 실패로 닫는다. 조건이 없으면 관리자가 환불해 cancelled가 된
+// 건에 오래된 복귀 URL이 재생됐을 때 failed로 덮여 cancelled_at이 의미를 잃는다.
+// DB 쪽 confirm_payment에는 같은 가드(notPending)가 이미 있다.
 async function markFailed(
   paymentId: string,
   code: PaymentOutcomeCode,
@@ -1400,7 +1429,8 @@ async function markFailed(
   await supabaseServer
     .from("payments")
     .update({ status: "failed", failure_code: code, raw: raw ?? null })
-    .eq("id", paymentId);
+    .eq("id", paymentId)
+    .eq("status", "pending");
 }
 ```
 
@@ -2311,6 +2341,8 @@ webhook으로 입금이 통보된다. 그러려면
 PG사가 정해지면 별도 태스크로 진행한다. 이 계획의 목표는 그 태스크를 작게 만드는 것이다.
 
 1. `src/shared/api/payments/providers/<pg>.ts` — `initiate / confirm / cancel` 세 메서드 구현
+   - **`confirm`은 반드시 PG 서버에 직접 확인할 것.** 복귀 쿼리는 손님 브라우저를 거쳐 오므로
+     그 자체로는 결제를 증명하지 않는다. 이 한 줄을 빠뜨리면 무료 주문이 열린다
 2. `registry.ts`에 한 줄, `catalog.ts`에 결제수단 항목 추가 (`kakaopay`, `naverpay`, `card`)
 3. `useStartPayment`의 `performNextAction`에 `sdk` 분기 추가
 4. `.env`에 PG 키와 `SITE_URL`
