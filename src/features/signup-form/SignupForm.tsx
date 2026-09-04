@@ -16,7 +16,8 @@ type SignupFormProps = { onSuccess: () => void };
 
 export function SignupForm({ onSuccess }: SignupFormProps) {
   const { d } = useLocale();
-  const { register, errors, isSubmitting, submitError, onSubmit } = useSignupForm(onSuccess);
+  const { register, errors, isSubmitting, submitError, onSubmit } =
+    useSignupForm(onSuccess);
   const [oauthError, setOauthError] = useState<string | null>(null);
 
   const errorText = (key: string | undefined) =>
@@ -44,7 +45,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       />
       <FormField
         label={d.signup.nameLabel}
-        placeholder={d.signup.namePlaceholder}
         registration={register("name")}
         error={errorText(errors.name?.message)}
       />
@@ -65,7 +65,8 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       />
       {submitError && (
         <p className="text-sm text-sale">
-          {d.signup.errors[submitError as keyof ErrorDict] ?? d.signup.errors.unknownError}
+          {d.signup.errors[submitError as keyof ErrorDict] ??
+            d.signup.errors.unknownError}
         </p>
       )}
       <button
@@ -129,7 +130,10 @@ function SigninLink() {
   return (
     <p className="text-center text-xs text-muted">
       {d.signup.hasAccountLabel}{" "}
-      <MarketLink href="/signin" className="underline underline-offset-2 text-foreground">
+      <MarketLink
+        href="/signin"
+        className="underline underline-offset-2 text-foreground"
+      >
         {d.signup.signinLink}
       </MarketLink>
     </p>

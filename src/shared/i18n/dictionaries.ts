@@ -8,8 +8,19 @@ export const dictionaries = {
     common: {
       loadError: "読み込みに失敗しました。もう一度お試しください。",
     },
-    search: { placeholder: "商品を検索", button: "検索", empty: "検索結果がありません。", resultFor: "の検索結果" },
-    nav: { home: "ホーム", best: "ベストセラー", new: "新着", gift: "ギフト", all: "すべての商品" },
+    search: {
+      placeholder: "商品を検索",
+      button: "検索",
+      empty: "検索結果がありません。",
+      resultFor: "の検索結果",
+    },
+    nav: {
+      home: "ホーム",
+      best: "ベストセラー",
+      new: "新着",
+      gift: "ギフト",
+      all: "すべての商品",
+    },
     home: {
       heroTitle: "はじめての一枚も、\nお気に入りの一枚も。",
       heroSubtitle: "肌にやさしい素材で、赤ちゃんの毎日をやわらかく包みます。",
@@ -61,8 +72,10 @@ export const dictionaries = {
       checkout: "レジに進む",
       freeShipMet: "送料無料の対象です 🎉",
       freeShipRemain: "あと {amount} で送料無料",
-      demoNotice: "※ 決済連携は準備中です。ご注文は保存されますが、実際の決済は発生しません。",
-      droppedNotice: "この地域でお取り扱いのない商品{count}点をカートから外しました。",
+      demoNotice:
+        "※ 決済連携は準備中です。ご注文は保存されますが、実際の決済は発生しません。",
+      droppedNotice:
+        "この地域でお取り扱いのない商品{count}点をカートから外しました。",
     },
     checkout: {
       title: "ご注文手続き",
@@ -75,7 +88,8 @@ export const dictionaries = {
       postalCodeLabel: "郵便番号",
       postalCodePlaceholder: "123-4567",
       addressSearchButton: "住所検索",
-      addressSearchPopupBlocked: "ポップアップがブロックされました。ブラウザの設定で許可してください",
+      addressSearchPopupBlocked:
+        "ポップアップがブロックされました。ブラウザの設定で許可してください",
       prefectureLabel: "都道府県",
       cityLabel: "市区町村",
       addressLineLabel: "番地",
@@ -100,9 +114,11 @@ export const dictionaries = {
       errors: {
         userCancelled: "決済がキャンセルされました。もう一度お試しください。",
         expired: "決済の有効期限が切れました。もう一度お試しください。",
-        amountMismatch: "決済金額が一致しませんでした。サポートまでご連絡ください。",
+        amountMismatch:
+          "決済金額が一致しませんでした。サポートまでご連絡ください。",
         alreadyPaid: "この注文はすでにお支払い済みです。",
-        providerDown: "決済サービスに接続できませんでした。しばらくしてからお試しください。",
+        providerDown:
+          "決済サービスに接続できませんでした。しばらくしてからお試しください。",
         notFound: "決済情報が見つかりませんでした。",
         notPaid: "お支払いが完了していない注文です。",
         notPending: "すでに処理された決済です。",
@@ -152,7 +168,6 @@ export const dictionaries = {
       passwordLabel: "パスワード",
       passwordConfirmLabel: "パスワード（確認）",
       nameLabel: "お名前",
-      namePlaceholder: "山田 太郎",
       agreeTermsLabel: "【必須】利用規約に同意します",
       agreePrivacyLabel: "【必須】個人情報の収集・利用に同意します",
       agreeMarketingLabel: "【任意】お得な情報のメール配信を希望する",
@@ -166,7 +181,8 @@ export const dictionaries = {
       // 쓴다. 「カカオでログイン」 등으로 바꾸면 가이드 위반이다.
       kakaoButton: "Login with Kakao",
       successTitle: "確認メールを送信しました",
-      successBody: "ご登録いただいたメールアドレスに確認メールをお送りしました。メール内のリンクから登録を完了してください。",
+      successBody:
+        "ご登録いただいたメールアドレスに確認メールをお送りしました。メール内のリンクから登録を完了してください。",
       backToHome: "トップページへ戻る",
       hasAccountLabel: "すでにアカウントをお持ちの方は",
       signinLink: "ログイン",
@@ -213,7 +229,6 @@ export const dictionaries = {
       emailLabel: "メールアドレス",
       logoutButton: "ログアウト",
       nameLabel: "お名前",
-      namePlaceholder: "山田 太郎",
       furiganaLabel: "お名前（フリガナ）",
       furiganaPlaceholder: "ヤマダ タロウ",
       phoneLabel: "電話番号",
@@ -242,8 +257,10 @@ export const dictionaries = {
         submitting: "変更中…",
         cancel: "キャンセル",
         done: "パスワードを変更しました。",
-        socialNotice: "{provider}でログイン中です。パスワードは{provider}で管理されます。",
-        socialNoticeGeneric: "パスワードでログインするアカウントではありません。",
+        socialNotice:
+          "{provider}でログイン中です。パスワードは{provider}で管理されます。",
+        socialNoticeGeneric:
+          "パスワードでログインするアカウントではありません。",
       },
       forgot: {
         title: "パスワードをお忘れの方",
@@ -270,8 +287,10 @@ export const dictionaries = {
         unknownDescription: "通信状態をご確認のうえ、もう一度お試しください。",
         retry: "再試行する",
         socialTitle: "パスワードのないアカウントです",
-        socialDescription: "{provider}で登録されたアカウントです。{provider}でログインしてください。",
-        socialDescriptionGeneric: "パスワードでログインするアカウントではありません。",
+        socialDescription:
+          "{provider}で登録されたアカウントです。{provider}でログインしてください。",
+        socialDescriptionGeneric:
+          "パスワードでログインするアカウントではありません。",
         goToSignin: "ログイン画面へ",
       },
       errors: {
@@ -290,7 +309,8 @@ export const dictionaries = {
     },
     consent: {
       title: "ご利用にあたっての同意",
-      description: "サービスをご利用いただくために、以下の項目へのご同意をお願いします。",
+      description:
+        "サービスをご利用いただくために、以下の項目へのご同意をお願いします。",
       agreeTermsLabel: "【必須】利用規約に同意します",
       agreePrivacyLabel: "【必須】個人情報の収集・利用に同意します",
       agreeMarketingLabel: "【任意】お得な情報のメール配信を希望する",
@@ -318,8 +338,19 @@ export const dictionaries = {
     common: {
       loadError: "불러오는 데 실패했어요. 다시 시도해 주세요.",
     },
-    search: { placeholder: "상품 검색", button: "검색", empty: "검색 결과가 없어요.", resultFor: " 검색 결과" },
-    nav: { home: "홈", best: "베스트셀러", new: "신상품", gift: "선물세트", all: "전체 상품" },
+    search: {
+      placeholder: "상품 검색",
+      button: "검색",
+      empty: "검색 결과가 없어요.",
+      resultFor: " 검색 결과",
+    },
+    nav: {
+      home: "홈",
+      best: "베스트셀러",
+      new: "신상품",
+      gift: "선물세트",
+      all: "전체 상품",
+    },
     home: {
       heroTitle: "첫 배냇옷도,\n최애 한 벌도.",
       heroSubtitle: "피부에 순한 소재로 아기의 하루를 부드럽게 감싸요.",
@@ -371,8 +402,10 @@ export const dictionaries = {
       checkout: "결제하기",
       freeShipMet: "무료배송 대상이에요 🎉",
       freeShipRemain: "{amount} 더 담으면 무료배송",
-      demoNotice: "※ 결제 연동은 준비 중입니다. 주문은 저장되지만 실제 결제는 발생하지 않아요.",
-      droppedNotice: "이 지역에서 판매하지 않는 상품 {count}개를 장바구니에서 뺐어요.",
+      demoNotice:
+        "※ 결제 연동은 준비 중입니다. 주문은 저장되지만 실제 결제는 발생하지 않아요.",
+      droppedNotice:
+        "이 지역에서 판매하지 않는 상품 {count}개를 장바구니에서 뺐어요.",
     },
     checkout: {
       title: "주문서 작성",
@@ -385,7 +418,8 @@ export const dictionaries = {
       postalCodeLabel: "우편번호",
       postalCodePlaceholder: "06232",
       addressSearchButton: "주소 검색",
-      addressSearchPopupBlocked: "팝업이 차단됐어요. 브라우저 설정에서 팝업을 허용해주세요",
+      addressSearchPopupBlocked:
+        "팝업이 차단됐어요. 브라우저 설정에서 팝업을 허용해주세요",
       prefectureLabel: "시/도",
       cityLabel: "시/군/구",
       addressLineLabel: "도로명 주소",
@@ -412,7 +446,8 @@ export const dictionaries = {
         expired: "결제 유효시간이 지났습니다. 다시 시도해 주세요.",
         amountMismatch: "결제 금액이 맞지 않습니다. 고객센터로 문의해 주세요.",
         alreadyPaid: "이미 결제가 완료된 주문입니다.",
-        providerDown: "결제 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        providerDown:
+          "결제 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
         notFound: "결제 정보를 찾지 못했습니다.",
         notPaid: "결제가 완료되지 않은 주문입니다.",
         notPending: "이미 처리된 결제입니다.",
@@ -462,7 +497,6 @@ export const dictionaries = {
       passwordLabel: "비밀번호",
       passwordConfirmLabel: "비밀번호 확인",
       nameLabel: "이름",
-      namePlaceholder: "야마다 타로",
       agreeTermsLabel: "[필수] 이용약관에 동의합니다",
       agreePrivacyLabel: "[필수] 개인정보 수집·이용에 동의합니다",
       agreeMarketingLabel: "[선택] 마케팅 정보 수신에 동의합니다",
@@ -473,7 +507,8 @@ export const dictionaries = {
       lineButton: "LINE으로 가입",
       kakaoButton: "카카오 로그인",
       successTitle: "인증 메일을 보냈습니다",
-      successBody: "입력하신 이메일 주소로 인증 메일을 보냈어요. 메일의 링크를 눌러 가입을 완료해주세요.",
+      successBody:
+        "입력하신 이메일 주소로 인증 메일을 보냈어요. 메일의 링크를 눌러 가입을 완료해주세요.",
       backToHome: "홈으로 돌아가기",
       hasAccountLabel: "이미 계정이 있으신가요?",
       signinLink: "로그인",
@@ -517,7 +552,6 @@ export const dictionaries = {
       emailLabel: "이메일",
       logoutButton: "로그아웃",
       nameLabel: "이름",
-      namePlaceholder: "야마다 타로",
       furiganaLabel: "이름 (후리가나)",
       furiganaPlaceholder: "ヤマダ タロウ",
       phoneLabel: "전화번호",
@@ -546,7 +580,8 @@ export const dictionaries = {
         submitting: "변경 중…",
         cancel: "취소",
         done: "비밀번호를 변경했어요.",
-        socialNotice: "{provider}로 로그인 중이에요. 비밀번호는 {provider}에서 관리해요.",
+        socialNotice:
+          "{provider}로 로그인 중이에요. 비밀번호는 {provider}에서 관리해요.",
         socialNoticeGeneric: "비밀번호로 로그인하는 계정이 아니에요.",
       },
       forgot: {
@@ -574,7 +609,8 @@ export const dictionaries = {
         unknownDescription: "연결 상태를 확인하고 다시 시도해주세요.",
         retry: "다시 시도",
         socialTitle: "비밀번호가 없는 계정이에요",
-        socialDescription: "{provider}로 가입한 계정이에요. {provider}로 로그인해주세요.",
+        socialDescription:
+          "{provider}로 가입한 계정이에요. {provider}로 로그인해주세요.",
         socialDescriptionGeneric: "비밀번호로 로그인하는 계정이 아니에요.",
         goToSignin: "로그인 화면으로",
       },
