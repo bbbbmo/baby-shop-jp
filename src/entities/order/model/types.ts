@@ -1,6 +1,6 @@
 import type { Market } from "@/shared/config/markets";
 
-export type OrderStatus = "pending_payment";
+export type OrderStatus = "pending_payment" | "paid" | "cancelled";
 
 export type OrderItem = {
   id: string;

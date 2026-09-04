@@ -94,6 +94,21 @@ export const dictionaries = {
         unknownError: "エラーが発生しました。もう一度お試しください",
       },
     },
+    payment: {
+      methodTitle: "お支払い方法",
+      noMethods: "現在ご利用いただけるお支払い方法がありません。",
+      errors: {
+        userCancelled: "決済がキャンセルされました。もう一度お試しください。",
+        expired: "決済の有効期限が切れました。もう一度お試しください。",
+        amountMismatch: "決済金額が一致しませんでした。サポートまでご連絡ください。",
+        alreadyPaid: "この注文はすでにお支払い済みです。",
+        providerDown: "決済サービスに接続できませんでした。しばらくしてからお試しください。",
+        notFound: "決済情報が見つかりませんでした。",
+        notPaid: "お支払いが完了していない注文です。",
+        notPending: "すでに処理された決済です。",
+        unknown: "決済に失敗しました。もう一度お試しください。",
+      },
+    },
     checkoutComplete: {
       title: "ご注文ありがとうございました",
       orderNumberLabel: "注文番号",
@@ -110,6 +125,8 @@ export const dictionaries = {
       notFound: "注文番号またはメールアドレスをご確認ください",
       statusLabel: "ステータス",
       statusPendingPayment: "支払い待ち",
+      statusPaid: "お支払い完了",
+      statusCancelled: "キャンセル済み",
       errors: {
         required: "必須項目です",
         invalidEmail: "メールアドレスの形式が正しくありません",
@@ -387,6 +404,21 @@ export const dictionaries = {
         unknownError: "오류가 발생했습니다. 다시 시도해주세요",
       },
     },
+    payment: {
+      methodTitle: "결제수단",
+      noMethods: "지금 이용할 수 있는 결제수단이 없습니다.",
+      errors: {
+        userCancelled: "결제가 취소되었습니다. 다시 시도해 주세요.",
+        expired: "결제 유효시간이 지났습니다. 다시 시도해 주세요.",
+        amountMismatch: "결제 금액이 맞지 않습니다. 고객센터로 문의해 주세요.",
+        alreadyPaid: "이미 결제가 완료된 주문입니다.",
+        providerDown: "결제 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        notFound: "결제 정보를 찾지 못했습니다.",
+        notPaid: "결제가 완료되지 않은 주문입니다.",
+        notPending: "이미 처리된 결제입니다.",
+        unknown: "결제에 실패했습니다. 다시 시도해 주세요.",
+      },
+    },
     checkoutComplete: {
       title: "주문해 주셔서 감사합니다",
       orderNumberLabel: "주문번호",
@@ -403,6 +435,8 @@ export const dictionaries = {
       notFound: "주문번호 또는 이메일을 확인해주세요",
       statusLabel: "상태",
       statusPendingPayment: "결제 대기",
+      statusPaid: "결제 완료",
+      statusCancelled: "취소됨",
       errors: {
         required: "필수 항목입니다",
         invalidEmail: "이메일 형식이 올바르지 않습니다",

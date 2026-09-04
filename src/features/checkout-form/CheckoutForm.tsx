@@ -16,10 +16,11 @@ type ErrorDict = Dictionary["checkout"]["errors"];
 type CheckoutFormProps = {
   items: CartItem[];
   prefill: Partial<CheckoutFormValues>;
-  onSuccess: (orderNumber: string) => void;
+  disabled?: boolean;
+  onSuccess: (orderNumber: string, email: string) => void;
 };
 
-export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
+export function CheckoutForm({ items, prefill, disabled, onSuccess }: CheckoutFormProps) {
   const { d } = useLocale();
   const market = useMarket();
   const { register, setValue, errors, isSubmitting, submitError, onSubmit } = useCheckoutForm(
@@ -59,7 +60,7 @@ export function CheckoutForm({ items, prefill, onSuccess }: CheckoutFormProps) {
       {submitError && <SubmitErrorMessage submitError={submitError} errors={d.checkout.errors} />}
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || disabled}
         className="w-full bg-foreground py-3 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isSubmitting ? d.checkout.submitting : d.checkout.submit}
