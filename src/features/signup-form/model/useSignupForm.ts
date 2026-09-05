@@ -5,8 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, initialSignupFormValues, type SignupFormValues } from "./schema";
 import { signUpWithEmail } from "@/shared/api/supabase";
+import { useMarket } from "@/shared/market";
 
 export function useSignupForm(onSuccess: () => void) {
+  const market = useMarket();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
@@ -26,7 +28,7 @@ export function useSignupForm(onSuccess: () => void) {
       consentTerms: values.agreeTerms,
       consentPrivacy: values.agreePrivacy,
       consentMarketing: values.agreeMarketing,
-    });
+    }, market);
     if (error) {
       setSubmitError(error);
       return;

@@ -6,6 +6,7 @@ import type {
 } from "@supabase/supabase-js";
 import type { Market } from "@/shared/config/markets";
 import { supabase } from "./client";
+import { authCallbackRedirectTo } from "./authCallbackRedirectTo";
 
 export type SignUpParams = {
   email: string;
@@ -17,19 +18,16 @@ export type SignUpParams = {
 };
 
 export async function signUpWithEmail(
-  params: SignUpParams
+  params: SignUpParams,
+  market: Market,
 ): Promise<{ error: string | null }> {
+  const emailRedirectTo = authCallbackRedirectTo(
+    window.location.origin, market, "signup",
+  );
   const { error } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
-    options: {
-      data: toSignUpMetadata(params),
-      // emailRedirectTo를 안 넘기면 Supabase 대시보드에 고정된 Site URL로
-      // 확인 메일 링크가 가버려, 배포 도메인에서 가입해도 로컬 주소 등
-      // 엉뚱한 곳으로 리다이렉트된다. signInWithOAuth와 동일하게 실제
-      // 요청이 온 origin을 그대로 넘긴다.
-      emailRedirectTo: window.location.origin,
-    },
+    options: { data: toSignUpMetadata(params), emailRedirectTo },
   });
   return { error: error ? mapAuthError(error) : null };
 }
@@ -61,7 +59,7 @@ export async function signInWithOAuth(
   const { error } = await supabase.auth.signInWithOAuth({
     provider: toSupabaseProvider(provider),
     options: {
-      redirectTo: `${window.location.origin}/${market}/auth/callback?from=${from}`,
+      redirectTo: authCallbackRedirectTo(window.location.origin, market, from),
     },
   });
   return { error: error ? mapAuthError(error) : null };
