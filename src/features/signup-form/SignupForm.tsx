@@ -5,14 +5,14 @@ import { MarketLink } from "@/shared/market";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import type { Dictionary } from "@/shared/i18n/dictionaries";
-import { useSignupForm } from "./model/useSignupForm";
+import { useSignupForm, type SignupResult } from "./model/useSignupForm";
 import { SocialLoginButtons } from "@/entities/auth";
 import { FormField } from "@/shared/ui/FormField";
 import { LegalConsentLinks } from "@/entities/legal";
 
 type ErrorDict = Dictionary["signup"]["errors"];
 
-type SignupFormProps = { onSuccess: () => void };
+type SignupFormProps = { onSuccess: (result: SignupResult) => void };
 
 export function SignupForm({ onSuccess }: SignupFormProps) {
   const { d } = useLocale();

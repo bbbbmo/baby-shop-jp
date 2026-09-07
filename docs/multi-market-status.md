@@ -157,6 +157,36 @@ http://localhost:3000/kr/auth/callback
 
 카카오 · 구글 · 라인 콘솔은 손대지 않아도 됩니다. 그쪽은 Supabase 주소를 봅니다.
 
+### 이메일 가입 확인이 동작하는지
+
+메일 링크는 `/auth/confirm`(Route Handler)이 서버에서 검증하고 세션 쿠키를 심은 뒤
+`/{market}/auth/confirmed`로 보낸다. 가입한 브라우저가 아니어도(메일 앱 내장 브라우저,
+다른 기기) 인증이 완료된다. 아래 항목이 모두 맞아야 한다.
+
+| 위치 | 항목 | 빠지면 |
+| --- | --- | --- |
+| Authentication → Sign In / Providers → Email | **Confirm email** 켜기 | 메일 없이 즉시 가입·로그인된다 |
+| Authentication → URL Configuration → Site URL | 배포 도메인 | 템플릿의 `{{ .SiteURL }}`이 엉뚱한 곳을 가리킨다 |
+| Authentication → URL Configuration → Redirect URLs | `http://localhost:3000/**`, `https://<배포도메인>/**` | `emailRedirectTo`가 Site URL로 대체된다 |
+| Authentication → Emails → Templates → Confirm signup | 아래 링크로 교체 | 브라우저 PKCE 교환에 의존해 다른 브라우저에서 열면 실패한다 |
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next={{ .RedirectTo }}">
+```
+
+Reset password 템플릿도 같은 형식(`type=recovery`)으로 바꿀 수 있다. 바꾸지 않아도 기존
+`?code=` 방식으로 동작한다.
+
+**메일 발송 수단.** 기본 SMTP는 조직 팀 멤버 주소에만 배달되고 시간당 2통이다. 실제 고객에게
+보내려면 둘 중 하나가 필요하다.
+
+- Send Email Hook (권장, 일본어·한국어 분기): Authentication → Hooks → Send Email → HTTP,
+  URL `https://<배포도메인>/api/auth/send-email`, 생성된 secret을 `SEND_EMAIL_HOOK_SECRET`에.
+  `RESEND_API_KEY`, `EMAIL_FROM`(Resend에서 인증한 도메인)도 함께 넣는다. 훅이 켜지면 위
+  템플릿은 쓰이지 않고 `src/entities/auth-email`의 템플릿이 나간다. 로컬 개발은 훅 URL이
+  공개 HTTPS여야 하므로 배포 주소를 쓴다.
+- 커스텀 SMTP: Authentication → SMTP Settings에 입력. 템플릿은 대시보드 것 하나뿐이다.
+
 ---
 
 ## 3단계 — 완료 (머지 전)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MarketLink } from "@/shared/market";
+import { MarketLink, useMarketRouter } from "@/shared/market";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { SignupForm } from "@/features/signup-form";
@@ -9,9 +9,14 @@ import { AuthErrorBanner } from "@/entities/auth";
 
 export function SignupView() {
   const { d } = useLocale();
+  const router = useMarketRouter();
   const [submitted, setSubmitted] = useState(false);
   const searchParams = useSearchParams();
   const authError = searchParams.get("authError");
+  // 서버가 세션을 바로 줬으면 확인할 메일이 없다. 동의 기록은 DB 트리거가
+  // 이미 남겼으므로 곧장 홈으로 보낸다.
+  const onSuccess = ({ confirmed }: { confirmed: boolean }) =>
+    confirmed ? router.replace("/") : setSubmitted(true);
 
   return (
     <div className="mx-auto w-full max-w-480 px-6 py-10 sm:px-10">
@@ -27,7 +32,7 @@ export function SignupView() {
         {authError && (
           <AuthErrorBanner code={authError} errors={d.signup.errors as Record<string, string>} />
         )}
-        {submitted ? <SuccessNotice /> : <SignupForm onSuccess={() => setSubmitted(true)} />}
+        {submitted ? <SuccessNotice /> : <SignupForm onSuccess={onSuccess} />}
       </div>
     </div>
   );

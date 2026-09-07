@@ -1,5 +1,6 @@
 export {
   signUpWithEmail,
+  resendSignupEmail,
   signInWithEmail,
   signInWithOAuth,
   hasSession,

@@ -7,7 +7,9 @@ import { signupSchema, initialSignupFormValues, type SignupFormValues } from "./
 import { signUpWithEmail } from "@/shared/api/supabase";
 import { useMarket } from "@/shared/market";
 
-export function useSignupForm(onSuccess: () => void) {
+export type SignupResult = { confirmed: boolean };
+
+export function useSignupForm(onSuccess: (result: SignupResult) => void) {
   const market = useMarket();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
@@ -21,7 +23,7 @@ export function useSignupForm(onSuccess: () => void) {
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
-    const { error } = await signUpWithEmail({
+    const { error, confirmed } = await signUpWithEmail({
       email: values.email,
       password: values.password,
       name: values.name,
@@ -33,7 +35,7 @@ export function useSignupForm(onSuccess: () => void) {
       setSubmitError(error);
       return;
     }
-    onSuccess();
+    onSuccess({ confirmed });
   });
 
   return { register, errors, isSubmitting, submitError, onSubmit };
