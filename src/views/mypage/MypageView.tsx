@@ -10,6 +10,8 @@ import { formatPrice } from "@/shared/lib/format";
 import { marketCurrency } from "@/shared/config/markets";
 import { ChangePasswordCard } from "@/features/password";
 import { ProfileCard } from "./ProfileCard";
+import { MarketLink } from "@/shared/market";
+import type { OrderItem } from "@/entities/order";
 
 export function MypageView() {
   const router = useMarketRouter();
@@ -123,6 +125,28 @@ function OrderHistoryItem({ order }: { order: Order }) {
       <p className="mt-1 text-xs text-muted">
         {new Date(order.createdAt).toLocaleDateString()}
       </p>
+      <ul className="mt-3 divide-y divide-border border-t border-border">
+        {order.items.map((item) => <OrderProduct key={item.id} item={item} />)}
+      </ul>
+    </li>
+  );
+}
+
+function OrderProduct({ item }: { item: OrderItem }) {
+  const { locale } = useLocale();
+  const name = locale === "ko" ? (item.productNameKo ?? item.productNameJa) : item.productNameJa;
+  const label = `${name} · ${item.size} × ${item.quantity}`;
+  if (!item.productId || !item.productCategory) {
+    return <li className="py-2 text-xs text-muted">{label}</li>;
+  }
+  return (
+    <li>
+      <MarketLink
+        href={`/products/${item.productCategory}/${item.productId}`}
+        className="block py-2 text-xs text-foreground underline-offset-2 hover:underline"
+      >
+        {label}
+      </MarketLink>
     </li>
   );
 }

@@ -5,6 +5,8 @@ export type OrderStatus = "pending_payment" | "paid" | "cancelled";
 export type OrderItem = {
   id: string;
   productVariantId: string;
+  productId: string | null;
+  productCategory: string | null;
   productNameJa: string;
   productNameKo: string | null;
   color: string;

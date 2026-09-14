@@ -12,13 +12,13 @@ function CheckoutCompleteContent() {
   const { user } = useSession();
   const params = useSearchParams();
   const orderNumber = params.get("order") ?? "";
-  const clear = useCart((s) => s.clear);
+  const clearCheckout = useCart((s) => s.clearCheckout);
 
   useEffect(() => {
     if (orderNumber) {
-      clear();
+      clearCheckout();
     }
-  }, [clear, orderNumber]);
+  }, [clearCheckout, orderNumber]);
 
   return (
     <div className="mx-auto max-w-480 px-6 py-16 text-center sm:px-10">

@@ -9,6 +9,8 @@ type CheckoutItem = { productId: string; color: string; size: string; quantity: 
 type CheckoutRequestBody = { items: CheckoutItem[]; shipping: unknown; market?: unknown };
 type ResolvedItem = {
   variant_id: string;
+  product_id: string;
+  product_category: string;
   product_name_ja: string;
   product_name_ko: string;
   color: string;
@@ -144,7 +146,7 @@ async function resolveColorSizeIds(
 function fetchVariantWithProduct(item: CheckoutItem, ids: { colorId: string; sizeId: string }) {
   return supabaseServer
     .from("product_variants")
-    .select("id, stock, products ( name_ja, name_ko, price_jpy, price_krw )")
+    .select("id, stock, products ( category, name_ja, name_ko, price_jpy, price_krw )")
     .eq("product_id", item.productId)
     .eq("color_id", ids.colorId)
     .eq("size_id", ids.sizeId)
@@ -153,18 +155,20 @@ function fetchVariantWithProduct(item: CheckoutItem, ids: { colorId: string; siz
 
 function extractProduct(data: { products?: unknown } | null) {
   return data?.products as
-    | { name_ja: string; name_ko: string; price_jpy: number; price_krw: number | null }
+    | { category: string; name_ja: string; name_ko: string; price_jpy: number; price_krw: number | null }
     | undefined;
 }
 
 function buildResolvedItem(
   item: CheckoutItem,
   variantId: string,
-  product: { name_ja: string; name_ko: string },
+  product: { category: string; name_ja: string; name_ko: string },
   unitPrice: number,
 ): ResolvedItem {
   return {
     variant_id: variantId,
+    product_id: item.productId,
+    product_category: product.category,
     product_name_ja: product.name_ja,
     product_name_ko: product.name_ko,
     color: item.color,
@@ -225,6 +229,8 @@ async function insertOrderItems(orderId: string, items: ResolvedItem[]): Promise
     items.map((item) => ({
       order_id: orderId,
       product_variant_id: item.variant_id,
+      product_id: item.product_id,
+      product_category: item.product_category,
       product_name_ja: item.product_name_ja,
       product_name_ko: item.product_name_ko,
       color: item.color,

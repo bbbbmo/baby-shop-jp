@@ -26,8 +26,12 @@ export function CartView() {
 
 function CartBody({ items, products }: { items: CartItem[]; products: Product[] }) {
   const { d } = useLocale();
+  const selectedIds = useCart((s) => s.selectedIds);
+  const setItemsSelected = useCart((s) => s.setItemsSelected);
   const { lines, droppedCount } = enrichCartLines(items, products);
-  const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+  const selectedLines = lines.filter((line) => selectedIds.includes(line.id));
+  const subtotal = selectedLines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+  const allSelected = lines.length > 0 && selectedLines.length === lines.length;
 
   return (
     <div className="mx-auto max-w-480 px-6 py-8 sm:px-10">
@@ -38,11 +42,21 @@ function CartBody({ items, products }: { items: CartItem[]; products: Product[] 
       ) : (
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
           <ul className="divide-y divide-border">
+            <li className="flex items-center gap-3 py-3 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(event) => setItemsSelected(lines.map((line) => line.id), event.target.checked)}
+                aria-label={d.cart.selectAll}
+                className="h-5 w-5 accent-black"
+              />
+              <span>{d.cart.selectAll}</span>
+            </li>
             {lines.map((line) => (
               <CartLine key={line.id} line={line} />
             ))}
           </ul>
-          <CartSummary subtotal={subtotal} />
+          <CartSummary subtotal={subtotal} selectedIds={selectedLines.map((line) => line.id)} />
         </div>
       )}
     </div>
@@ -67,18 +81,32 @@ function EmptyState() {
 
 function CartLine({ line }: { line: EnrichedCartItem }) {
   const { locale, d } = useLocale();
-  const { updateQuantity, remove } = useCart();
+  const { selectedIds, toggleSelected, updateQuantity, remove } = useCart();
   const currency = marketCurrency(useMarket());
   return (
-    <li className="flex gap-4 py-5">
-      <ProductThumb
-        category={line.product.category}
-        color={line.color}
-        className="h-24 w-24 shrink-0 rounded-2xl"
+    <li className="flex items-start gap-3 py-5">
+      <input
+        type="checkbox"
+        checked={selectedIds.includes(line.id)}
+        onChange={() => toggleSelected(line.id)}
+        aria-label={`${line.product.name[locale]} ${d.cart.selectItem}`}
+        className="mt-10 h-5 w-5 shrink-0 accent-black"
       />
+      <MarketLink href={`/products/${line.product.category}/${line.product.id}`}>
+        <ProductThumb
+          category={line.product.category}
+          color={line.color}
+          className="h-24 w-24 shrink-0"
+        />
+      </MarketLink>
       <div className="flex flex-1 flex-col">
         <p className="text-xs text-muted">{line.product.brand}</p>
-        <p className="text-sm text-foreground">{line.product.name[locale]}</p>
+        <MarketLink
+          href={`/products/${line.product.category}/${line.product.id}`}
+          className="text-sm text-foreground underline-offset-2 hover:underline"
+        >
+          {line.product.name[locale]}
+        </MarketLink>
         <p className="mt-0.5 text-xs text-muted">
           {d.product.size} {line.size}
         </p>
@@ -105,8 +133,9 @@ function CartLine({ line }: { line: EnrichedCartItem }) {
   );
 }
 
-function CartSummary({ subtotal }: { subtotal: number }) {
+function CartSummary({ subtotal, selectedIds }: { subtotal: number; selectedIds: string[] }) {
   const { d } = useLocale();
+  const prepareCheckout = useCart((s) => s.prepareCheckout);
   const market = useMarket();
   const currency = marketCurrency(market);
   const shipping = shippingFeeFor(market, subtotal);
@@ -129,7 +158,13 @@ function CartSummary({ subtotal }: { subtotal: number }) {
       </div>
       <MarketLink
         href="/checkout"
-        className="mt-5 block w-full rounded-full bg-foreground py-3 text-center text-sm font-medium text-white hover:opacity-90"
+        aria-disabled={selectedIds.length === 0}
+        tabIndex={selectedIds.length === 0 ? -1 : undefined}
+        onClick={(event) => {
+          if (selectedIds.length === 0) event.preventDefault();
+          else prepareCheckout(selectedIds);
+        }}
+        className="mt-5 block w-full bg-foreground py-3 text-center text-sm font-medium text-white hover:opacity-90 aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
       >
         {d.cart.checkout}
       </MarketLink>

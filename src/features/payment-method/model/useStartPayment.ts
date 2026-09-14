@@ -11,6 +11,7 @@ const START_ERRORS: Record<string, PaymentOutcomeCode> = {
   alreadyPaid: "alreadyPaid",
   providerDown: "providerDown",
   orderNotFound: "notFound",
+  soldOut: "soldOut",
 };
 
 export function useStartPayment() {

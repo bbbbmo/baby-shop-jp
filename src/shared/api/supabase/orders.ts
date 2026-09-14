@@ -6,7 +6,7 @@ import { isMarket } from "@/shared/config/markets";
 const ORDER_SELECT = `
   id, order_number, status, market, recipient_name, recipient_furigana, phone, email,
   postal_code, prefecture, city, address_line, building, memo, total_price, created_at,
-  order_items ( id, product_variant_id, product_name_ja, product_name_ko, color, size, unit_price, quantity )
+  order_items ( id, product_variant_id, product_id, product_category, product_name_ja, product_name_ko, color, size, unit_price, quantity )
 `;
 
 // RPC는 테이블 select를 거치지 않고 jsonb를 직접 만들어 반환하므로

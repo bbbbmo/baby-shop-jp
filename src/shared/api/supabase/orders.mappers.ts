@@ -4,6 +4,8 @@ import { isMarket } from "@/shared/config/markets";
 type OrderItemRow = {
   id: string;
   product_variant_id: string;
+  product_id: string | null;
+  product_category: string | null;
   product_name_ja: string;
   product_name_ko: string | null;
   color: string;
@@ -36,6 +38,8 @@ function mapDbOrderItemToOrderItem(row: OrderItemRow): OrderItem {
   return {
     id: row.id,
     productVariantId: row.product_variant_id,
+    productId: row.product_id,
+    productCategory: row.product_category,
     productNameJa: row.product_name_ja,
     productNameKo: row.product_name_ko,
     color: row.color,

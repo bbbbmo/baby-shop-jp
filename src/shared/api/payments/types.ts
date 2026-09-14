@@ -22,6 +22,7 @@ export const PAYMENT_OUTCOME_CODES = [
   "notFound",
   "notPaid",
   "notPending",
+  "soldOut",
 ] as const;
 
 export type PaymentOutcomeCode = (typeof PAYMENT_OUTCOME_CODES)[number];

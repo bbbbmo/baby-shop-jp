@@ -7,6 +7,7 @@ import { FormField } from "@/shared/ui/FormField";
 import { formatPrice } from "@/shared/lib/format";
 import { marketCurrency } from "@/shared/config/markets";
 import type { Order, OrderItem } from "@/entities/order";
+import { MarketLink } from "@/shared/market";
 
 type ErrorDict = Dictionary["orderLookup"]["errors"];
 
@@ -73,12 +74,25 @@ function OrderResultItem({
 }) {
   const { locale } = useLocale();
   const name = locale === "ko" ? (item.productNameKo ?? item.productNameJa) : item.productNameJa;
+  const label = `${name} · ${item.color} · ${item.size} × ${item.quantity}`;
   return (
     <li className="flex items-center justify-between py-2">
-      <span className="text-foreground">
-        {name} · {item.color} · {item.size} × {item.quantity}
-      </span>
+      <OrderProductLink item={item} label={label} />
       <span className="text-foreground">{formatPrice(item.unitPrice * item.quantity, currency)}</span>
     </li>
+  );
+}
+
+function OrderProductLink({ item, label }: { item: OrderItem; label: string }) {
+  if (!item.productId || !item.productCategory) {
+    return <span className="text-foreground">{label}</span>;
+  }
+  return (
+    <MarketLink
+      href={`/products/${item.productCategory}/${item.productId}`}
+      className="text-foreground underline-offset-2 hover:underline"
+    >
+      {label}
+    </MarketLink>
   );
 }

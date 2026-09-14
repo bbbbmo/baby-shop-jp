@@ -17,20 +17,25 @@ import { paymentMethodsFor } from "@/shared/api/payments/catalog";
 export function CheckoutView() {
   const router = useMarketRouter();
   const items = useCart((s) => s.items);
+  const checkoutIds = useCart((s) => s.checkoutIds);
   const hydrated = useCartHydrated();
   const { user, loading: sessionLoading } = useSession();
   const { data: products = [], isLoading, error } = useProducts();
+  const productIds = new Set(products.map((product) => product.id));
+  const checkoutItems = items.filter(
+    (item) => checkoutIds.includes(item.id) && productIds.has(item.productId),
+  );
 
   useEffect(() => {
-    if (hydrated && items.length === 0) {
+    if (hydrated && !isLoading && !error && checkoutItems.length === 0) {
       router.replace("/cart");
     }
-  }, [hydrated, items.length, router]);
+  }, [hydrated, isLoading, error, checkoutItems.length, router]);
 
   return (
     <QueryGuard isLoading={!hydrated || sessionLoading || isLoading} error={error}>
       <CheckoutBody
-        items={items}
+        items={checkoutItems}
         products={products}
         userId={user?.id ?? null}
         prefill={buildPrefill(user)}

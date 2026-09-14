@@ -18,7 +18,7 @@ type PaymentRow = {
   amount: number;
   provider_ref: string | null;
   provider_txn_id: string | null;
-  orders: { order_number: string; market: string } | null;
+  orders: { id: string; order_number: string; market: string } | null;
 };
 
 // 손님이 결제사에서 돌아오는 자리다. 어떤 경우에도 JSON을 뱉지 않고
@@ -91,6 +91,7 @@ async function settle(
       return await settleAlreadyPaid(payment.id, { origin, market, orderNumber });
     }
     await markFailed(payment.id, confirmed.code, confirmed.raw);
+    await releaseStock(payment.orders?.id);
     return fail(origin, market, confirmed.code);
   }
   return await applyResult(payment, provider, confirmed, { origin, market, orderNumber });
@@ -146,8 +147,8 @@ async function applyResult(
   if (outcome === "ok" || outcome === "alreadyPaid") {
     return done(target.origin, target.market, target.orderNumber);
   }
-  if (outcome === "amountMismatch") {
-    await refundAndRecord(provider, payment.id, confirmed);
+  if (outcome === "amountMismatch" || outcome === "expired") {
+    await refundAndRecord(provider, payment.id, confirmed, outcome);
   }
   return fail(target.origin, target.market, outcome);
 }
@@ -174,15 +175,16 @@ async function runConfirmRpc(
   return error ? "unknown" : toOutcomeCode(data as string | null);
 }
 
-// 금액이 다르면 받은 돈을 돌려주려 시도한다. 이 호출이 실패해도 손님을
+// 금액이 다르거나 선점 만료 뒤 승인이 왔으면 받은 돈을 돌려주려 시도한다. 이 호출이 실패해도 손님을
 // 붙잡아 둘 수는 없다 — 그래서 시도 결과를 반드시 남긴다. 돈은 이미 빠져나갔고,
 // 나중에 이 행을 들여다볼 사람에게 「환불을 시도했는가, 왜 실패했는가」가 전부다.
 async function refundAndRecord(
   provider: PaymentProvider,
   paymentId: string,
   confirmed: { providerTxnId: string; paidAmount: number; raw: unknown },
+  reason: "amountMismatch" | "expired",
 ): Promise<void> {
-  const attempt = await tryCancel(provider, confirmed);
+  const attempt = await tryCancel(provider, confirmed, reason);
   await supabaseServer
     .from("payments")
     .update({ raw: { confirm: confirmed.raw ?? null, refundAttempt: attempt } })
@@ -192,12 +194,13 @@ async function refundAndRecord(
 async function tryCancel(
   provider: PaymentProvider,
   confirmed: { providerTxnId: string; paidAmount: number },
+  reason: "amountMismatch" | "expired",
 ): Promise<Record<string, unknown>> {
   try {
     const result = await provider.cancel({
       providerTxnId: confirmed.providerTxnId,
       amount: confirmed.paidAmount,
-      reason: "amountMismatch",
+      reason,
     });
     return { ok: true, raw: result.raw ?? null };
   } catch (error) {
@@ -236,7 +239,7 @@ async function fetchPayment(ref: string | null): Promise<PaymentRow | null> {
   const { data } = await supabaseServer
     .from("payments")
     .select(
-      "id, provider, status, amount, provider_ref, provider_txn_id, orders ( order_number, market )",
+      "id, provider, status, amount, provider_ref, provider_txn_id, orders ( id, order_number, market )",
     )
     .eq("id", ref)
     .maybeSingle();
@@ -256,4 +259,10 @@ async function markFailed(
     .update({ status: "failed", failure_code: code, raw: raw ?? null })
     .eq("id", paymentId)
     .eq("status", "pending");
+}
+
+async function releaseStock(orderId: string | undefined): Promise<void> {
+  if (orderId) {
+    await supabaseServer.rpc("release_order_stock", { p_order_id: orderId });
+  }
 }

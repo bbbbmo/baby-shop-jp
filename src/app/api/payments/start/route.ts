@@ -76,15 +76,40 @@ async function createAndInitiate(
   // 마켓을 들고 있으므로 어긋나면 결제창까지 갔다가 실패한다.
   const provider = getProvider(method.provider);
   const usable = provider?.markets.includes(market) ? provider : null;
-  const paymentId = usable ? await insertPayment(order, market, method) : null;
-  if (!usable || !paymentId) {
+  if (!usable) {
+    return NextResponse.json({ error: "providerDown" }, { status: 502 });
+  }
+  const reserved = await reserveStock(order.id);
+  if (reserved === "soldOut") {
+    return NextResponse.json({ error: "soldOut" }, { status: 409 });
+  }
+  if (reserved !== "ok") {
+    return NextResponse.json({ error: "providerDown" }, { status: 502 });
+  }
+  const paymentId = await insertPayment(order, market, method);
+  if (!paymentId) {
+    await releaseStock(order.id);
     return NextResponse.json({ error: "providerDown" }, { status: 502 });
   }
   const intent = buildIntent(order, market, method, paymentId, origin);
   const nextAction = await runInitiate(usable, paymentId, intent);
-  return nextAction
-    ? NextResponse.json({ paymentId, nextAction })
-    : NextResponse.json({ error: "providerDown" }, { status: 502 });
+  if (!nextAction) {
+    await releaseStock(order.id);
+    return NextResponse.json({ error: "providerDown" }, { status: 502 });
+  }
+  return NextResponse.json({ paymentId, nextAction });
+}
+
+async function reserveStock(orderId: string): Promise<string | null> {
+  const { data, error } = await supabaseServer.rpc("reserve_order_stock", {
+    p_order_id: orderId,
+    p_ttl_minutes: 15,
+  });
+  return error ? null : (data as string | null);
+}
+
+async function releaseStock(orderId: string): Promise<void> {
+  await supabaseServer.rpc("release_order_stock", { p_order_id: orderId });
 }
 
 async function runInitiate(
@@ -125,7 +150,7 @@ function buildIntent(
     buyerName: order.recipient_name,
     buyerEmail: order.email,
     returnUrl: buildReturnUrl(origin, method.provider, paymentId, market),
-    cancelUrl: `${origin}/${market}/checkout`,
+    cancelUrl: `${origin}/api/payments/abandon?ref=${paymentId}&m=${market}`,
   };
 }
 
