@@ -33,6 +33,7 @@ export function FontModeProvider({
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (isFontMode(stored)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFontModeState(stored);
     }
   }, []);
