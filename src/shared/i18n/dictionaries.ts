@@ -311,6 +311,27 @@ export const dictionaries = {
     admin: {
       title: "管理者ページ",
     },
+    emailConfirmed: {
+      title: "メール認証が完了しました",
+      body: "メールアドレスの確認が完了しました。COMOをお楽しみください。",
+      goHome: "トップページへ",
+      goMypage: "マイページへ",
+      expiredTitle: "リンクの有効期限が切れています",
+      expiredBody:
+        "確認リンクは期限切れか、すでに使用されています。メールアドレスを入力すると確認メールを再送します。",
+      resendEmailLabel: "メールアドレス",
+      resendButton: "確認メールを再送する",
+      resendSubmitting: "送信中…",
+      resendSentTitle: "確認メールを再送しました",
+      resendSentBody:
+        "メール内のリンクから登録を完了してください。届かない場合は迷惑メールフォルダをご確認ください。",
+      errors: {
+        required: "必須項目です",
+        invalidEmail: "メールアドレスの形式が正しくありません",
+        tooManyRequests: "送信回数の上限に達しました。しばらくしてからお試しください",
+        unknownError: "エラーが発生しました。もう一度お試しください",
+      },
+    },
     consent: {
       title: "ご利用にあたっての同意",
       description:
@@ -635,6 +656,26 @@ export const dictionaries = {
     },
     admin: {
       title: "관리자 페이지",
+    },
+    emailConfirmed: {
+      title: "이메일 인증이 완료되었어요",
+      body: "이메일 주소 확인이 끝났어요. 이제 COMO를 이용하실 수 있어요.",
+      goHome: "홈으로",
+      goMypage: "마이페이지로",
+      expiredTitle: "링크가 만료되었어요",
+      expiredBody:
+        "인증 링크가 만료되었거나 이미 사용되었어요. 이메일을 입력하면 인증 메일을 다시 보내드려요.",
+      resendEmailLabel: "이메일",
+      resendButton: "인증 메일 다시 받기",
+      resendSubmitting: "보내는 중…",
+      resendSentTitle: "인증 메일을 다시 보냈어요",
+      resendSentBody: "메일 속 링크를 눌러 가입을 완료해주세요. 안 보이면 스팸함도 확인해주세요.",
+      errors: {
+        required: "필수 입력 항목이에요",
+        invalidEmail: "이메일 형식이 올바르지 않아요",
+        tooManyRequests: "요청이 너무 잦아요. 잠시 후 다시 시도해주세요",
+        unknownError: "오류가 발생했어요. 다시 시도해주세요",
+      },
     },
     consent: {
       title: "서비스 이용 동의",

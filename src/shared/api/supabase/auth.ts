@@ -6,7 +6,7 @@ import type {
 } from "@supabase/supabase-js";
 import type { Market } from "@/shared/config/markets";
 import { supabase } from "./client";
-import { authCallbackRedirectTo } from "./authCallbackRedirectTo";
+import { authCallbackRedirectTo, authConfirmedRedirectTo } from "./authCallbackRedirectTo";
 
 export type SignUpParams = {
   email: string;
@@ -17,17 +17,32 @@ export type SignUpParams = {
   consentMarketing: boolean;
 };
 
+// confirmed: 서버가 메일 확인 없이 바로 세션을 준 경우(대시보드의 Confirm email이
+// 꺼진 상태). 이걸 무시하고 "확인 메일을 보냈다"고 안내하면 설정과 화면이 어긋난다.
 export async function signUpWithEmail(
   params: SignUpParams,
   market: Market,
-): Promise<{ error: string | null }> {
-  const emailRedirectTo = authCallbackRedirectTo(
-    window.location.origin, market, "signup",
-  );
-  const { error } = await supabase.auth.signUp({
+): Promise<{ error: string | null; confirmed: boolean }> {
+  const emailRedirectTo = authConfirmedRedirectTo(window.location.origin, market);
+  const { data, error } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
     options: { data: toSignUpMetadata(params), emailRedirectTo },
+  });
+  return { error: error ? mapAuthError(error) : null, confirmed: data.session !== null };
+}
+
+// 확인 링크가 만료됐을 때 다시 보낸다. 가입되지 않았거나 이미 확인된 주소에는
+// Supabase가 보내지 않되 에러도 내지 않는다 — 계정 열거 방지라 그대로 둔다.
+export async function resendSignupEmail(
+  email: string,
+  market: Market,
+): Promise<{ error: string | null }> {
+  const emailRedirectTo = authConfirmedRedirectTo(window.location.origin, market);
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo },
   });
   return { error: error ? mapAuthError(error) : null };
 }
@@ -183,6 +198,8 @@ const AUTH_ERROR_CODES: Record<string, string> = {
   weak_password: "passwordTooWeak",
   invalid_credentials: "invalidCredentials",
   email_not_confirmed: "emailNotConfirmed",
+  // 확인 메일 재전송을 짧은 간격으로 반복했을 때.
+  over_email_send_rate_limit: "tooManyRequests",
   // 새 비밀번호가 기존과 같을 때. 폼에서 미리 거르지만 서버도 거절한다.
   same_password: "samePassword",
   // 현재 비밀번호가 틀렸을 때. GoTrue가 내는 실제 코드를 확인해 넣었다
