@@ -251,6 +251,8 @@ export const dictionaries = {
     },
     password: {
       providers: { kakao: "カカオ", google: "Google", line: "LINE" },
+      // 가입·변경·재설정 세 폼이 같은 8자 규칙을 쓴다 (schema의 min(8)과 맞춘다).
+      lengthHint: "8文字以上",
       change: {
         title: "パスワード",
         openButton: "パスワードを変更",
@@ -599,6 +601,7 @@ export const dictionaries = {
     },
     password: {
       providers: { kakao: "카카오", google: "Google", line: "LINE" },
+      lengthHint: "8자 이상",
       change: {
         title: "비밀번호",
         openButton: "비밀번호 변경",

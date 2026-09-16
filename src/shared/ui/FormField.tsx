@@ -5,6 +5,8 @@ type FormFieldProps = {
   type?: string;
   placeholder?: string;
   error?: string;
+  // 입력 전에 미리 보여 주는 규칙 안내. 오류가 있으면 오류 문구가 대신 보인다.
+  hint?: string;
   readOnly?: boolean;
   // 읽기 전용 칸에 입력 수단을 붙일 때 쓴다 (예: 주소 칸을 눌러 주소 검색 팝업 열기).
   onClick?: () => void;
@@ -16,6 +18,7 @@ export function FormField({
   type = "text",
   placeholder,
   error,
+  hint,
   readOnly,
   onClick,
   registration,
@@ -34,6 +37,7 @@ export function FormField({
         } ${onClick ? "cursor-pointer" : ""}`}
       />
       {error && <span className="mt-1 block text-xs text-sale">{error}</span>}
+      {!error && hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

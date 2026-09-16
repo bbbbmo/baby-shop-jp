@@ -34,6 +34,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       <FormField
         label={d.signup.passwordLabel}
         type="password"
+        hint={d.password.lengthHint}
         registration={register("password")}
         error={errorText(errors.password?.message)}
       />

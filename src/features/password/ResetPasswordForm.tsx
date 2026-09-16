@@ -18,6 +18,7 @@ export function ResetPasswordForm({ onSuccess }: { onSuccess: () => void }) {
       <FormField
         label={d.password.reset.newLabel}
         type="password"
+        hint={d.password.lengthHint}
         registration={register("password")}
         error={errorText(errors.password?.message)}
       />

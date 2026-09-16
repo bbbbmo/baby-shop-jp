@@ -104,6 +104,7 @@ function ChangePasswordFields({
       <FormField
         label={d.password.change.newLabel}
         type="password"
+        hint={d.password.lengthHint}
         registration={register("password")}
         error={errorText(errors.password?.message)}
       />
