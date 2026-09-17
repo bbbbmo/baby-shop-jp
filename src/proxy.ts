@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { MARKET_HEADER, isMarket } from "@/shared/config/markets";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -12,20 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  // 루트 레이아웃이 <html lang>을 정하려면 경로의 마켓을 알아야 하는데,
-  // 레이아웃은 자기 아래 세그먼트의 params를 볼 수 없다. 요청 헤더로 넘긴다.
-  const requestHeaders = new Headers(request.headers);
-  const segment = request.nextUrl.pathname.split("/")[1];
-  if (isMarket(segment)) {
-    requestHeaders.set(MARKET_HEADER, segment);
-  } else {
-    // 클라이언트가 직접 보낸 값이 그대로 통과하지 않게 지운다.
-    // 이 헤더는 proxy만 쓰는 통로다.
-    requestHeaders.delete(MARKET_HEADER);
-  }
-  const nextResponse = () => NextResponse.next({ request: { headers: requestHeaders } });
-
-  let response = nextResponse();
+  let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     supabaseUrl!,
@@ -36,11 +22,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // 갱신된 쿠키는 두 곳에 간다. 요청 객체에 넣어 이번 요청의 서버
+          // 컴포넌트가 새 세션을 보게 하고, 응답에 실어 브라우저가 다음 요청부터
+          // 새 쿠키를 보내게 한다. 요청 쪽이 빠지면 세션이 유실된다.
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          // 요청 헤더를 새로 만들어 넘기므로 갱신된 쿠키를 여기에도 반영해야
-          // 이번 요청의 서버 컴포넌트가 새 세션을 본다. 빠지면 세션이 유실된다.
-          requestHeaders.set("cookie", request.cookies.toString());
-          response = nextResponse();
+          response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
