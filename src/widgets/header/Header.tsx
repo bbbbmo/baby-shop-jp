@@ -59,8 +59,7 @@ export function Header({ isAdmin }: { isAdmin: boolean }) {
           </span>
           <MarketLink
             href="/"
-            style={{ fontFamily: "var(--font-noto-jp)" }}
-            className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-tight text-foreground md:text-3xl"
+            className="font-brand absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-tight text-foreground md:text-3xl"
           >
             {d.brandName}
           </MarketLink>

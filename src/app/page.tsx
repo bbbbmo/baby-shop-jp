@@ -18,8 +18,7 @@ export default function RootPage() {
   return (
     <main className="mx-auto flex w-full max-w-480 flex-1 flex-col items-center justify-center gap-12 px-6 py-20 sm:px-10">
       <h1
-        style={{ fontFamily: "var(--font-noto-jp)" }}
-        className="text-3xl font-bold tracking-tight text-foreground"
+        className="font-brand text-3xl font-bold tracking-tight text-foreground"
       >
         {BRAND_NAME}
       </h1>

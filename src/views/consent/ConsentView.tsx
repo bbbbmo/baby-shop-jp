@@ -26,8 +26,7 @@ export function ConsentView() {
       <div className="mx-auto max-w-md">
         <MarketLink
           href="/"
-          style={{ fontFamily: "var(--font-noto-jp)" }}
-          className="mb-6 block text-center text-2xl font-bold tracking-tight text-foreground"
+          className="font-brand mb-6 block text-center text-2xl font-bold tracking-tight text-foreground"
         >
           {d.brandName}
         </MarketLink>
